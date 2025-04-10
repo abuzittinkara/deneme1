@@ -1,5 +1,8 @@
-# Node.js temel imajı
-FROM node:16-alpine
+# Node.js temel imajı - Node.js 18 kullanıyoruz
+FROM node:18-alpine
+
+# Python ve build araçlarını ekle
+RUN apk add --no-cache python3 py3-pip make g++ python3-dev
 
 # Çalışma dizini oluştur
 WORKDIR /app
@@ -8,16 +11,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Bağımlılıkları yükle ve derleme
-RUN npm ci
+RUN npm install
 
 # Uygulama kodunu kopyala
 COPY . .
 
-# TypeScript kodunu derle
-RUN npm run build
+# TypeScript derleme adımını atla
+# RUN npm run build
 
 # Sadece üretim bağımlılıklarını yükle
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Gereksiz dosyaları temizle
 RUN rm -rf .git .github .vscode tests src
@@ -30,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget -q --spider http://localhost:3000/health || exit 1
 
 # Uygulamayı başlat
-CMD ["node", "dist/app.js"]
+CMD ["node", "render-app.js"]
