@@ -1,0 +1,59 @@
+/* Mikrofon Yardımcısı Stilleri */
+
+.microphone-help-modal {
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.microphone-help-modal h2 {
+  color: #fff;
+  margin-top: 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.microphone-help-modal h3 {
+  color: #c61884;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.help-section {
+  margin-bottom: 25px;
+}
+
+.help-section p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.help-section ol, 
+.help-section ul {
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+.help-section li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.help-section ul li {
+  list-style-type: disc;
+}
+
+.help-section strong {
+  color: #fff;
+  font-weight: 500;
+}
+
+#enableListenOnlyMode {
+  margin: 10px 0;
+  background-color: #4caf50;
+}
+
+#enableListenOnlyMode:hover {
+  background-color: #3d8b40;
+}

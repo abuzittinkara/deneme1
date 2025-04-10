@@ -1,0 +1,139 @@
+/* User Blocking Styles */
+
+/* Blocked user item */
+.blocked-user {
+  opacity: 0.6;
+  position: relative;
+}
+
+.blocked-user::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+
+.blocked-user-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  margin-bottom: 8px;
+}
+
+.blocked-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.blocked-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+}
+
+.blocked-user-name {
+  font-weight: bold;
+}
+
+.unblock-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background-color: #5865f2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.unblock-user-btn:hover {
+  background-color: #4752c4;
+}
+
+/* Block user modal */
+.block-user-modal,
+.unblock-user-modal,
+.blocked-users-modal {
+  max-width: 500px;
+}
+
+.block-user-info,
+.unblock-user-info {
+  margin-top: 16px;
+  font-weight: bold;
+}
+
+.block-user-effects,
+.unblock-user-effects {
+  margin: 8px 0 16px;
+  padding-left: 24px;
+}
+
+.block-user-effects li,
+.unblock-user-effects li {
+  margin-bottom: 4px;
+}
+
+.block-user-buttons,
+.unblock-user-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Blocked users list */
+.blocked-users-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 16px 0;
+}
+
+.no-blocked-users {
+  text-align: center;
+  padding: 24px;
+  color: #aaa;
+}
+
+/* Blocked user message in DM */
+.blocked-user-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin: 16px;
+  text-align: center;
+}
+
+.blocked-user-message .material-icons {
+  font-size: 48px;
+  color: #f04747;
+  margin-bottom: 16px;
+}
+
+.blocked-user-message p {
+  margin-bottom: 16px;
+  color: #ccc;
+}
+
+.blocked-user-message .unblock-user-btn {
+  margin-top: 8px;
+}

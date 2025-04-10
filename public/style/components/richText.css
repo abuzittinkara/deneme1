@@ -1,0 +1,122 @@
+/* Rich Text Formatting Styles */
+
+/* Formatting toolbar */
+.formatting-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.formatting-toolbar button {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.formatting-toolbar button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Formatted text styles */
+.message-content strong {
+  font-weight: bold;
+}
+
+.message-content em {
+  font-style: italic;
+}
+
+.message-content u {
+  text-decoration: underline;
+}
+
+.message-content s {
+  text-decoration: line-through;
+}
+
+.message-content code {
+  font-family: 'Courier New', monospace;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.message-content pre {
+  margin: 8px 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.message-content pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  display: block;
+  white-space: pre;
+}
+
+.message-content a {
+  color: #7289da;
+  text-decoration: none;
+}
+
+.message-content a:hover {
+  text-decoration: underline;
+}
+
+/* Edited indicator */
+.edited-indicator {
+  font-size: 0.8em;
+  color: #aaa;
+  margin-left: 4px;
+}
+
+/* Deleted message */
+.deleted-message {
+  font-style: italic;
+  color: #888;
+}
+
+/* Quoted message */
+.quoted-message {
+  margin: 4px 0;
+  padding: 4px 8px;
+  border-left: 3px solid #7289da;
+  background-color: rgba(114, 137, 218, 0.1);
+  border-radius: 0 4px 4px 0;
+}
+
+.quoted-message-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8em;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.quoted-message-content {
+  font-size: 0.9em;
+  color: #bbb;
+}
+
+/* Highlight message (when navigating to quoted message) */
+.highlight-message {
+  animation: highlight-pulse 2s;
+}
+
+@keyframes highlight-pulse {
+  0% { background-color: rgba(114, 137, 218, 0.2); }
+  100% { background-color: transparent; }
+}

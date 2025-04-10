@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yardım Merkezi - Fisqos</title>
+  <link rel="stylesheet" href="style/main.css">
+  <link rel="stylesheet" href="style/help.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <header class="help-header">
+    <div class="container">
+      <div class="logo">
+        <a href="index.html">
+          <img src="images/logo.png" alt="Fisqos Logo">
+        </a>
+      </div>
+      <nav class="help-nav">
+        <ul>
+          <li><a href="index.html">Ana Sayfa</a></li>
+          <li><a href="help.html" class="active">Yardım Merkezi</a></li>
+          <li><a href="#contact">İletişim</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="help-main">
+    <div class="container">
+      <div class="help-sidebar">
+        <div class="help-search">
+          <input type="text" id="helpSearch" placeholder="Yardım ara...">
+          <button id="helpSearchBtn">
+            <span class="material-icons">search</span>
+          </button>
+        </div>
+        <nav class="help-menu">
+          <ul>
+            <li><a href="#getting-started" class="active">Başlangıç</a></li>
+            <li><a href="#account">Hesap Yönetimi</a></li>
+            <li><a href="#groups">Gruplar ve Kanallar</a></li>
+            <li><a href="#messaging">Mesajlaşma</a></li>
+            <li><a href="#voice">Sesli İletişim</a></li>
+            <li><a href="#files">Dosya Paylaşımı</a></li>
+            <li><a href="#notifications">Bildirimler</a></li>
+            <li><a href="#security">Güvenlik</a></li>
+            <li><a href="#faq">Sık Sorulan Sorular</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="help-content">
+        <section id="getting-started" class="help-section active">
+          <h1>Fisqos'a Hoş Geldiniz</h1>
+          <p class="help-intro">Fisqos, arkadaşlarınız, aileniz veya iş arkadaşlarınızla iletişim kurmanızı sağlayan güçlü bir mesajlaşma ve sesli iletişim platformudur. Bu rehber, Fisqos'u kullanmaya başlamanıza yardımcı olacaktır.</p>
+          
+          <div class="help-card">
+            <h2>Hızlı Başlangıç</h2>
+            <ol>
+              <li>
+                <h3>Hesap Oluşturma</h3>
+                <p>Ana sayfadaki "Kayıt Ol" düğmesine tıklayarak yeni bir hesap oluşturun. Kullanıcı adı, e-posta ve şifre bilgilerinizi girin.</p>
+                <div class="help-image">
+                  <img src="images/help/register.png" alt="Kayıt Ekranı">
+                </div>
+              </li>
+              <li>
+                <h3>Giriş Yapma</h3>
+                <p>Hesabınızı oluşturduktan sonra, kullanıcı adınız ve şifrenizle giriş yapın.</p>
+              </li>
+              <li>
+                <h3>Grup Oluşturma veya Katılma</h3>
+                <p>Sol menüdeki "+" düğmesine tıklayarak yeni bir grup oluşturabilir veya mevcut bir gruba katılabilirsiniz.</p>
+                <div class="help-image">
+                  <img src="images/help/create-group.png" alt="Grup Oluşturma">
+                </div>
+              </li>
+              <li>
+                <h3>Kanal Oluşturma</h3>
+                <p>Bir gruba katıldıktan sonra, grup adının yanındaki "+" düğmesine tıklayarak yeni bir kanal oluşturabilirsiniz.</p>
+              </li>
+              <li>
+                <h3>Mesaj Gönderme</h3>
+                <p>Bir metin kanalına tıklayın ve alt kısımdaki metin kutusuna mesajınızı yazın. Enter tuşuna basarak mesajınızı gönderin.</p>
+              </li>
+              <li>
+                <h3>Sesli Kanala Katılma</h3>
+                <p>Bir ses kanalına tıklayarak sesli sohbete katılabilirsiniz. Mikrofonunuzu açmak/kapatmak için mikrofon simgesine tıklayın.</p>
+              </li>
+            </ol>
+          </div>
+          
+          <div class="help-card">
+            <h2>Arayüz Tanıtımı</h2>
+            <div class="help-image">
+              <img src="images/help/interface.png" alt="Fisqos Arayüzü">
+            </div>
+            <div class="help-interface-guide">
+              <div class="help-interface-item">
+                <span class="help-interface-number">1</span>
+                <p>Sol Menü: Gruplar ve doğrudan mesajlar arasında geçiş yapabilirsiniz.</p>
+              </div>
+              <div class="help-interface-item">
+                <span class="help-interface-number">2</span>
+                <p>Grup Listesi: Katıldığınız grupları görüntüleyebilirsiniz.</p>
+              </div>
+              <div class="help-interface-item">
+                <span class="help-interface-number">3</span>
+                <p>Kanal Listesi: Seçili gruptaki kanalları görüntüleyebilirsiniz.</p>
+              </div>
+              <div class="help-interface-item">
+                <span class="help-interface-number">4</span>
+                <p>Mesaj Alanı: Kanaldaki mesajları görüntüleyebilirsiniz.</p>
+              </div>
+              <div class="help-interface-item">
+                <span class="help-interface-number">5</span>
+                <p>Metin Kutusu: Mesajlarınızı yazabilirsiniz.</p>
+              </div>
+              <div class="help-interface-item">
+                <span class="help-interface-number">6</span>
+                <p>Kullanıcı Listesi: Kanaldaki kullanıcıları görüntüleyebilirsiniz.</p>
+              </div>
+              <div class="help-interface-item">
+                <span class="help-interface-number">7</span>
+                <p>Kullanıcı Ayarları: Profil ve uygulama ayarlarına erişebilirsiniz.</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="help-card">
+            <h2>Klavye Kısayolları</h2>
+            <div class="help-shortcuts">
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Ctrl</span> + <span class="help-key">K</span>
+                </div>
+                <div class="help-shortcut-desc">Hızlı arama</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Alt</span> + <span class="help-key">↑</span>
+                </div>
+                <div class="help-shortcut-desc">Önceki kanala git</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Alt</span> + <span class="help-key">↓</span>
+                </div>
+                <div class="help-shortcut-desc">Sonraki kanala git</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Ctrl</span> + <span class="help-key">B</span>
+                </div>
+                <div class="help-shortcut-desc">Kalın yazı</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Ctrl</span> + <span class="help-key">I</span>
+                </div>
+                <div class="help-shortcut-desc">İtalik yazı</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Ctrl</span> + <span class="help-key">U</span>
+                </div>
+                <div class="help-shortcut-desc">Altı çizili yazı</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Esc</span>
+                </div>
+                <div class="help-shortcut-desc">İletişim kutusunu kapat</div>
+              </div>
+              <div class="help-shortcut">
+                <div class="help-shortcut-keys">
+                  <span class="help-key">Ctrl</span> + <span class="help-key">F</span>
+                </div>
+                <div class="help-shortcut-desc">Mesajlarda ara</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="help-card">
+            <h2>Video Rehberleri</h2>
+            <div class="help-videos">
+              <div class="help-video">
+                <h3>Fisqos'a Başlangıç</h3>
+                <div class="help-video-container">
+                  <iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+              </div>
+              <div class="help-video">
+                <h3>Grup ve Kanal Yönetimi</h3>
+                <div class="help-video-container">
+                  <iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <section id="account" class="help-section">
+          <h1>Hesap Yönetimi</h1>
+          
+          <div class="help-card">
+            <h2>Profil Ayarları</h2>
+            <p>Profil ayarlarınızı güncelleyerek kişisel bilgilerinizi yönetebilirsiniz.</p>
+            
+            <h3>Profil Fotoğrafı Değiştirme</h3>
+            <ol>
+              <li>Sağ alt köşedeki kullanıcı simgenize tıklayın.</li>
+              <li>"Profil Ayarları" seçeneğini seçin.</li>
+              <li>Profil fotoğrafınıza tıklayın ve yeni bir fotoğraf yükleyin.</li>
+              <li>"Kaydet" düğmesine tıklayın.</li>
+            </ol>
+            
+            <h3>Kullanıcı Bilgilerini Güncelleme</h3>
+            <ol>
+              <li>Sağ alt köşedeki kullanıcı simgenize tıklayın.</li>
+              <li>"Profil Ayarları" seçeneğini seçin.</li>
+              <li>İsim, soyisim, e-posta gibi bilgilerinizi güncelleyin.</li>
+              <li>"Kaydet" düğmesine tıklayın.</li>
+            </ol>
+          </div>
+          
+          <div class="help-card">
+            <h2>Şifre Değiştirme</h2>
+            <ol>
+              <li>Sağ alt köşedeki kullanıcı simgenize tıklayın.</li>
+              <li>"Profil Ayarları" seçeneğini seçin.</li>
+              <li>"Şifre Değiştir" sekmesine tıklayın.</li>
+              <li>Mevcut şifrenizi ve yeni şifrenizi girin.</li>
+              <li>"Şifreyi Güncelle" düğmesine tıklayın.</li>
+            </ol>
+          </div>
+          
+          <div class="help-card">
+            <h2>İki Faktörlü Kimlik Doğrulama (2FA)</h2>
+            <p>İki faktörlü kimlik doğrulama, hesabınızın güvenliğini artırmak için ek bir güvenlik katmanı sağlar.</p>
+            
+            <h3>2FA Etkinleştirme</h3>
+            <ol>
+              <li>Sağ alt köşedeki kullanıcı simgenize tıklayın.</li>
+              <li>"Profil Ayarları" seçeneğini seçin.</li>
+              <li>"Güvenlik" sekmesine tıklayın.</li>
+              <li>"İki Faktörlü Kimlik Doğrulama" bölümünde "Etkinleştir" düğmesine tıklayın.</li>
+              <li>Görüntülenen QR kodunu, Google Authenticator veya benzer bir uygulama ile tarayın.</li>
+              <li>Uygulamada görüntülenen 6 haneli kodu girin ve "Doğrula" düğmesine tıklayın.</li>
+              <li>Yedek kodlarınızı güvenli bir yerde saklayın.</li>
+            </ol>
+            
+            <h3>2FA ile Giriş Yapma</h3>
+            <ol>
+              <li>Kullanıcı adınız ve şifrenizle giriş yapın.</li>
+              <li>Kimlik doğrulama uygulamanızda görüntülenen 6 haneli kodu girin.</li>
+              <li>"Doğrula" düğmesine tıklayın.</li>
+            </ol>
+          </div>
+          
+          <div class="help-card">
+            <h2>Hesap Silme</h2>
+            <p>Hesabınızı silmek geri alınamaz bir işlemdir ve tüm verileriniz kalıcı olarak silinir.</p>
+            
+            <ol>
+              <li>Sağ alt köşedeki kullanıcı simgenize tıklayın.</li>
+              <li>"Profil Ayarları" seçeneğini seçin.</li>
+              <li>"Hesap" sekmesine tıklayın.</li>
+              <li>"Hesabı Sil" bölümünde "Hesabımı Sil" düğmesine tıklayın.</li>
+              <li>Şifrenizi girin ve onaylayın.</li>
+            </ol>
+            
+            <div class="help-warning">
+              <span class="material-icons">warning</span>
+              <p>Bu işlem geri alınamaz! Hesabınız ve tüm verileriniz kalıcı olarak silinecektir.</p>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Diğer bölümler benzer şekilde oluşturulabilir -->
+        
+        <section id="faq" class="help-section">
+          <h1>Sık Sorulan Sorular</h1>
+          
+          <div class="help-card">
+            <div class="help-faq">
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos nedir?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Fisqos, arkadaşlarınız, aileniz veya iş arkadaşlarınızla iletişim kurmanızı sağlayan bir mesajlaşma ve sesli iletişim platformudur. Metin mesajları, sesli görüşmeler, dosya paylaşımı ve daha fazlasını sunar.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'u nasıl kullanabilirim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Fisqos'u kullanmak için önce bir hesap oluşturmanız gerekir. Ardından, gruplar oluşturabilir veya mevcut gruplara katılabilirsiniz. Gruplarda metin ve ses kanalları oluşturabilir, mesajlaşabilir ve sesli görüşmeler yapabilirsiniz.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos ücretsiz mi?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Evet, Fisqos tamamen ücretsizdir. Tüm temel özellikleri ücretsiz olarak kullanabilirsiniz.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Şifremi unuttum, ne yapmalıyım?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Giriş sayfasındaki "Şifremi Unuttum" bağlantısına tıklayarak şifre sıfırlama işlemi başlatabilirsiniz. E-posta adresinize bir sıfırlama bağlantısı gönderilecektir.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'ta kaç kişi ile sesli görüşme yapabilirim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Bir ses kanalında aynı anda 50 kişiye kadar sesli görüşme yapabilirsiniz.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'ta hangi dosya türlerini paylaşabilirim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Fisqos'ta resim, video, ses, belge ve diğer birçok dosya türünü paylaşabilirsiniz. Dosya boyutu sınırı 100MB'dir.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'u mobil cihazımda kullanabilir miyim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Evet, Fisqos'u mobil tarayıcınızdan kullanabilirsiniz. Ayrıca, yakında iOS ve Android için mobil uygulamalarımız da yayınlanacaktır.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'ta mesajlarımı silebilir miyim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Evet, gönderdiğiniz mesajları silebilirsiniz. Mesajın üzerine gelin, açılan menüden "Sil" seçeneğini seçin ve onaylayın.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'ta ekran paylaşımı yapabilir miyim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Evet, ses kanallarında ekran paylaşımı yapabilirsiniz. Ses kanalına katıldıktan sonra, ekran paylaşımı simgesine tıklayarak ekranınızı paylaşabilirsiniz.</p>
+                </div>
+              </div>
+              
+              <div class="help-faq-item">
+                <div class="help-faq-question">
+                  <h3>Fisqos'ta birini nasıl engellerim?</h3>
+                  <span class="material-icons">expand_more</span>
+                </div>
+                <div class="help-faq-answer">
+                  <p>Bir kullanıcıyı engellemek için, kullanıcının profiline tıklayın, açılan menüden "Engelle" seçeneğini seçin ve onaylayın. Engellediğiniz kullanıcılar size mesaj gönderemez ve sizi arkadaş olarak ekleyemez.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="help-footer" id="contact">
+    <div class="container">
+      <div class="help-footer-content">
+        <div class="help-footer-logo">
+          <img src="images/logo.png" alt="Fisqos Logo">
+          <p>© 2023 Fisqos. Tüm hakları saklıdır.</p>
+        </div>
+        <div class="help-footer-links">
+          <h3>Bağlantılar</h3>
+          <ul>
+            <li><a href="index.html">Ana Sayfa</a></li>
+            <li><a href="help.html">Yardım Merkezi</a></li>
+            <li><a href="privacy.html">Gizlilik Politikası</a></li>
+            <li><a href="terms.html">Kullanım Koşulları</a></li>
+          </ul>
+        </div>
+        <div class="help-footer-contact">
+          <h3>İletişim</h3>
+          <p>E-posta: <a href="mailto:info@fisqos.com.tr">info@fisqos.com.tr</a></p>
+          <p>Telefon: <a href="tel:+902121234567">+90 212 123 45 67</a></p>
+          <div class="help-footer-social">
+            <a href="#" target="_blank"><span class="material-icons">facebook</span></a>
+            <a href="#" target="_blank"><span class="material-icons">twitter</span></a>
+            <a href="#" target="_blank"><span class="material-icons">instagram</span></a>
+            <a href="#" target="_blank"><span class="material-icons">youtube</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/help.js"></script>
+</body>
+</html>

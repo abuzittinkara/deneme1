@@ -1,0 +1,143 @@
+/* Favorites Styles */
+
+/* Favoriler Bölümü */
+.favorites-section {
+  margin: 0.5rem 0;
+  padding: 0 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.favorites-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  user-select: none;
+}
+
+.favorites-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.favorites-toggle {
+  color: #aaa;
+  font-size: 18px !important;
+  transition: transform 0.2s ease;
+}
+
+.favorites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+  max-height: 200px;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+/* Favori Öğesi */
+.favorite-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: rgba(198, 24, 132, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.favorite-item:hover {
+  background: rgba(198, 24, 132, 0.2);
+  transform: translateX(2px);
+}
+
+.favorite-icon {
+  color: #c61884;
+  margin-right: 0.5rem;
+  font-size: 18px !important;
+  background-color: rgba(198, 24, 132, 0.1);
+  border-radius: 50%;
+  padding: 3px;
+}
+
+.favorite-name {
+  font-size: 0.9rem;
+  color: #fff;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favorite-remove {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 2px;
+  margin-left: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.favorite-item:hover .favorite-remove {
+  opacity: 1;
+}
+
+.favorite-remove:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.favorite-remove .material-icons {
+  font-size: 16px !important;
+}
+
+/* Boş Favoriler Mesajı */
+.favorites-empty {
+  color: #777;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 0.5rem;
+  font-style: italic;
+}
+
+/* Bağlam Menüsü Öğeleri */
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.context-menu-item:hover {
+  background-color: rgba(198, 24, 132, 0.1);
+}
+
+.context-menu-item .material-icons {
+  font-size: 18px !important;
+  color: #c61884;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .favorites-section {
+    padding: 0 0.5rem;
+  }
+  
+  .favorites-list {
+    max-height: 150px;
+  }
+}

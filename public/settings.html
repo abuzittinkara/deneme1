@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ayarlar - Fisqos</title>
+  <link rel="stylesheet" href="style/main.css">
+  <link rel="stylesheet" href="style/components/settings.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-header">
+      <h1 class="settings-title">Kullanıcı Ayarları</h1>
+      <button id="closeSettingsBtn" class="settings-close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    
+    <div class="settings-content">
+      <div class="settings-sidebar">
+        <ul class="settings-nav">
+          <li class="settings-nav-item active" data-section="profile">Profil</li>
+          <li class="settings-nav-item" data-section="account">Hesap</li>
+          <li class="settings-nav-item" data-section="password">Şifre</li>
+          
+          <div class="settings-nav-header">Ses & Görüntü</div>
+          <li class="settings-nav-item" data-section="voice">Ses Ayarları</li>
+          
+          <div class="settings-nav-header">Uygulama Ayarları</div>
+          <li class="settings-nav-item" data-section="appearance">Görünüm</li>
+          <li class="settings-nav-item" data-section="notifications">Bildirimler</li>
+          <li class="settings-nav-item" data-section="language">Dil</li>
+          
+          <div class="settings-nav-header">Gizlilik & Güvenlik</div>
+          <li class="settings-nav-item" data-section="privacy">Gizlilik</li>
+          <li class="settings-nav-item" data-section="data">Verilerim</li>
+        </ul>
+      </div>
+      
+      <div class="settings-main">
+        <!-- Profil Ayarları -->
+        <div id="profile-section" class="settings-section active">
+          <h2 class="settings-section-title">Profil Ayarları</h2>
+          
+          <form id="profileForm">
+            <div class="settings-avatar-container">
+              <img id="profileAvatar" src="images/default-avatar.png" alt="Profil Fotoğrafı" class="settings-avatar">
+              <label for="avatarUpload" class="settings-avatar-upload">
+                <span class="material-icons">photo_camera</span>
+                <input type="file" id="avatarUpload" accept="image/*">
+              </label>
+            </div>
+            
+            <div class="settings-form-group">
+              <label for="displayName" class="settings-label">Görünen Ad</label>
+              <input type="text" id="displayName" class="settings-input" placeholder="Görünen adınız">
+              <div class="settings-info-text">Diğer kullanıcıların sizi nasıl göreceği.</div>
+            </div>
+            
+            <div class="settings-form-group">
+              <label for="userBio" class="settings-label">Hakkımda</label>
+              <textarea id="userBio" class="settings-input" rows="3" placeholder="Kendiniz hakkında kısa bir bilgi"></textarea>
+              <div class="settings-info-text">Maksimum 190 karakter.</div>
+            </div>
+            
+            <div class="settings-footer">
+              <button type="submit" class="settings-btn">Değişiklikleri Kaydet</button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Hesap Ayarları -->
+        <div id="account-section" class="settings-section">
+          <h2 class="settings-section-title">Hesap Ayarları</h2>
+          
+          <form id="accountForm">
+            <div class="settings-form-group">
+              <label for="username" class="settings-label">Kullanıcı Adı</label>
+              <input type="text" id="username" class="settings-input" disabled>
+              <div class="settings-info-text">Kullanıcı adınız değiştirilemez.</div>
+            </div>
+            
+            <div class="settings-form-group">
+              <label for="email" class="settings-label">E-posta</label>
+              <input type="email" id="email" class="settings-input" placeholder="E-posta adresiniz">
+            </div>
+            
+            <div class="settings-form-group">
+              <label for="phone" class="settings-label">Telefon (İsteğe Bağlı)</label>
+              <input type="tel" id="phone" class="settings-input" placeholder="Telefon numaranız">
+            </div>
+            
+            <div class="settings-footer">
+              <button type="submit" class="settings-btn">Değişiklikleri Kaydet</button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Şifre Ayarları -->
+        <div id="password-section" class="settings-section">
+          <h2 class="settings-section-title">Şifre Değiştir</h2>
+          
+          <form id="passwordForm">
+            <div class="settings-form-group">
+              <label for="currentPassword" class="settings-label">Mevcut Şifre</label>
+              <input type="password" id="currentPassword" class="settings-input" placeholder="Mevcut şifreniz">
+            </div>
+            
+            <div class="settings-form-group">
+              <label for="newPassword" class="settings-label">Yeni Şifre</label>
+              <input type="password" id="newPassword" class="settings-input" placeholder="Yeni şifreniz">
+            </div>
+            
+            <div class="settings-form-group">
+              <label for="confirmPassword" class="settings-label">Yeni Şifre (Tekrar)</label>
+              <input type="password" id="confirmPassword" class="settings-input" placeholder="Yeni şifrenizi tekrar girin">
+            </div>
+            
+            <div class="settings-password-requirements">
+              <div class="settings-password-requirement" id="req-length">
+                <span class="material-icons">check_circle</span>
+                En az 8 karakter
+              </div>
+              <div class="settings-password-requirement" id="req-uppercase">
+                <span class="material-icons">check_circle</span>
+                En az 1 büyük harf
+              </div>
+              <div class="settings-password-requirement" id="req-lowercase">
+                <span class="material-icons">check_circle</span>
+                En az 1 küçük harf
+              </div>
+              <div class="settings-password-requirement" id="req-number">
+                <span class="material-icons">check_circle</span>
+                En az 1 rakam
+              </div>
+              <div class="settings-password-requirement" id="req-match">
+                <span class="material-icons">check_circle</span>
+                Şifreler eşleşiyor
+              </div>
+            </div>
+            
+            <div class="settings-footer">
+              <button type="submit" class="settings-btn">Şifreyi Değiştir</button>
+            </div>
+          </form>
+        </div>
+        
+        <!-- Ses Ayarları -->
+        <div id="voice-section" class="settings-section">
+          <h2 class="settings-section-title">Ses Ayarları</h2>
+          
+          <div class="settings-section-subtitle">Ses Giriş Cihazı</div>
+          <div class="settings-form-group">
+            <label for="inputDevice" class="settings-label">Mikrofon</label>
+            <select id="inputDevice" class="settings-select">
+              <option value="">Cihaz seçin...</option>
+            </select>
+          </div>
+          
+          <div class="settings-audio-controls">
+            <div class="settings-audio-control">
+              <div class="settings-audio-header">
+                <div class="settings-audio-label">Mikrofon Seviyesi</div>
+                <div class="settings-audio-value" id="micLevel">100%</div>
+              </div>
+              <input type="range" id="micVolume" class="settings-audio-slider" min="0" max="100" value="100">
+              
+              <div class="settings-audio-test">
+                <button id="testMicBtn" class="settings-audio-test-btn">
+                  <span class="material-icons">mic</span>
+                  Test Et
+                </button>
+                <div class="settings-audio-meter">
+                  <div class="settings-audio-meter-fill" id="micMeter"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="settings-divider"></div>
+          
+          <div class="settings-section-subtitle">Ses Çıkış Cihazı</div>
+          <div class="settings-form-group">
+            <label for="outputDevice" class="settings-label">Hoparlör</label>
+            <select id="outputDevice" class="settings-select">
+              <option value="">Cihaz seçin...</option>
+            </select>
+          </div>
+          
+          <div class="settings-audio-controls">
+            <div class="settings-audio-control">
+              <div class="settings-audio-header">
+                <div class="settings-audio-label">Hoparlör Seviyesi</div>
+                <div class="settings-audio-value" id="speakerLevel">100%</div>
+              </div>
+              <input type="range" id="speakerVolume" class="settings-audio-slider" min="0" max="100" value="100">
+              
+              <div class="settings-audio-test">
+                <button id="testSpeakerBtn" class="settings-audio-test-btn">
+                  <span class="material-icons">volume_up</span>
+                  Test Et
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="settings-footer">
+            <button id="saveVoiceBtn" class="settings-btn">Değişiklikleri Kaydet</button>
+          </div>
+        </div>
+        
+        <!-- Görünüm Ayarları -->
+        <div id="appearance-section" class="settings-section">
+          <h2 class="settings-section-title">Görünüm Ayarları</h2>
+          
+          <div class="settings-form-group">
+            <label class="settings-label">Tema</label>
+            <div class="settings-theme-options">
+              <label class="settings-theme-option">
+                <input type="radio" name="theme" value="dark" checked>
+                <span>Koyu</span>
+              </label>
+              <label class="settings-theme-option">
+                <input type="radio" name="theme" value="light">
+                <span>Açık</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="settings-form-group">
+            <label class="settings-label">Yazı Tipi Boyutu</label>
+            <select id="fontSize" class="settings-select">
+              <option value="12">Küçük (12px)</option>
+              <option value="14" selected>Normal (14px)</option>
+              <option value="16">Büyük (16px)</option>
+              <option value="18">Çok Büyük (18px)</option>
+            </select>
+          </div>
+          
+          <div class="settings-footer">
+            <button id="saveAppearanceBtn" class="settings-btn">Değişiklikleri Kaydet</button>
+          </div>
+        </div>
+        
+        <!-- Bildirim Ayarları -->
+        <div id="notifications-section" class="settings-section">
+          <h2 class="settings-section-title">Bildirim Ayarları</h2>
+          
+          <div class="settings-form-group">
+            <label class="settings-label">Bildirimler</label>
+            <div class="settings-toggle">
+              <input type="checkbox" id="enableNotifications" checked>
+              <label for="enableNotifications">Bildirimleri Etkinleştir</label>
+            </div>
+          </div>
+          
+          <div class="settings-form-group">
+            <label class="settings-label">Ses Bildirimleri</label>
+            <div class="settings-toggle">
+              <input type="checkbox" id="enableSoundNotifications" checked>
+              <label for="enableSoundNotifications">Ses Bildirimlerini Etkinleştir</label>
+            </div>
+          </div>
+          
+          <div class="settings-section-subtitle">Bildirim Türleri</div>
+          
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="notifyDirectMessages" checked>
+              <label for="notifyDirectMessages">Doğrudan Mesajlar</label>
+            </div>
+          </div>
+          
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="notifyMentions" checked>
+              <label for="notifyMentions">Bahsetmeler (@mentions)</label>
+            </div>
+          </div>
+          
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="notifyFriendRequests" checked>
+              <label for="notifyFriendRequests">Arkadaşlık İstekleri</label>
+            </div>
+          </div>
+          
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="notifyGroupInvites" checked>
+              <label for="notifyGroupInvites">Grup Davetleri</label>
+            </div>
+          </div>
+          
+          <div class="settings-footer">
+            <button id="saveNotificationsBtn" class="settings-btn">Değişiklikleri Kaydet</button>
+          </div>
+        </div>
+        
+        <!-- Dil Ayarları -->
+        <div id="language-section" class="settings-section">
+          <h2 class="settings-section-title">Dil Ayarları</h2>
+          
+          <div class="settings-form-group">
+            <label for="language" class="settings-label">Uygulama Dili</label>
+            <select id="language" class="settings-select">
+              <option value="tr" selected>Türkçe</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          
+          <div class="settings-footer">
+            <button id="saveLanguageBtn" class="settings-btn">Değişiklikleri Kaydet</button>
+          </div>
+        </div>
+        
+        <!-- Gizlilik Ayarları -->
+        <div id="privacy-section" class="settings-section">
+          <h2 class="settings-section-title">Gizlilik Ayarları</h2>
+          
+          <div class="settings-section-subtitle">Profil Gizliliği</div>
+          <div class="settings-form-group">
+            <label class="settings-label">Profilimi kimler görebilir?</label>
+            <select id="profileVisibility" class="settings-select">
+              <option value="everyone">Herkes</option>
+              <option value="friends">Sadece Arkadaşlar</option>
+              <option value="nobody">Kimse</option>
+            </select>
+          </div>
+          
+          <div class="settings-form-group">
+            <label class="settings-label">Bana kimler mesaj gönderebilir?</label>
+            <select id="messagePermission" class="settings-select">
+              <option value="everyone">Herkes</option>
+              <option value="friends">Sadece Arkadaşlar</option>
+              <option value="nobody">Kimse</option>
+            </select>
+          </div>
+          
+          <div class="settings-section-subtitle">Görünmez Mod</div>
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="invisibleMode">
+              <label for="invisibleMode">Görünmez Mod</label>
+            </div>
+            <div class="settings-info-text">Görünmez moddayken çevrimiçi durumunuz diğer kullanıcılara gösterilmez.</div>
+          </div>
+          
+          <div class="settings-section-subtitle">Otomatik Mesaj Silme</div>
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="autoDeleteMessages">
+              <label for="autoDeleteMessages">Otomatik Mesaj Silme</label>
+            </div>
+            <div class="settings-info-text">Mesajlarınız belirli bir süre sonra otomatik olarak silinir.</div>
+          </div>
+          
+          <div class="settings-form-group" id="autoDeleteTimeGroup" style="display: none;">
+            <label class="settings-label">Mesajları silme süresi</label>
+            <select id="autoDeleteTime" class="settings-select">
+              <option value="3600">1 saat sonra</option>
+              <option value="86400">24 saat sonra</option>
+              <option value="604800">1 hafta sonra</option>
+              <option value="2592000">30 gün sonra</option>
+            </select>
+          </div>
+          
+          <div class="settings-section-subtitle">Gizli Sohbet</div>
+          <div class="settings-form-group">
+            <div class="settings-toggle">
+              <input type="checkbox" id="enableSecretChat">
+              <label for="enableSecretChat">Gizli Sohbet Modu</label>
+            </div>
+            <div class="settings-info-text">Gizli sohbet modunda mesajlar uçtan uca şifrelenir ve belirli bir süre sonra otomatik olarak silinir.</div>
+          </div>
+          
+          <div class="settings-footer">
+            <button id="savePrivacyBtn" class="settings-btn">Değişiklikleri Kaydet</button>
+          </div>
+        </div>
+        
+        <!-- Verilerim -->
+        <div id="data-section" class="settings-section">
+          <h2 class="settings-section-title">Verilerim</h2>
+          
+          <div class="settings-section-subtitle">Veri İndirme</div>
+          <div class="settings-form-group">
+            <label class="settings-label">Verilerinizi İndirin</label>
+            <div class="settings-info-text">Tüm verilerinizin bir kopyasını indirebilirsiniz. Bu, mesajlarınızı, profil bilgilerinizi ve diğer kişisel verilerinizi içerir.</div>
+            <button id="requestDataBtn" class="settings-btn secondary">Verilerimi İndir</button>
+          </div>
+          
+          <div class="settings-section-subtitle">Veri Silme</div>
+          <div class="settings-form-group">
+            <label class="settings-label">Geçmiş Mesajları Sil</label>
+            <div class="settings-info-text">Belirli bir tarihten önceki tüm mesajlarınızı silebilirsiniz.</div>
+            <div class="settings-date-picker">
+              <label for="deleteBeforeDate" class="settings-label">Bu tarihten önceki mesajları sil:</label>
+              <input type="date" id="deleteBeforeDate" class="settings-input">
+            </div>
+            <button id="deleteMessagesBtn" class="settings-btn danger">Mesajları Sil</button>
+          </div>
+          
+          <div class="settings-divider"></div>
+          
+          <div class="settings-section-subtitle">Hesap Silme</div>
+          <div class="settings-form-group">
+            <label class="settings-label">Hesabımı Sil</label>
+            <div class="settings-info-text">Hesabınızı sildiğinizde, tüm verileriniz kalıcı olarak silinir ve geri alınamaz.</div>
+            <button id="deleteAccountBtn" class="settings-btn danger">Hesabımı Sil</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/settings.js" type="module"></script>
+</body>
+</html>

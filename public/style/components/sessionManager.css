@@ -1,0 +1,121 @@
+/* Session Manager Styles */
+
+/* Sessions modal */
+.sessions-modal {
+  max-width: 600px;
+}
+
+.sessions-info {
+  margin-bottom: 16px;
+  color: #ccc;
+}
+
+.sessions-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.session-item {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-item.current-session {
+  background-color: rgba(88, 101, 242, 0.1);
+  border: 1px solid rgba(88, 101, 242, 0.3);
+}
+
+.session-info {
+  flex: 1;
+}
+
+.session-device {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.session-device .material-icons {
+  font-size: 32px;
+  color: #aaa;
+}
+
+.session-device-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.session-browser {
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.session-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.session-time,
+.session-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-meta .material-icons {
+  font-size: 16px;
+}
+
+.session-actions {
+  margin-left: 16px;
+}
+
+.end-session-btn {
+  background-color: #f04747;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.end-session-btn:hover {
+  background-color: #d43c3c;
+}
+
+.current-session-badge {
+  background-color: #43b581;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.sessions-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.no-sessions {
+  text-align: center;
+  padding: 24px;
+  color: #aaa;
+}
+
+/* Disabled button */
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

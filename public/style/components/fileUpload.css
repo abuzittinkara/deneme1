@@ -1,0 +1,94 @@
+/* File Upload Styles */
+.file-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #aaa;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-right: 8px;
+}
+
+.file-upload-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.file-upload-loading {
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin: 8px 0;
+  color: #aaa;
+  font-style: italic;
+}
+
+.file-attachment {
+  margin: 8px 0;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  max-width: 400px;
+}
+
+.file-attachment.image-attachment {
+  padding: 4px;
+}
+
+.file-attachment .attachment-preview {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  display: block;
+}
+
+.file-attachment .file-name {
+  margin-top: 4px;
+  font-size: 0.9em;
+  color: #aaa;
+  word-break: break-all;
+}
+
+.file-attachment .file-link {
+  display: flex;
+  align-items: center;
+  color: #aaa;
+  text-decoration: none;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.file-attachment .file-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.file-attachment .file-icon {
+  margin-right: 8px;
+  color: #c61884;
+}
+
+/* Add file upload button to chat input */
+.chat-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.chat-input-wrapper .file-upload-btn {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.chat-input {
+  padding-right: 80px !important;
+}

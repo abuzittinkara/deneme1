@@ -1,0 +1,188 @@
+version: '3.8'
+
+services:
+  # API Servisi
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sesli-sohbet-api:latest
+    container_name: sesli-sohbet-api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/sesli-sohbet
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=1h
+      - CORS_ORIGIN=https://seslisohbet.com
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - sesli-sohbet-network
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    command: ["node", "app.js"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Socket.IO Servisi
+  socket:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sesli-sohbet-socket:latest
+    container_name: sesli-sohbet-socket
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/sesli-sohbet
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=1h
+      - CORS_ORIGIN=https://seslisohbet.com
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - sesli-sohbet-network
+    volumes:
+      - ./logs:/app/logs
+    command: ["node", "socket-server.js"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Mediasoup Servisi
+  mediasoup:
+    build:
+      context: .
+      dockerfile: Dockerfile.mediasoup
+    image: sesli-sohbet-mediasoup:latest
+    container_name: sesli-sohbet-mediasoup
+    restart: always
+    ports:
+      - "3002:3002"
+      - "10000-10999:10000-10999/udp" # RTC portları
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - MONGODB_URI=mongodb://mongo:27017/sesli-sohbet
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET}
+      - MEDIASOUP_ANNOUNCED_IP=${MEDIASOUP_ANNOUNCED_IP}
+      - CORS_ORIGIN=https://seslisohbet.com
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - sesli-sohbet-network
+    volumes:
+      - ./logs:/app/logs
+    command: ["node", "mediasoup-server.js"]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    cap_add:
+      - NET_ADMIN # UDP portları için gerekli
+    sysctls:
+      - net.core.rmem_max=10485760
+      - net.core.wmem_max=10485760
+
+  # MongoDB
+  mongo:
+    image: mongo:5
+    container_name: sesli-sohbet-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=sesli-sohbet
+    volumes:
+      - mongo-data:/data/db
+      - ./deployment/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/sesli-sohbet --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: ["--wiredTigerCacheSizeGB", "1"]
+
+  # Redis
+  redis:
+    image: redis:6-alpine
+    container_name: sesli-sohbet-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./deployment/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+
+  # Nginx
+  nginx:
+    image: nginx:1.21-alpine
+    container_name: sesli-sohbet-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/ssl:/etc/letsencrypt:ro
+      - ./client/build:/var/www/seslisohbet.com:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - api
+      - socket
+      - mediasoup
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  sesli-sohbet-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  redis-data:
+  nginx-logs:

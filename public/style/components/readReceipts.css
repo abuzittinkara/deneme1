@@ -1,0 +1,27 @@
+/* Read Receipts Styles */
+
+.read-receipt {
+  display: none;
+  font-size: 0.8em;
+  color: #aaa;
+  margin-top: 4px;
+  text-align: right;
+}
+
+.read-receipt .material-icons {
+  font-size: 14px !important;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+
+/* For DM messages */
+.dm-message .read-receipt {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* For channel messages */
+.text-message .read-receipt {
+  margin-left: auto;
+  margin-right: 0;
+}

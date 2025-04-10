@@ -1,0 +1,38 @@
+# Node.js temel imajı
+FROM node:16
+
+# Gerekli paketleri yükle
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    python3 \
+    python3-pip \
+    libssl-dev \
+    wget \
+    net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Bağımlılıkları kopyala
+COPY package*.json ./
+
+# Bağımlılıkları yükle
+RUN npm ci --only=production
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# Gereksiz dosyaları temizle
+RUN rm -rf .git .github .vscode tests
+
+# Uygulama portunu aç
+EXPOSE 3002
+EXPOSE 10000-10999/udp
+
+# Sağlık kontrolü
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD wget -q --spider http://localhost:3002/health || exit 1
+
+# Uygulamayı başlat
+CMD ["node", "mediasoup-server.js"]

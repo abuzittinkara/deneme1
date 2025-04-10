@@ -1,0 +1,97 @@
+/* Message Management Styles */
+.message-actions {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 8px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.text-message:hover .message-actions,
+.dm-message:hover .message-actions {
+  display: flex;
+}
+
+.message-action-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.message-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.edit-message-form {
+  margin-top: 4px;
+}
+
+.edit-message-textarea {
+  width: 100%;
+  min-height: 60px;
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 8px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.edit-message-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  gap: 8px;
+}
+
+.save-edit-btn,
+.cancel-edit-btn {
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.save-edit-btn {
+  background-color: #c61884;
+}
+
+.save-edit-btn:hover {
+  background-color: #a3156f;
+}
+
+.cancel-edit-btn:hover {
+  background-color: #666;
+}
+
+.edited-indicator {
+  font-size: 0.8em;
+  color: #888;
+  font-style: italic;
+}
+
+.deleted-message {
+  font-style: italic;
+  color: #888;
+}
+
+.highlight-message {
+  animation: highlight-animation 2s ease;
+}
+
+@keyframes highlight-animation {
+  0% { background-color: rgba(198, 24, 132, 0.3); }
+  100% { background-color: transparent; }
+}

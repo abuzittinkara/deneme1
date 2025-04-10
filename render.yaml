@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: sesli-sohbet
+    env: node
+    buildCommand: bash ./build.sh
+    startCommand: node render-app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 1

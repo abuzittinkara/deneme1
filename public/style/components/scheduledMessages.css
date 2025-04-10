@@ -1,0 +1,138 @@
+/* Scheduled Messages Styles */
+
+/* Schedule button */
+.schedule-message-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  margin-right: 8px;
+}
+
+.schedule-message-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Schedule modal */
+.schedule-modal-content {
+  max-width: 500px;
+}
+
+.schedule-message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: bold;
+}
+
+.schedule-message-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 8px;
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.schedule-message-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Date and time inputs */
+input[type="date"],
+input[type="time"] {
+  padding: 8px;
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background-color: #444;
+  color: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+  z-index: 1000;
+  max-width: 400px;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.toast-message {
+  font-size: 0.9em;
+  color: #ccc;
+}
+
+.toast-close {
+  cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s;
+}
+
+.toast-close:hover {
+  color: #fff;
+}
+
+/* Scheduled message toast */
+.scheduled-message-toast .toast-icon {
+  background-color: rgba(114, 137, 218, 0.2);
+  color: #7289da;
+}
+
+/* Scheduled message sent toast */
+.scheduled-message-sent-toast .toast-icon {
+  background-color: rgba(67, 181, 129, 0.2);
+  color: #43b581;
+}

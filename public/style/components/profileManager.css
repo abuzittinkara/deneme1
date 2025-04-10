@@ -1,0 +1,437 @@
+/* Profile Management Styles */
+.profile-modal-content {
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #444;
+  margin-bottom: 16px;
+}
+
+.profile-tab {
+  background: none;
+  border: none;
+  color: #aaa;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.profile-tab.active {
+  color: #c61884;
+  border-bottom-color: #c61884;
+}
+
+.profile-tab:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.profile-tab-content {
+  display: none;
+}
+
+.profile-tab-content.active {
+  display: block;
+}
+
+.profile-picture-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.profile-picture-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-picture {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.profile-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-picture .material-icons {
+  font-size: 64px !important;
+  color: #666;
+}
+
+.change-profile-picture-btn {
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.change-profile-picture-btn:hover {
+  background-color: #666;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: inherit;
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+/* Profile View Styles */
+.profile-view-content {
+  max-width: 400px;
+}
+
+.profile-view-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.profile-status {
+  font-size: 0.9em;
+  color: #aaa;
+  position: relative;
+  padding-left: 16px;
+}
+
+.profile-status::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #43b581;
+}
+
+.profile-status.idle::before {
+  background-color: #faa61a;
+}
+
+.profile-status.dnd::before {
+  background-color: #f04747;
+}
+
+.profile-status.invisible::before {
+  background-color: #747f8d;
+}
+
+.profile-bio {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* Security tab styles */
+.security-section {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.security-section h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+/* Sessions tab styles */
+.sessions-container {
+  margin-bottom: 16px;
+}
+
+.session-item {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-item.current-session {
+  background-color: rgba(88, 101, 242, 0.1);
+  border: 1px solid rgba(88, 101, 242, 0.3);
+}
+
+.session-info {
+  flex: 1;
+}
+
+.session-device {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.session-device .material-icons {
+  font-size: 32px;
+  color: #aaa;
+}
+
+.session-device-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.session-browser {
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.session-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.session-time,
+.session-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-meta .material-icons {
+  font-size: 16px;
+}
+
+.session-actions {
+  margin-left: 16px;
+}
+
+.end-session-btn {
+  background-color: #f04747;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.end-session-btn:hover {
+  background-color: #d43c3c;
+}
+
+.current-session-badge {
+  background-color: #43b581;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.loading-sessions,
+.loading-blocked-users,
+.loading-reports,
+.no-sessions,
+.no-blocked-users,
+.no-reports,
+.error-message {
+  text-align: center;
+  padding: 24px;
+  color: #aaa;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+/* Privacy tab styles */
+.blocked-users-container,
+.my-reports-container {
+  margin-bottom: 24px;
+}
+
+.blocked-user-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.2);
+  margin-bottom: 8px;
+}
+
+.blocked-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.blocked-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+}
+
+.blocked-user-name {
+  font-weight: bold;
+}
+
+.unblock-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background-color: #5865f2;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.unblock-user-btn:hover {
+  background-color: #4752c4;
+}
+
+.report-item {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.report-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-username {
+  font-weight: bold;
+}
+
+.report-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.report-status.pending {
+  background-color: #faa61a;
+  color: #000;
+}
+
+.report-status.investigating {
+  background-color: #3498db;
+  color: #fff;
+}
+
+.report-status.resolved {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.report-status.dismissed {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.report-details {
+  padding: 16px;
+}
+
+.report-reason,
+.report-description,
+.report-date,
+.report-resolution {
+  margin-bottom: 8px;
+}

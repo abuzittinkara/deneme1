@@ -1,0 +1,190 @@
+/* User Status Styles */
+
+/* Durum Göstergesi */
+.user-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.user-status-indicator:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+}
+
+.status-dot.online {
+  background-color: #43b581;
+}
+
+.status-dot.idle {
+  background-color: #faa61a;
+}
+
+.status-dot.dnd {
+  background-color: #f04747;
+}
+
+.status-dot.invisible {
+  background-color: #747f8d;
+}
+
+.status-text {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.status-dropdown-icon {
+  font-size: 16px !important;
+  color: #aaa;
+}
+
+/* Durum Menüsü */
+.status-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid #444;
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.status-option:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.status-option-text {
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+/* Özel Durum Girişi */
+.custom-status-input {
+  padding: 0.7rem 1rem;
+  border-top: 1px solid #444;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.custom-status-input input {
+  flex: 1;
+  background-color: #444;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.custom-status-input input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(198, 24, 132, 0.5);
+}
+
+.set-custom-status-btn {
+  background-color: #c61884;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s ease;
+}
+
+.set-custom-status-btn:hover {
+  background-color: #d62994;
+}
+
+/* Kullanıcı Listesindeki Durum Göstergeleri */
+.user-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+  position: relative;
+}
+
+.user-status-dot.online {
+  background-color: #43b581;
+}
+
+.user-status-dot.idle {
+  background-color: #faa61a;
+}
+
+.user-status-dot.dnd {
+  background-color: #f04747;
+}
+
+.user-status-dot.invisible {
+  background-color: #747f8d;
+}
+
+/* Kullanıcı Panelindeki Durum Göstergesi */
+.user-panel-info {
+  position: relative;
+}
+
+/* DM Listesindeki Durum Göstergeleri */
+.dm-user-item .user-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #2d2d2d;
+}
+
+/* Mesajlardaki Durum Göstergeleri */
+.message-author .user-status-dot {
+  width: 8px;
+  height: 8px;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .status-menu {
+    width: 180px;
+  }
+  
+  .status-option {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .custom-status-input {
+    padding: 0.6rem 0.8rem;
+    flex-direction: column;
+  }
+  
+  .set-custom-status-btn {
+    width: 100%;
+  }
+}

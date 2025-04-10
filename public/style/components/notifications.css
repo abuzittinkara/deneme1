@@ -1,0 +1,429 @@
+/* Notifications Styles */
+
+/* Toast Container */
+#toastContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 350px;
+}
+
+/* Toast */
+.toast {
+  display: flex;
+  align-items: center;
+  background-color: #2d2d2d;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin-bottom: 10px;
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.toast.closing {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+.toast::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.toast.success::before {
+  background-color: #4CAF50;
+}
+
+.toast.error::before {
+  background-color: #F44336;
+}
+
+.toast.warning::before {
+  background-color: #FFC107;
+}
+
+.toast.info::before {
+  background-color: #2196F3;
+}
+
+.toast-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-icon .material-icons {
+  font-size: 20px;
+}
+
+.toast.success .toast-icon {
+  color: #4CAF50;
+}
+
+.toast.error .toast-icon {
+  color: #F44336;
+}
+
+.toast.warning .toast-icon {
+  color: #FFC107;
+}
+
+.toast.info .toast-icon {
+  color: #2196F3;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: 14px;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-close:hover {
+  color: #fff;
+}
+
+.toast-close .material-icons {
+  font-size: 18px;
+}
+
+/* In-App Notifications Container */
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 350px;
+  transition: opacity 0.3s ease;
+}
+
+.notifications-container.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* In-App Notification */
+.in-app-notification {
+  display: flex;
+  align-items: center;
+  background-color: #2d2d2d;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin-bottom: 10px;
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.in-app-notification.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.in-app-notification.closing {
+  transform: translateY(-20px);
+  opacity: 0;
+}
+
+.in-app-notification::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.in-app-notification.success::before {
+  background-color: #4CAF50;
+}
+
+.in-app-notification.error::before {
+  background-color: #F44336;
+}
+
+.in-app-notification.warning::before {
+  background-color: #FFC107;
+}
+
+.in-app-notification.info::before {
+  background-color: #2196F3;
+}
+
+.in-app-notification.message::before {
+  background-color: #c61884;
+}
+
+.in-app-notification.friend_request::before {
+  background-color: #9C27B0;
+}
+
+.in-app-notification.group_invite::before {
+  background-color: #3F51B5;
+}
+
+.notification-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-icon .material-icons {
+  font-size: 20px;
+}
+
+.in-app-notification.success .notification-icon {
+  color: #4CAF50;
+}
+
+.in-app-notification.error .notification-icon {
+  color: #F44336;
+}
+
+.in-app-notification.warning .notification-icon {
+  color: #FFC107;
+}
+
+.in-app-notification.info .notification-icon {
+  color: #2196F3;
+}
+
+.in-app-notification.message .notification-icon {
+  color: #c61884;
+}
+
+.in-app-notification.friend_request .notification-icon {
+  color: #9C27B0;
+}
+
+.in-app-notification.group_invite .notification-icon {
+  color: #3F51B5;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.notification-message {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-close:hover {
+  color: #fff;
+}
+
+.notification-close .material-icons {
+  font-size: 18px;
+}
+
+/* Notification Settings */
+.notification-settings {
+  margin-bottom: 20px;
+}
+
+.notification-settings-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #c61884;
+}
+
+.notification-settings-group {
+  margin-bottom: 15px;
+}
+
+.notification-settings-group-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
+.notification-setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notification-setting-item:last-child {
+  border-bottom: none;
+}
+
+.notification-setting-label {
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* Enable Notifications Button */
+#enableNotificationsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+#enableNotificationsBtn:hover {
+  background-color: #555;
+}
+
+#enableNotificationsBtn.enabled {
+  background-color: #c61884;
+}
+
+#enableNotificationsBtn.enabled:hover {
+  background-color: #d62994;
+}
+
+/* Bildirim Sayısı Göstergesi */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #f04747;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+/* Kanal Bildirim Göstergesi */
+.channel-item .notification-badge {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
+/* Grup Bildirim Göstergesi */
+.grp-item .notification-badge {
+  top: 0;
+  right: 0;
+}
+
+/* Mention Bildirim Göstergesi */
+.mention-badge {
+  background-color: #c61884;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  margin-left: 5px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Okunmamış Mesaj Göstergesi */
+.unread-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #c61884;
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Bildirim Animasyonu */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.notification-badge.new {
+  animation: pulse 1s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #toastContainer,
+  .notifications-container {
+    max-width: calc(100% - 40px);
+  }
+
+  .notification-badge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+  }
+}
