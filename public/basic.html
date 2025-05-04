@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Basit Test Sayfası</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+    }
+    p {
+      line-height: 1.6;
+    }
+    .button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Basit Test Sayfası</h1>
+    <p>Bu sayfa görünüyorsa, sunucu doğru çalışıyor demektir.</p>
+    <p>Saat: <span id="time"></span></p>
+    <button class="button" id="testButton">Test Butonu</button>
+  </div>
+
+  <script>
+    // Saati güncelle
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('time').textContent = now.toLocaleTimeString();
+    }
+    
+    // Sayfa yüklendiğinde
+    document.addEventListener('DOMContentLoaded', function() {
+      // Saati güncelle
+      updateTime();
+      setInterval(updateTime, 1000);
+      
+      // Buton tıklama olayı
+      document.getElementById('testButton').addEventListener('click', function() {
+        alert('Buton çalışıyor!');
+      });
+      
+      console.log('Sayfa başarıyla yüklendi');
+    });
+  </script>
+</body>
+</html>

@@ -198,7 +198,7 @@ const dmPanel = document.getElementById('dmPanel');
 window.addEventListener('DOMContentLoaded', () => {
   toggleDMButton.querySelector('.material-icons').textContent = 'forum';
 
-  socket = io("https://fisqos.com.tr", { transports: ['websocket'] });
+  socket = io("http://localhost:3333", { transports: ['websocket'] });
   console.log("Socket connected =>", socket.id);
 
   // Update global socket reference after initialization

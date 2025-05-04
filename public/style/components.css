@@ -33,3 +33,8 @@
 /* New UI improvements */
 @import url("components/favorites.css");
 @import url("components/userStatus.css");
+@import url("components/voiceControls.css");
+@import url("components/screenShare.css");
+@import url("components/videoChat.css");
+@import url("components/roomManagement.css");
+@import url("components/audioIndicators.css");

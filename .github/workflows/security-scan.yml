@@ -1,0 +1,72 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0' # Her Pazar günü çalıştır
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run npm audit
+      run: npm audit --audit-level=high
+    
+    - name: Run OWASP Dependency-Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'Sesli Sohbet'
+        path: '.'
+        format: 'HTML'
+        out: 'reports'
+        args: >
+          --suppression suppression.xml
+          --failOnCVSS 7
+          --enableRetired
+    
+    - name: Upload dependency check report
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-check-report
+        path: reports
+    
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+    
+    - name: Run ESLint Security Plugin
+      run: |
+        npm install eslint eslint-plugin-security
+        npx eslint --plugin security --ext .js,.ts src/
+    
+    - name: Run SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: >
+          -Dsonar.projectKey=sesli-sohbet
+          -Dsonar.organization=sesli-sohbet
+          -Dsonar.sources=src
+          -Dsonar.tests=src/tests
+          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          -Dsonar.coverage.exclusions=src/tests/**/*

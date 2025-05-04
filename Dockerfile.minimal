@@ -1,0 +1,54 @@
+FROM node:18
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Minimal bir Express uygulaması oluştur
+RUN npm init -y && \
+    npm install express cors dotenv
+
+# Uygulama dosyasını oluştur
+COPY .env ./
+RUN echo 'const express = require("express"); \n\
+const cors = require("cors"); \n\
+const dotenv = require("dotenv"); \n\
+\n\
+dotenv.config(); \n\
+\n\
+const app = express(); \n\
+const PORT = process.env.PORT || 9999; \n\
+\n\
+app.use(cors()); \n\
+app.use(express.json()); \n\
+\n\
+app.get("/", (req, res) => { \n\
+  res.json({ message: "Sesli Sohbet API çalışıyor!" }); \n\
+}); \n\
+\n\
+app.get("/api/health", (req, res) => { \n\
+  res.json({ status: "ok", message: "API sağlıklı çalışıyor!" }); \n\
+}); \n\
+\n\
+app.get("/api/info", (req, res) => { \n\
+  res.json({ \n\
+    name: "Sesli Sohbet API", \n\
+    version: "1.0.0", \n\
+    description: "Gerçek zamanlı sesli sohbet uygulaması API", \n\
+    environment: process.env.NODE_ENV, \n\
+    containerized: true \n\
+  }); \n\
+}); \n\
+\n\
+app.listen(PORT, () => { \n\
+  console.log(`Server running on port ${PORT}`); \n\
+});' > server.js
+
+# Ortam değişkenleri
+ENV NODE_ENV=development
+ENV PORT=9999
+
+# Uygulama portunu aç
+EXPOSE ${PORT}
+
+# Uygulamayı başlat
+CMD ["node", "server.js"]

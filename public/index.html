@@ -1,288 +1,1362 @@
 <!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fisqos</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fisqos - Discord Benzeri Uygulama</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    /* Genel Stiller */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: var(--font-primary);
+    }
 
-    <!-- Material Icons (Filled) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-    <!-- Material Icons Outlined -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" />
+    body {
+      background-color: var(--color-bg-medium);
+      color: var(--color-text-bright);
+      height: 100vh;
+      overflow: hidden;
+    }
 
-    <!-- Ana stil dosyası; type="text/css" eklenmiştir -->
-    <link rel="stylesheet" href="style.css" type="text/css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <!-- Giriş Ekranı -->
-    <div id="loginScreen" class="screen-container" style="display: block;">
-      <div class="card">
-        <h1 class="app-title">Oturum Aç</h1>
-        <!-- Giriş Hatası Mesajı -->
-        <p id="loginErrorMessage" style="display: none; color: #f44; margin: 0 0 0.6rem; font-size: 0.9rem;">
-          Lütfen girdiğiniz bilgileri kontrol edip tekrar deneyin
-        </p>
-        <input type="text" id="loginUsernameInput" placeholder="Kullanıcı Adı" class="input-text" />
-        <input type="password" id="loginPasswordInput" placeholder="Parola" class="input-text" />
-        <button id="loginButton" class="btn primary">Giriş Yap</button>
-        <p style="margin-top: 1rem;">
-          Hesabın yok mu?
-          <span id="showRegisterScreen" style="color: #fff; cursor: pointer; text-decoration: underline;">
-            Yeni Hesap Oluştur
-          </span>
-        </p>
-        <p style="margin-top: 0.5rem;">
-          <a href="help.html" target="_blank" style="color: #c61884; text-decoration: none;">
-            <span class="material-icons" style="font-size: 16px; vertical-align: middle;">help</span>
-            Yardım Merkezi
-          </a>
-        </p>
+    /* Giriş Ekranı */
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: var(--color-bg-medium);
+    }
+
+    .login-box {
+      background-color: var(--color-bg-dark);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-xl);
+      width: 480px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .login-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-bold);
+      margin-bottom: var(--spacing-sm);
+      color: var(--color-text-brightest);
+    }
+
+    .login-subtitle {
+      color: var(--color-text-normal);
+      font-size: var(--font-size-md);
+    }
+
+    .login-form {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-normal);
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 40px;
+      padding: 10px;
+      background-color: var(--color-bg-darker);
+      border: 1px solid var(--color-bg-darker);
+      border-radius: var(--radius-sm);
+      color: var(--color-text-brightest);
+      font-size: var(--font-size-md);
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-input:focus {
+      border-color: var(--color-primary);
+    }
+
+    .form-button {
+      width: 100%;
+      height: 44px;
+      background-color: var(--color-primary);
+      color: var(--color-text-brightest);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-medium);
+      cursor: pointer;
+      transition: background-color var(--transition-fast);
+    }
+
+    .form-button:hover {
+      background-color: var(--color-primary-dark);
+    }
+
+    .login-footer {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .login-footer a {
+      color: var(--color-primary-light);
+      text-decoration: none;
+    }
+
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Ana Uygulama Ekranı */
+    .app-container {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sunucu Listesi */
+    .servers-list {
+      width: 72px;
+      background-color: var(--color-bg-darker);
+      padding: var(--spacing-sm) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
+
+    .server-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-circle);
+      background-color: var(--color-bg-medium);
+      margin-bottom: var(--spacing-sm);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: border-radius var(--transition-fast);
+      color: var(--color-text-bright);
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-md);
+    }
+
+    .server-icon:hover {
+      border-radius: var(--radius-md);
+      background-color: var(--color-primary);
+    }
+
+    .server-icon.active {
+      border-radius: var(--radius-md);
+      background-color: var(--color-primary);
+    }
+
+    /* Kanallar Bölümü */
+    .channels-container {
+      width: 240px;
+      background-color: var(--color-bg-dark);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .server-header {
+      height: 48px;
+      padding: 0 var(--spacing-md);
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--color-bg-darker);
+    }
+
+    .server-name {
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-md);
+      flex: 1;
+      color: var(--color-text-brightest);
+    }
+
+    .channels-header {
+      padding: var(--spacing-md) var(--spacing-sm) 0 var(--spacing-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .channels-header-text {
+      text-transform: uppercase;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-muted);
+    }
+
+    .channels-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 var(--spacing-sm);
+    }
+
+    .channel {
+      height: 32px;
+      padding: 0 var(--spacing-sm);
+      margin-bottom: 2px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: var(--color-text-muted);
+    }
+
+    .channel:hover {
+      background-color: var(--color-bg-medium);
+      color: var(--color-text-bright);
+    }
+
+    .channel.active {
+      background-color: var(--color-bg-light);
+      color: var(--color-text-brightest);
+    }
+
+    .channel-icon {
+      margin-right: var(--spacing-xs);
+      font-size: var(--font-size-md);
+    }
+
+    .channel-name {
+      font-size: var(--font-size-md);
+    }
+
+    /* Sohbet Bölümü */
+    .chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      height: 48px;
+      padding: 0 var(--spacing-md);
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--color-bg-darker);
+    }
+
+    .chat-header-name {
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-md);
+      color: var(--color-text-brightest);
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: var(--spacing-md);
+      overflow-y: auto;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: var(--spacing-md);
+      padding: 2px 0;
+    }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-circle);
+      background-color: var(--color-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: var(--spacing-md);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-brightest);
+    }
+
+    .message-content {
+      flex: 1;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: baseline;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .message-author {
+      font-weight: var(--font-weight-medium);
+      margin-right: var(--spacing-sm);
+      color: var(--color-text-brightest);
+    }
+
+    .message-timestamp {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    .message-text {
+      color: var(--color-text-bright);
+      font-size: var(--font-size-md);
+      line-height: 1.375;
+    }
+
+    .chat-input-container {
+      padding: 0 var(--spacing-md) var(--spacing-lg);
+    }
+
+    .chat-input-box {
+      background-color: var(--color-bg-light);
+      border-radius: var(--radius-lg);
+      padding: 0 var(--spacing-md);
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      height: 44px;
+      background: none;
+      border: none;
+      color: var(--color-text-brightest);
+      font-size: var(--font-size-md);
+      outline: none;
+    }
+
+    /* Ekranları Gizle/Göster */
+    #login-screen {
+      display: flex;
+    }
+
+    #app-screen {
+      display: none;
+    }
+
+    /* Hata mesajı */
+    .error-message {
+      background-color: var(--color-danger);
+      color: var(--color-text-brightest);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--spacing-md);
+      display: none;
+    }
+
+    /* Medya Kontrol Dropdown */
+    .media-control-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .media-control-dropdown-content {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--color-bg-dark);
+      min-width: 160px;
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-sm);
+      z-index: 1;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .media-control-dropdown:hover .media-control-dropdown-content {
+      display: block;
+    }
+
+    .quality-option {
+      padding: var(--spacing-sm) var(--spacing-md);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background-color var(--transition-fast);
+    }
+
+    .quality-option:hover {
+      background-color: var(--color-bg-light);
+    }
+
+    .quality-option.active {
+      background-color: var(--color-primary);
+    }
+
+    /* Ekran Paylaşımı Duraklatma Düğmesi */
+    #toggle-pause-screen-btn {
+      display: none;
+    }
+
+    #toggle-pause-screen-btn.visible {
+      display: inline-flex;
+    }
+
+    /* Ekran Paylaşımı Kalite Düğmesi */
+    #screen-quality-btn {
+      display: none;
+    }
+
+    #screen-quality-btn.visible {
+      display: inline-flex;
+    }
+
+    /* Video Kontrolleri */
+    #switch-camera-btn {
+      display: none;
+    }
+
+    #switch-camera-btn.visible {
+      display: inline-flex;
+    }
+
+    #video-quality-btn {
+      display: none;
+    }
+
+    #video-quality-btn.visible {
+      display: inline-flex;
+    }
+
+    /* Video Kalite Seçenekleri */
+    .video-quality-option {
+      padding: var(--spacing-sm) var(--spacing-md);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background-color var(--transition-fast);
+    }
+
+    .video-quality-option:hover {
+      background-color: var(--color-bg-light);
+    }
+
+    .video-quality-option.active {
+      background-color: var(--color-primary);
+    }
+
+    /* Video Konteynerler */
+    .remote-videos {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .remote-video-container {
+      position: relative;
+      width: 240px;
+      height: 180px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background-color: var(--color-bg-darker);
+    }
+
+    .remote-video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .username-label {
+      position: absolute;
+      bottom: var(--spacing-xs);
+      left: var(--spacing-xs);
+      background-color: rgba(0, 0, 0, 0.5);
+      color: var(--color-text-brightest);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-xs);
+    }
+
+    .local-video-container {
+      position: absolute;
+      bottom: var(--spacing-md);
+      right: var(--spacing-md);
+      width: 160px;
+      height: 120px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background-color: var(--color-bg-darker);
+      border: 2px solid var(--color-primary);
+      z-index: 10;
+    }
+
+    .local-video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Ayna görüntüsü */
+    }
+
+    /* Katılımcı Listesi */
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--color-bg-darker);
+    }
+
+    .panel-tab {
+      padding: var(--spacing-sm) var(--spacing-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      color: var(--color-text-muted);
+      border-bottom: 2px solid transparent;
+    }
+
+    .panel-tab.active {
+      color: var(--color-text-brightest);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .panel-tab .material-icons {
+      font-size: 18px;
+    }
+
+    .panel-tab .badge {
+      background-color: var(--color-primary);
+      color: var(--color-text-brightest);
+      border-radius: var(--radius-circle);
+      padding: 2px 6px;
+      font-size: var(--font-size-xs);
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .panel-content {
+      display: none;
+      flex-direction: column;
+      height: calc(100% - 40px);
+    }
+
+    .panel-content.active {
+      display: flex;
+    }
+
+    .participant-list-header {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--color-bg-darker);
+    }
+
+    .participant-list-header h3 {
+      font-size: var(--font-size-md);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-brightest);
+    }
+
+    .participant-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--spacing-sm);
+    }
+
+    .participant-item {
+      display: flex;
+      align-items: center;
+      padding: var(--spacing-sm);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-xs);
+      transition: background-color var(--transition-fast);
+    }
+
+    .participant-item:hover {
+      background-color: var(--color-bg-light);
+    }
+
+    .participant-item.speaking {
+      background-color: rgba(var(--color-primary-rgb), 0.1);
+    }
+
+    .participant-item.local {
+      background-color: rgba(var(--color-primary-rgb), 0.2);
+    }
+
+    .participant-avatar {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-circle);
+      background-color: var(--color-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: var(--spacing-md);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-brightest);
+    }
+
+    .participant-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius-circle);
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: var(--font-size-md);
+    }
+
+    .speaking-indicator {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 12px;
+      height: 12px;
+      border-radius: var(--radius-circle);
+      background-color: var(--color-success);
+      border: 2px solid var(--color-bg-dark);
+      display: none;
+    }
+
+    .participant-item.speaking .speaking-indicator {
+      display: block;
+    }
+
+    .participant-info {
+      flex: 1;
+    }
+
+    .participant-name {
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-brightest);
+      margin-bottom: 2px;
+    }
+
+    .participant-status {
+      display: flex;
+      gap: var(--spacing-xs);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
+    }
+
+    .status-indicator .material-icons {
+      font-size: 16px;
+    }
+
+    .status-indicator.enabled {
+      color: var(--color-success);
+    }
+
+    .status-indicator.disabled {
+      color: var(--color-danger);
+    }
+  </style>
+</head>
+<body>
+  <!-- Giriş Ekranı -->
+  <div id="login-screen" class="login-container">
+    <div class="login-box">
+      <div class="login-header">
+        <h1 class="login-title">Fisqos'a Hoş Geldiniz</h1>
+        <div class="login-subtitle">Discord benzeri sesli ve yazılı iletişim platformu</div>
+      </div>
+
+      <div id="login-error" class="error-message">
+        Kullanıcı adı veya şifre hatalı!
+      </div>
+
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="username" class="form-label">Kullanıcı Adı</label>
+          <input type="text" id="username" class="form-input" placeholder="Kullanıcı adınızı girin" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password" class="form-label">Şifre</label>
+          <input type="password" id="password" class="form-input" placeholder="Şifrenizi girin" required>
+        </div>
+
+        <button type="submit" class="form-button">Giriş Yap</button>
+      </form>
+
+      <div class="login-footer">
+        Hesabınız yok mu? <a href="#" id="show-register">Kayıt Ol</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ana Uygulama Ekranı -->
+  <div id="app-screen" class="app-container">
+    <!-- Sunucu Listesi -->
+    <div class="servers-list">
+      <div class="server-icon active">F</div>
+      <div class="server-icon">G1</div>
+      <div class="server-icon">G2</div>
+    </div>
+
+    <!-- Kanallar Bölümü -->
+    <div class="channels-container">
+      <div class="server-header">
+        <div class="server-name">Fisqos Sunucusu</div>
+      </div>
+
+      <div class="channels-header">
+        <div class="channels-header-text">Metin Kanalları</div>
+      </div>
+
+      <div class="channels-list">
+        <div class="channel active">
+          <div class="channel-icon">#</div>
+          <div class="channel-name">genel</div>
+        </div>
+        <div class="channel">
+          <div class="channel-icon">#</div>
+          <div class="channel-name">sohbet</div>
+        </div>
+        <div class="channel">
+          <div class="channel-icon">#</div>
+          <div class="channel-name">yardım</div>
+        </div>
+      </div>
+
+      <div class="channels-header">
+        <div class="channels-header-text">Ses Kanalları</div>
+      </div>
+
+      <div class="channels-list">
+        <div class="channel voice-channel" data-channel-id="voice-general">
+          <div class="channel-icon">🔊</div>
+          <div class="channel-name">Genel</div>
+          <div class="channel-users"></div>
+        </div>
+        <div class="channel voice-channel" data-channel-id="voice-music">
+          <div class="channel-icon">🔊</div>
+          <div class="channel-name">Müzik</div>
+          <div class="channel-users"></div>
+        </div>
+        <div class="channel voice-channel" data-channel-id="voice-gaming">
+          <div class="channel-icon">🔊</div>
+          <div class="channel-name">Oyun</div>
+          <div class="channel-users"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Kayıt Ekranı -->
-    <div id="registerScreen" class="screen-container" style="display: none;">
-      <div class="card">
-        <h1 class="app-title">Kayıt Ol</h1>
-        <!-- Kayıt Hatası Mesajı -->
-        <p id="registerErrorMessage" style="display: none; color: #f44; margin: 0 0 0.6rem; font-size: 0.9rem;">
-          Lütfen girdiğiniz bilgileri kontrol edip tekrar deneyin
-        </p>
-        <input type="text" id="regUsernameInput" placeholder="Kullanıcı Adı (küçük harf)" class="input-text" />
-        <input type="text" id="regNameInput" placeholder="İsim" class="input-text" />
-        <input type="text" id="regSurnameInput" placeholder="Soyisim" class="input-text" />
-        <input type="date" id="regBirthdateInput" class="input-text" />
-        <input type="email" id="regEmailInput" placeholder="E-Posta" class="input-text" />
-        <input type="tel" id="regPhoneInput" placeholder="Telefon Numarası" class="input-text" />
-        <input type="password" id="regPasswordInput" placeholder="Parola" class="input-text" />
-        <input type="password" id="regPasswordConfirmInput" placeholder="Parola (Tekrar)" class="input-text" />
-        <button id="registerButton" class="btn primary">Kayıt Ol ve Başla</button>
-        <button id="backToLoginButton" class="btn secondary">Geri Gel</button>
-        <p style="margin-top: 1rem;">
-          Zaten hesabın var mı?
-          <span id="showLoginScreen" style="color: #fff; cursor: pointer; text-decoration: underline;">
-            Oturum Aç
-          </span>
-        </p>
-        <p style="margin-top: 0.5rem;">
-          <a href="help.html" target="_blank" style="color: #c61884; text-decoration: none;">
-            <span class="material-icons" style="font-size: 16px; vertical-align: middle;">help</span>
-            Yardım Merkezi
-          </a>
-        </p>
+    <!-- Sohbet Bölümü -->
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-header-name"># genel</div>
+        <div class="chat-header-controls">
+          <button id="voice-call-btn" class="control-btn" title="Sesli Arama">
+            <span class="material-icons">call</span>
+          </button>
+          <button id="screen-share-btn" class="control-btn" title="Ekran Paylaşımı">
+            <span class="material-icons">screen_share</span>
+          </button>
+          <button id="video-call-btn" class="control-btn" title="Görüntülü Arama">
+            <span class="material-icons">videocam</span>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <!-- Görüşme Ekranı -->
-    <div id="callScreen" class="screen-container" style="display: none;">
-      <!-- Soldaki Paneller -->
-      <div id="leftPanels" class="left-panels">
-        <div id="groupsAndRooms" class="groups-rooms">
-          <!-- Sidebar (Gruplar) -->
-          <div class="sidebar" id="sidebar">
-            <button id="toggleDMButton" class="circle-btn dm-toggle-btn">
-              <span class="material-icons">forum</span>
+      <!-- Sesli/Görüntülü Görüşme Alanı -->
+      <div id="media-container" class="media-container" style="display: none;">
+        <div class="media-header">
+          <div class="media-title">Sesli Görüşme</div>
+          <div class="media-controls">
+            <!-- Ses Kontrolleri -->
+            <button id="toggle-mic-btn" class="media-control-btn" title="Mikrofonu Aç/Kapat">
+              <span class="material-icons">mic</span>
             </button>
-            <div id="groupList" class="group-list"></div>
-            <button id="createGroupButton" class="circle-btn create-group-btn">
-              <span class="material-icons">add</span>
+
+            <!-- Video Kontrolleri -->
+            <button id="toggle-video-btn" class="media-control-btn" title="Kamerayı Aç/Kapat">
+              <span class="material-icons">videocam</span>
             </button>
-          </div>
-          <!-- Odalar Paneli -->
-          <div id="roomPanel" class="rooms-panel">
-            <div class="room-panel-header">
-              <h2 id="groupTitle" class="panel-title">Seçili Grup</h2>
-              <span id="groupDropdownIcon" class="dropdown-icon material-icons">keyboard_arrow_down</span>
-              <div id="groupDropdownMenu" class="dropdown-menu" style="display: none;">
-                <div class="dropdown-item" id="copyGroupIdBtn">Grup ID Kopyala</div>
-                <div class="dropdown-item" id="renameGroupBtn">Grup ismi değiştir</div>
-                <div class="dropdown-item" id="createChannelBtn">Kanal Oluştur</div>
-                <div class="dropdown-item" id="deleteGroupBtn">Grubu Sil</div>
+            <button id="switch-camera-btn" class="media-control-btn" title="Kamera Yönünü Değiştir">
+              <span class="material-icons">camera_front</span>
+            </button>
+            <div class="media-control-dropdown">
+              <button id="video-quality-btn" class="media-control-btn" title="Video Kalitesi">
+                <span class="material-icons">hd</span>
+              </button>
+              <div class="media-control-dropdown-content">
+                <div class="video-quality-option" data-quality="low">Düşük Kalite</div>
+                <div class="video-quality-option" data-quality="medium">Orta Kalite</div>
+                <div class="video-quality-option" data-quality="high">Yüksek Kalite</div>
               </div>
             </div>
-            <div id="roomList" class="room-list"></div>
-          </div>
-        </div>
-        <!-- Kanal Durum Paneli -->
-        <div id="channelStatusPanel" class="channel-status-panel" style="display: none;">
-          <div class="chan-status-content">
-            <div id="signalBars" class="signal-bars">
-              <div class="cell-bar" id="cellBar1"></div>
-              <div class="cell-bar" id="cellBar2"></div>
-              <div class="cell-bar" id="cellBar3"></div>
-              <div class="cell-bar" id="cellBar4"></div>
-            </div>
-            <span id="pingValue" style="font-size: 0.85rem;">-- ms</span>
-            <button id="leaveButton" class="leave-btn">
-              <span class="material-icons">call_end</span>
+
+            <!-- Ekran Paylaşımı Kontrolleri -->
+            <button id="toggle-screen-btn" class="media-control-btn" title="Ekran Paylaşımı">
+              <span class="material-icons">screen_share</span>
             </button>
-            <!-- Yeni Ekran Paylaşım Butonu -->
-            <button id="screenShareButton" class="screenshare-btn">
-              <span class="material-icons">desktop_windows</span>
+            <button id="toggle-pause-screen-btn" class="media-control-btn" title="Ekran Paylaşımını Duraklat/Devam Ettir">
+              <span class="material-icons">pause_presentation</span>
             </button>
-          </div>
-        </div>
-        <!-- Kullanıcı Paneli -->
-        <div id="leftUserPanel" class="user-panel">
-          <div class="user-panel-content">
-            <div class="user-profile-pic"></div>
-            <div class="user-panel-info">
-              <span id="leftUserName" class="left-username">(Kullanıcı)</span>
-            </div>
-            <div class="user-panel-buttons">
-              <button id="micToggleButton" class="user-panel-btn" title="Mikrofon Aç/Kapa" style="width: 22px; height: 22px;"></button>
-              <button id="deafenToggleButton" class="user-panel-btn" title="Kendini Sağırlaştır" style="width: 22px; height: 22px;"></button>
-              <button id="settingsButton" class="user-panel-btn" style="width: 22px; height: 22px;" title="Ayarlar">
+            <div class="media-control-dropdown">
+              <button id="screen-quality-btn" class="media-control-btn" title="Ekran Paylaşımı Kalitesi">
                 <span class="material-icons">settings</span>
               </button>
+              <div class="media-control-dropdown-content">
+                <div class="quality-option" data-quality="low">Düşük Kalite</div>
+                <div class="quality-option" data-quality="medium">Orta Kalite</div>
+                <div class="quality-option" data-quality="high">Yüksek Kalite</div>
+              </div>
             </div>
+
+            <!-- Görüşme Kontrolleri -->
+            <button id="leave-call-btn" class="media-control-btn leave-btn" title="Görüşmeden Ayrıl">
+              <span class="material-icons">call_end</span>
+            </button>
+          </div>
+        </div>
+        <div class="media-content">
+          <div id="remote-videos" class="remote-videos"></div>
+          <div id="screen-share-container" class="screen-share-container">
+            <video id="screen-share-video" autoplay playsinline></video>
+          </div>
+          <div id="local-video-container" class="local-video-container">
+            <video id="local-video" autoplay playsinline muted></video>
           </div>
         </div>
       </div>
 
-      <!-- Ortadaki Ana İçerik -->
-      <div class="main-content" style="display: flex; flex-direction: column; height: 100%;">
-        <!-- Seçili Kanal Barı (kanal moduna özel) -->
-        <div id="selectedChannelBar" class="selected-channel-bar">
-          <h2 id="selectedChannelTitle" class="selected-channel-title">Kanal Seçilmedi</h2>
-        </div>
-        <!-- Seçili DM Barı (DM moduna özel) -->
-        <div id="selectedDMBar" class="selected-channel-bar" style="display: none;">
-          <!-- dmChannelTitle doğrudan selectedDMBar içinde yer alır, sol hizalı -->
-          <h2 id="dmChannelTitle" class="dm-channel-title">
-            <span class="dm-title-text">Arkadaşlar</span>
-            <span class="dm-divider"></span>
-            <span class="dm-filter-item" data-filter="online">Çevrimiçi</span>
-            <span class="dm-filter-item" data-filter="all">Hepsi</span>
-            <span class="dm-filter-item" data-filter="sent">Beklemede</span>
-            <span class="dm-filter-item" data-filter="blocked">Engellenen</span>
-            <span class="dm-filter-item" data-filter="add">Arkadaş ekle</span>
-          </h2>
-        </div>
-        <!-- dmContentArea, selectedDMBar'dan hemen sonra, main-content'in geri kalanını dolduracak şekilde konumlandırılmıştır -->
-        <div id="dmContentArea" style="display: none; flex: 1; overflow: auto;">
-          <!-- DM içerikleri buraya gelecek -->
-        </div>
-        <div id="channelContentArea" class="channel-content-area">
-          <!-- Boş durum gösterimi için -->
-          <div id="emptyStateContainer" class="empty-state-container">
-            <div class="empty-state-content">
-              <span class="material-icons empty-state-icon">chat</span>
-              <h3 class="empty-state-title">Bir kanal seçilmedi</h3>
-              <p class="empty-state-message">Sol taraftan bir kanal seçerek sohbete başlayabilirsiniz.</p>
-              <div class="empty-state-tips">
-                <div class="empty-state-tip">
-                  <span class="material-icons">add_circle</span>
-                  <span>Yeni bir kanal oluşturmak için grup adının yanındaki menüyü kullanabilirsiniz.</span>
-                </div>
-                <div class="empty-state-tip">
-                  <span class="material-icons">group</span>
-                  <span>Arkadaşlarınızı gruba davet etmek için grup ID'sini paylaşabilirsiniz.</span>
-                </div>
-              </div>
+      <div class="chat-messages">
+        <div class="message">
+          <div class="message-avatar">A</div>
+          <div class="message-content">
+            <div class="message-header">
+              <div class="message-author">Admin</div>
+              <div class="message-timestamp">Bugün 14:30</div>
             </div>
+            <div class="message-text">Merhaba, Fisqos'a hoş geldiniz!</div>
           </div>
-          <!-- Voice kanallar için -->
-          <div id="channelUsersContainer" class="channel-users-container" style="display: none;"></div>
-          <!-- Text kanallar için: mesajların listeleneceği alan + mesaj yazma kutusu -->
-          <div id="textChannelContainer" class="text-channel-container" style="display: none;">
-            <div id="textMessages" class="text-messages">
-              <!-- Örnek mesaj öğeleri (HTML üretiminiz dinamik olsa bile örnek olarak eklenmiştir) -->
-              <div class="text-message first-message" data-timestamp="2025-02-24T14:47:08.391Z" data-sender="abuzorttin">
-                <div class="message-item" style="position: relative;">
-                  <span class="hover-time">14:47</span>
-                  <div class="message-content first-message">Merhaba, bu ilk mesaj.</div>
-                </div>
-              </div>
-              <div class="text-message middle-message" data-timestamp="2025-02-24T14:47:12.000Z" data-sender="abuzorttin">
-                <div class="message-item" style="position: relative;">
-                  <span class="hover-time">14:47</span>
-                  <div class="message-content middle-message">Devam eden mesaj.</div>
-                </div>
-              </div>
-              <div class="text-message last-message" data-timestamp="2025-02-24T14:47:16.000Z" data-sender="abuzorttin">
-                <div class="message-item" style="position: relative;">
-                  <span class="hover-time">14:47</span>
-                  <div class="message-content last-message">Son mesaj.</div>
-                </div>
-              </div>
+        </div>
+
+        <div class="message">
+          <div class="message-avatar">K</div>
+          <div class="message-content">
+            <div class="message-header">
+              <div class="message-author">Kullanıcı1</div>
+              <div class="message-timestamp">Bugün 14:32</div>
             </div>
-            <div id="textChatInputBar" class="text-chat-input-bar">
-              <div class="chat-input-wrapper">
-                <input type="text" id="textChannelMessageInput" class="chat-input" placeholder="Bir mesaj yazın..." />
-                <span id="sendTextMessageBtn" class="material-icons send-icon">send</span>
-              </div>
-            </div>
+            <div class="message-text">Merhaba! Nasılsınız?</div>
           </div>
         </div>
       </div>
 
-      <!-- Sağ Panel (Kullanıcılar) -->
-      <div class="right-panel" id="rightPanel">
-        <div id="userList" class="user-list"></div>
-      </div>
-    </div>
-
-    <!-- DM Paneli -->
-    <div id="dmPanel" class="dm-panel" style="display: none;"></div>
-
-    <!-- Modal: Grup Seçenekleri -->
-    <div id="groupModal" class="modal">
-      <div class="modal-content">
-        <h2>Grup Seçenekleri</h2>
-        <button id="modalGroupCreateBtn" class="btn primary">Grup Kur</button>
-        <button id="modalGroupJoinBtn" class="btn secondary">Gruba Katıl</button>
-      </div>
-    </div>
-    <!-- Modal: Grup Kurma -->
-    <div id="actualGroupCreateModal" class="modal">
-      <div class="modal-content">
-        <h2>Yeni Grup Kur</h2>
-        <input type="text" id="actualGroupName" class="input-text" placeholder="Grup Adı" />
-        <div class="modal-buttons">
-          <button id="actualGroupNameBtn" class="btn primary">Oluştur</button>
-          <button id="closeCreateGroupModal" class="btn secondary">Kapat</button>
-        </div>
-      </div>
-    </div>
-    <!-- Modal: Gruba Katıl -->
-    <div id="joinGroupModal" class="modal">
-      <div class="modal-content">
-        <h2>Gruba Katıl</h2>
-        <input type="text" id="joinGroupIdInput" class="input-text" placeholder="Grup ID" />
-        <div class="modal-buttons">
-          <button id="joinGroupIdBtn" class="btn primary">Gruba Katıl</button>
-          <button id="closeJoinGroupModal" class="btn secondary">Kapat</button>
-        </div>
-      </div>
-    </div>
-    <!-- Modal: Oda Oluşturma -->
-    <div id="roomModal" class="modal">
-      <div class="modal-content">
-        <h2>Oda Oluştur</h2>
-        <input type="text" id="modalRoomName" class="input-text" placeholder="Oda Adı" />
-        <div class="channel-type-options" style="margin-top: 1rem;">
-          <input type="radio" id="textChannel" name="channelType" value="text" checked />
-          <label for="textChannel">Metin Kanalı (Yazılı sohbet)</label>
-          <br />
-          <input type="radio" id="voiceChannel" name="channelType" value="voice" />
-          <label for="voiceChannel">Ses Kanalı (Sesli sohbet)</label>
-        </div>
-        <div class="modal-buttons">
-          <button id="modalCreateRoomBtn" class="btn primary">Oluştur</button>
-          <button id="modalCloseRoomBtn" class="btn secondary">Kapat</button>
+      <div class="chat-input-container">
+        <div class="chat-input-box">
+          <input type="text" class="chat-input" placeholder="genel kanalına mesaj gönder">
         </div>
       </div>
     </div>
 
-    <!-- Önce Socket.IO, sonra Mediasoup Client, en son script.js -->
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-    <script src="libs/mediasoup-client.min.js"></script>
-    <!-- script.js dosyasını modül olarak yüklemek için type="module" eklenmiştir -->
-    <script type="module" src="script.js"></script>
-  </body>
+    <!-- Sağ Panel -->
+    <div class="right-panel">
+      <div class="panel-tabs">
+        <div class="panel-tab active" data-tab="users">
+          <span class="material-icons">people</span>
+          <span>Kullanıcılar</span>
+        </div>
+        <div class="panel-tab" data-tab="participants">
+          <span class="material-icons">groups</span>
+          <span>Katılımcılar</span>
+          <span class="badge" id="participant-count">0</span>
+        </div>
+      </div>
+
+      <div class="panel-content active" id="users-panel">
+        <div class="user-list-header">
+          <h3>Çevrimiçi Kullanıcılar</h3>
+        </div>
+        <div class="user-list" id="userList">
+          <!-- Kullanıcılar burada listelenecek -->
+        </div>
+      </div>
+
+      <div class="panel-content" id="participants-panel">
+        <div class="participant-list-header">
+          <h3>Görüşme Katılımcıları</h3>
+        </div>
+        <div class="participant-list" id="participant-list">
+          <!-- Katılımcılar burada listelenecek -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/lib/mediasoup-client-bundle.js"></script>
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+
+  <!-- JavaScript modüllerini doğrudan script etiketleriyle yükle -->
+  <script src="js/dist/index.js"></script>
+  <script src="js/dist/voiceChannel.js"></script>
+  <script src="js/dist/screenShare.js"></script>
+  <script src="js/dist/videoCall.js"></script>
+  <script src="js/dist/participantManager.js"></script>
+
+  <script>
+    // Modülleri global değişkenlerden al
+    const { initVoiceChannel, joinVoiceChannel, leaveVoiceChannel, toggleMicrophone } = window.voiceChannelModule || {};
+    const { startScreenShare, stopScreenShare, togglePauseScreenShare, changeScreenShareQuality } = window.screenShareModule || {};
+    const { initVideoCall, startVideoCall, stopVideoCall, togglePauseVideoCall, changeVideoQuality, switchCamera } = window.videoCallModule || {};
+    const { initParticipantManager } = window.participantManagerModule || {};
+
+    // Global değişkenleri tanımla
+    window.voiceChannel = {
+      join: joinVoiceChannel,
+      leave: leaveVoiceChannel,
+      toggleMic: toggleMicrophone
+    };
+
+    window.screenShare = {
+      start: startScreenShare,
+      stop: stopScreenShare,
+      togglePause: togglePauseScreenShare,
+      changeQuality: changeScreenShareQuality
+    };
+
+    window.videoCall = {
+      start: startVideoCall,
+      stop: stopVideoCall,
+      togglePause: togglePauseVideoCall,
+      changeQuality: changeVideoQuality,
+      switchCamera: switchCamera
+    };
+
+    // Video tüketicileri için boş nesne oluştur
+    window.videoConsumers = {};
+
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('index.html içindeki script yüklendi');
+
+      // Socket.IO bağlantısı
+      const socket = io('http://localhost:3002', {
+        transports: ['websocket'],
+        autoConnect: true
+      });
+
+      // Socket bağlantı olayları
+      socket.on('connect', () => {
+        console.log('Socket.IO bağlantısı kuruldu:', socket.id);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Socket.IO bağlantısı kesildi');
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket.IO bağlantı hatası:', error);
+      });
+
+      // Modülleri başlat
+      initVoiceChannel(socket);
+      initVideoCall(socket);
+      initParticipantManager(socket);
+
+      // Ekran paylaşımı düğmesi
+      const screenShareBtn = document.getElementById('screen-share-btn');
+      if (screenShareBtn) {
+        screenShareBtn.addEventListener('click', () => {
+          if (window.screenShareStream) {
+            stopScreenShare(socket);
+            screenShareBtn.classList.remove('active');
+          } else {
+            startScreenShare(window.sendTransport, socket)
+              .then(() => {
+                screenShareBtn.classList.add('active');
+              })
+              .catch(error => {
+                console.error('Ekran paylaşımı başlatılamadı:', error);
+              });
+          }
+        });
+      }
+
+      // Ekran paylaşımı düğmesi (medya kontrolleri)
+      const toggleScreenBtn = document.getElementById('toggle-screen-btn');
+      if (toggleScreenBtn) {
+        toggleScreenBtn.addEventListener('click', () => {
+          if (window.screenShareStream) {
+            stopScreenShare(socket);
+            toggleScreenBtn.classList.remove('active');
+            screenShareBtn.classList.remove('active');
+
+            // Duraklatma ve kalite düğmelerini gizle
+            document.getElementById('toggle-pause-screen-btn')?.classList.remove('visible');
+            document.getElementById('screen-quality-btn')?.classList.remove('visible');
+          } else {
+            startScreenShare(window.sendTransport, socket, { quality: 'medium', withAudio: true })
+              .then(() => {
+                toggleScreenBtn.classList.add('active');
+                screenShareBtn.classList.add('active');
+
+                // Duraklatma ve kalite düğmelerini göster
+                document.getElementById('toggle-pause-screen-btn')?.classList.add('visible');
+                document.getElementById('screen-quality-btn')?.classList.add('visible');
+
+                // Orta kaliteyi seç
+                document.querySelectorAll('.quality-option').forEach(option => {
+                  if (option.getAttribute('data-quality') === 'medium') {
+                    option.classList.add('active');
+                  } else {
+                    option.classList.remove('active');
+                  }
+                });
+              })
+              .catch(error => {
+                console.error('Ekran paylaşımı başlatılamadı:', error);
+              });
+          }
+        });
+      }
+
+      // Ekran paylaşımı duraklatma düğmesi
+      const togglePauseScreenBtn = document.getElementById('toggle-pause-screen-btn');
+      if (togglePauseScreenBtn) {
+        togglePauseScreenBtn.addEventListener('click', () => {
+          if (window.screenShareStream && window.screenShareActive) {
+            togglePauseScreenShare(socket)
+              .then(success => {
+                if (success) {
+                  togglePauseScreenBtn.classList.toggle('active');
+                  const icon = togglePauseScreenBtn.querySelector('.material-icons');
+                  if (icon) {
+                    icon.textContent = window.screenSharePaused ? 'play_arrow' : 'pause_presentation';
+                  }
+                }
+              })
+              .catch(error => {
+                console.error('Ekran paylaşımı duraklatma/devam ettirme hatası:', error);
+              });
+          }
+        });
+      }
+
+      // Ekran paylaşımı kalite seçenekleri
+      const qualityOptions = document.querySelectorAll('.quality-option');
+      qualityOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          const quality = option.getAttribute('data-quality');
+
+          if (window.screenShareStream && window.screenShareActive) {
+            changeScreenShareQuality(socket, quality)
+              .then(success => {
+                if (success) {
+                  // Aktif kaliteyi güncelle
+                  qualityOptions.forEach(opt => {
+                    opt.classList.remove('active');
+                  });
+                  option.classList.add('active');
+                }
+              })
+              .catch(error => {
+                console.error('Ekran paylaşımı kalite değişikliği hatası:', error);
+              });
+          }
+        });
+      });
+
+      // Video kalite seçenekleri
+      const videoQualityOptions = document.querySelectorAll('.video-quality-option');
+      videoQualityOptions.forEach(option => {
+        option.addEventListener('click', () => {
+          const quality = option.getAttribute('data-quality');
+
+          if (window.videoStream && window.videoActive) {
+            changeVideoQuality(socket, quality)
+              .then(success => {
+                if (success) {
+                  // Aktif kaliteyi güncelle
+                  videoQualityOptions.forEach(opt => {
+                    opt.classList.remove('active');
+                  });
+                  option.classList.add('active');
+                }
+              })
+              .catch(error => {
+                console.error('Video kalite değişikliği hatası:', error);
+              });
+          }
+        });
+      });
+
+      // Görüntülü arama düğmesi
+      const videoCallBtn = document.getElementById('video-call-btn');
+      if (videoCallBtn) {
+        videoCallBtn.addEventListener('click', () => {
+          // Medya konteynerini göster
+          const mediaContainer = document.getElementById('media-container');
+          if (mediaContainer) {
+            mediaContainer.style.display = 'flex';
+          }
+
+          // Aktif kanal varsa ona katıl, yoksa genel kanala katıl
+          const channelId = document.querySelector('.channel.voice-channel.active')?.getAttribute('data-channel-id') || 'voice-general';
+
+          // Ses kanalına katıl
+          joinVoiceChannel(channelId, socket)
+            .then(() => {
+              // Görüntülü görüşmeyi başlat
+              if (window.videoActive) {
+                stopVideoCall(socket)
+                  .then(() => {
+                    videoCallBtn.classList.remove('active');
+                    document.getElementById('toggle-video-btn')?.classList.remove('active');
+                    document.getElementById('switch-camera-btn')?.classList.remove('visible');
+                    document.getElementById('video-quality-btn')?.classList.remove('visible');
+                  })
+                  .catch(error => {
+                    console.error('Görüntülü görüşme durdurulurken hata oluştu:', error);
+                  });
+              } else {
+                startVideoCall(window.sendTransport, socket, { quality: 'medium' })
+                  .then(() => {
+                    videoCallBtn.classList.add('active');
+                    document.getElementById('toggle-video-btn')?.classList.remove('active');
+                    document.getElementById('switch-camera-btn')?.classList.add('visible');
+                    document.getElementById('video-quality-btn')?.classList.add('visible');
+
+                    // Orta kaliteyi seç
+                    videoQualityOptions.forEach(option => {
+                      if (option.getAttribute('data-quality') === 'medium') {
+                        option.classList.add('active');
+                      } else {
+                        option.classList.remove('active');
+                      }
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Görüntülü görüşme başlatılırken hata oluştu:', error);
+                  });
+              }
+            })
+            .catch(error => {
+              console.error('Ses kanalına katılırken hata oluştu:', error);
+            });
+        });
+      }
+
+      // Kamera düğmesi
+      const toggleVideoBtn = document.getElementById('toggle-video-btn');
+      if (toggleVideoBtn) {
+        toggleVideoBtn.addEventListener('click', () => {
+          if (window.videoActive) {
+            togglePauseVideoCall(socket)
+              .then(success => {
+                if (success) {
+                  toggleVideoBtn.classList.toggle('active');
+                  const icon = toggleVideoBtn.querySelector('.material-icons');
+                  if (icon) {
+                    icon.textContent = window.videoPaused ? 'videocam_off' : 'videocam';
+                  }
+                }
+              })
+              .catch(error => {
+                console.error('Kamera duraklatma/devam ettirme hatası:', error);
+              });
+          } else if (window.sendTransport) {
+            // Medya konteynerini göster
+            const mediaContainer = document.getElementById('media-container');
+            if (mediaContainer) {
+              mediaContainer.style.display = 'flex';
+            }
+
+            // Aktif kanal varsa ona katıl, yoksa genel kanala katıl
+            const channelId = document.querySelector('.channel.voice-channel.active')?.getAttribute('data-channel-id') || 'voice-general';
+
+            // Ses kanalına katıl
+            joinVoiceChannel(channelId, socket)
+              .then(() => {
+                // Görüntülü görüşmeyi başlat
+                startVideoCall(window.sendTransport, socket, { quality: 'medium' })
+                  .then(() => {
+                    document.getElementById('video-call-btn')?.classList.add('active');
+                    toggleVideoBtn.classList.remove('active');
+                    document.getElementById('switch-camera-btn')?.classList.add('visible');
+                    document.getElementById('video-quality-btn')?.classList.add('visible');
+
+                    // Orta kaliteyi seç
+                    videoQualityOptions.forEach(option => {
+                      if (option.getAttribute('data-quality') === 'medium') {
+                        option.classList.add('active');
+                      } else {
+                        option.classList.remove('active');
+                      }
+                    });
+                  })
+                  .catch(error => {
+                    console.error('Görüntülü görüşme başlatılırken hata oluştu:', error);
+                  });
+              })
+              .catch(error => {
+                console.error('Ses kanalına katılırken hata oluştu:', error);
+              });
+          }
+        });
+      }
+
+      // Kamera yönü değiştirme düğmesi
+      const switchCameraBtn = document.getElementById('switch-camera-btn');
+      if (switchCameraBtn) {
+        switchCameraBtn.addEventListener('click', () => {
+          if (window.videoActive) {
+            // Mevcut kamera yönünü al
+            const currentFacingMode = qualitySettings[window.videoQuality || 'medium'].facingMode;
+
+            // Kamera yönünü değiştir
+            const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+
+            switchCamera(socket, newFacingMode)
+              .then(success => {
+                if (success) {
+                  // Durum göstergesini güncelle
+                  const icon = switchCameraBtn.querySelector('.material-icons');
+                  if (icon) {
+                    icon.textContent = newFacingMode === 'user' ? 'camera_front' : 'camera_rear';
+                  }
+                }
+              })
+              .catch(error => {
+                console.error('Kamera yönü değiştirilirken hata oluştu:', error);
+              });
+          }
+        });
+      }
+
+      // Panel sekmeleri
+      const panelTabs = document.querySelectorAll('.panel-tab');
+      panelTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Aktif sekmeyi güncelle
+          panelTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          // Aktif içeriği güncelle
+          const tabId = tab.getAttribute('data-tab');
+          document.querySelectorAll('.panel-content').forEach(content => {
+            content.classList.remove('active');
+          });
+          document.getElementById(`${tabId}-panel`)?.classList.add('active');
+        });
+      });
+
+      // Giriş formu
+      const loginForm = document.getElementById('login-form');
+      const loginScreen = document.getElementById('login-screen');
+      const appScreen = document.getElementById('app-screen');
+      const loginError = document.getElementById('login-error');
+
+      // Giriş işlemi
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        console.log('Giriş denemesi:', username, password);
+
+        // Basit doğrulama
+        if (username === 'admin' && password === 'admin') {
+          console.log('Giriş başarılı');
+
+          // Hata mesajını gizle
+          loginError.style.display = 'none';
+
+          // Ana ekranı göster
+          loginScreen.style.display = 'none';
+          appScreen.style.display = 'flex';
+        } else {
+          console.log('Giriş başarısız');
+          // Hata mesajını göster
+          loginError.style.display = 'block';
+
+          // Giriş alanlarını temizle
+          document.getElementById('password').value = '';
+          document.getElementById('password').focus();
+        }
+      });
+
+      // Kanal tıklama olayları
+      const channels = document.querySelectorAll('.channel');
+      channels.forEach(channel => {
+        channel.addEventListener('click', function() {
+          // Aktif kanalı güncelle
+          channels.forEach(c => c.classList.remove('active'));
+          this.classList.add('active');
+
+          // Kanal başlığını güncelle
+          const channelName = this.querySelector('.channel-name').textContent;
+          document.querySelector('.chat-header-name').textContent = '# ' + channelName;
+          document.querySelector('.chat-input').placeholder = `${channelName} kanalına mesaj gönder`;
+        });
+      });
+
+      // Sunucu tıklama olayları
+      const servers = document.querySelectorAll('.server-icon');
+      servers.forEach(server => {
+        server.addEventListener('click', function() {
+          // Aktif sunucuyu güncelle
+          servers.forEach(s => s.classList.remove('active'));
+          this.classList.add('active');
+
+          // Sunucu adını güncelle
+          const serverName = this.textContent + ' Sunucusu';
+          document.querySelector('.server-name').textContent = serverName;
+        });
+      });
+
+      // Mesaj gönderme
+      const chatInput = document.querySelector('.chat-input');
+      chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && this.value.trim() !== '') {
+          // Mesaj gönderme işlemi
+          const messageText = this.value.trim();
+          const messagesContainer = document.querySelector('.chat-messages');
+
+          // Yeni mesaj oluştur
+          const messageElement = document.createElement('div');
+          messageElement.className = 'message';
+
+          // Mesaj içeriği
+          messageElement.innerHTML = `
+            <div class="message-avatar">U</div>
+            <div class="message-content">
+              <div class="message-header">
+                <div class="message-author">Kullanıcı</div>
+                <div class="message-timestamp">${new Date().toLocaleTimeString()}</div>
+              </div>
+              <div class="message-text">${messageText}</div>
+            </div>
+          `;
+
+          // Mesajı ekle
+          messagesContainer.appendChild(messageElement);
+
+          // Mesaj alanını temizle
+          this.value = '';
+
+          // Mesajlar alanını en alta kaydır
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+      });
+    });
+  </script>
+</body>
 </html>

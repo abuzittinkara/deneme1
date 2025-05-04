@@ -1,0 +1,122 @@
+<!-- Oda Oluşturma/Düzenleme Modalı -->
+<div id="roomModal" class="room-modal">
+  <div class="room-modal-content">
+    <div class="room-modal-header">
+      <h2 class="room-modal-title">Yeni Oda Oluştur</h2>
+      <button id="closeRoomModalBtn" class="room-modal-close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <form class="room-form">
+      <div class="form-group">
+        <label for="roomNameInput" class="form-label">Oda Adı</label>
+        <input type="text" id="roomNameInput" class="form-input" placeholder="Oda adını girin" required>
+      </div>
+      <div class="form-group">
+        <label for="roomDescriptionInput" class="form-label">Açıklama</label>
+        <textarea id="roomDescriptionInput" class="form-textarea" placeholder="Oda açıklamasını girin"></textarea>
+      </div>
+      <div class="form-group form-checkbox">
+        <input type="checkbox" id="roomPrivateCheckbox">
+        <label for="roomPrivateCheckbox">Özel Oda</label>
+      </div>
+      <div class="form-group" id="passwordGroup" style="display: none;">
+        <label for="roomPasswordInput" class="form-label">Şifre</label>
+        <input type="password" id="roomPasswordInput" class="form-input" placeholder="Oda şifresini girin" disabled>
+      </div>
+      <div class="form-actions">
+        <button type="button" id="cancelRoomBtn" class="form-cancel">İptal</button>
+        <button type="button" id="createRoomModalBtn" class="form-submit">Oluştur</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Oda Detay Modalı -->
+<div id="roomDetailModal" class="room-modal">
+  <div class="room-modal-content">
+    <div class="room-modal-header">
+      <h2 class="room-modal-title">Oda Detayları</h2>
+      <button id="closeRoomDetailModalBtn" class="room-modal-close">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="room-detail">
+      <div class="room-detail-content">
+        <div class="room-detail-section">
+          <h3 class="room-detail-section-title">Genel Bilgiler</h3>
+          <div class="room-detail-info">
+            <div class="room-detail-info-item">
+              <span class="room-detail-info-label">Oda Adı:</span>
+              <span id="roomDetailName" class="room-detail-info-value">-</span>
+            </div>
+            <div class="room-detail-info-item">
+              <span class="room-detail-info-label">Açıklama:</span>
+              <span id="roomDetailDescription" class="room-detail-info-value">-</span>
+            </div>
+            <div class="room-detail-info-item">
+              <span class="room-detail-info-label">Kurucu:</span>
+              <span id="roomDetailOwner" class="room-detail-info-value">-</span>
+            </div>
+            <div class="room-detail-info-item">
+              <span class="room-detail-info-label">Özel Oda:</span>
+              <span id="roomDetailPrivate" class="room-detail-info-value">-</span>
+            </div>
+          </div>
+        </div>
+        <div class="room-detail-section">
+          <h3 class="room-detail-section-title">Üyeler</h3>
+          <div id="roomDetailMembers" class="room-member-list">
+            <!-- Üyeler burada listelenecek -->
+          </div>
+        </div>
+        <div class="room-detail-section">
+          <h3 class="room-detail-section-title">Kanallar</h3>
+          <div id="roomDetailChannels" class="room-channel-list">
+            <!-- Kanallar burada listelenecek -->
+          </div>
+        </div>
+      </div>
+      <div class="room-detail-actions">
+        <button id="editRoomBtn" class="btn primary">Düzenle</button>
+        <button id="deleteRoomBtn" class="btn danger">Sil</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Özel oda checkbox'ı değiştiğinde şifre alanını göster/gizle
+  document.getElementById('roomPrivateCheckbox').addEventListener('change', function() {
+    const passwordGroup = document.getElementById('passwordGroup');
+    const passwordInput = document.getElementById('roomPasswordInput');
+    
+    if (this.checked) {
+      passwordGroup.style.display = 'block';
+      passwordInput.disabled = false;
+    } else {
+      passwordGroup.style.display = 'none';
+      passwordInput.disabled = true;
+      passwordInput.value = '';
+    }
+  });
+  
+  // İptal butonuna tıklandığında modalı kapat
+  document.getElementById('cancelRoomBtn').addEventListener('click', function() {
+    document.getElementById('roomModal').style.display = 'none';
+  });
+  
+  // Modalın dışına tıklandığında modalı kapat
+  window.addEventListener('click', function(event) {
+    const roomModal = document.getElementById('roomModal');
+    const roomDetailModal = document.getElementById('roomDetailModal');
+    
+    if (event.target === roomModal) {
+      roomModal.style.display = 'none';
+    }
+    
+    if (event.target === roomDetailModal) {
+      roomDetailModal.style.display = 'none';
+    }
+  });
+</script>

@@ -1,0 +1,40 @@
+FROM cgr.dev/chainguard/node:latest-dev AS builder
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Bağımlılıkları kopyala
+COPY package*.json ./
+
+# Bağımlılıkları yükle
+USER root
+RUN npm ci
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# TypeScript derleme
+RUN npm run build
+
+# Üretim aşaması
+FROM cgr.dev/chainguard/node:latest
+
+# Derlenen dosyaları kopyala
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+COPY .env* ./
+
+# Ortam değişkenleri
+ENV NODE_ENV=development
+ENV PORT=9999
+
+# Uygulama portunu aç
+EXPOSE ${PORT}
+
+# Sağlık kontrolü
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/api/health || exit 1
+
+# Uygulamayı başlat
+CMD ["node", "dist/src/app.js"]

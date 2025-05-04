@@ -2,10 +2,10 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
-  background: #2d2d2d;
-  color: #aaa;
-  font-size: 16px;
+  font-family: var(--font-primary);
+  background: var(--color-bg-medium);
+  color: var(--color-text-normal);
+  font-size: var(--font-size-md);
 }
 
 /* Material icons => 20px */
@@ -24,19 +24,21 @@ body {
 
 /* Kart */
 .card {
-  background: #2d2d2d;
-  padding: 2rem;
-  border-radius: 8px;
+  background: var(--color-bg-dark);
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-lg);
   min-width: 320px;
   text-align: center;
   border: none;
-  box-shadow: none;
+  box-shadow: var(--shadow-md);
 }
 
 /* Uygulama Başlığı */
 .app-title {
-  margin: 0 0 1rem;
-  font-size: 1.5rem;
+  margin: 0 0 var(--spacing-md);
+  font-size: var(--font-size-xl);
+  color: var(--color-text-bright);
+  font-weight: var(--font-weight-medium);
 }
 
 /* Inputlar */
@@ -44,14 +46,20 @@ body {
   display: block;
   width: 260px;
   max-width: 90%;
-  padding: 0.6rem;
-  background: #444;
-  color: #fff;
-  border: 1px solid #666;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  margin: 0.6rem auto;
+  padding: var(--spacing-sm);
+  background: var(--color-bg-light);
+  color: var(--color-text-brightest);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin: var(--spacing-sm) auto;
   box-sizing: border-box;
+  transition: border-color var(--transition-fast);
+}
+
+.input-text:focus {
+  outline: none;
+  border-color: var(--color-primary);
 }
 
 /* Shake Animasyonu */

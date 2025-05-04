@@ -1,0 +1,289 @@
+/* Sesli/Görüntülü Görüşme ve Ekran Paylaşımı Stilleri */
+
+/* Medya Konteyner */
+.media-container {
+  background-color: var(--color-bg-dark);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: var(--media-height-md);
+  border: 1px solid var(--color-border);
+}
+
+/* Medya Başlık */
+.media-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-bg-darker);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.media-title {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-bright);
+}
+
+/* Medya Kontrolleri */
+.media-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.media-control-btn {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-bright);
+  border: none;
+  border-radius: var(--radius-circle);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.media-control-btn:hover {
+  background-color: var(--color-bg-lighter);
+}
+
+.media-control-btn.active {
+  background-color: var(--color-primary);
+  color: var(--color-text-brightest);
+}
+
+.media-control-btn.leave-btn {
+  background-color: var(--color-danger);
+}
+
+.media-control-btn.leave-btn:hover {
+  background-color: #d04040;
+}
+
+/* Medya İçerik */
+.media-content {
+  flex: 1;
+  display: flex;
+  position: relative;
+  background-color: var(--color-bg-darkest);
+}
+
+/* Uzak Videolar */
+.remote-videos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  width: 100%;
+  height: 100%;
+}
+
+.remote-video-container {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: var(--color-bg-darker);
+}
+
+.remote-user-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: var(--color-text-brightest);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+}
+
+.remote-user-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remote-user-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* Ekran Paylaşımı */
+.screen-share-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  z-index: 1;
+}
+
+.screen-share-container.active {
+  display: block;
+}
+
+#screen-share-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: var(--color-bg-darkest);
+}
+
+/* Yerel Video */
+.local-video-container {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  right: var(--spacing-sm);
+  width: 180px;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--color-bg-darker);
+  z-index: 2;
+}
+
+#local-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: var(--color-bg-darker);
+  transform: scaleX(-1); /* Ayna görüntüsü */
+}
+
+/* Ses Göstergeleri */
+.audio-indicator {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-bg-darker);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.audio-indicator.speaking {
+  color: var(--color-success);
+}
+
+.audio-indicator.muted {
+  color: var(--color-danger);
+}
+
+/* Sohbet Başlık Kontrolleri */
+.chat-header-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.control-btn {
+  background-color: transparent;
+  color: var(--color-text-normal);
+  border: none;
+  border-radius: var(--radius-circle);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.control-btn:hover {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-bright);
+}
+
+.control-btn.active {
+  background-color: var(--color-primary);
+  color: var(--color-text-brightest);
+}
+
+/* Ses Kanalı Kullanıcıları */
+.channel-users {
+  margin-top: var(--spacing-xs);
+  padding-left: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.channel-user {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-xs);
+}
+
+.channel-user-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-bg-light);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-bright);
+}
+
+.channel-user-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-user-status {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+}
+
+/* Ses Kanalı Aktif */
+.voice-channel.active {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-brightest);
+}
+
+/* Duyarlı Tasarım */
+@media (max-width: 768px) {
+  .media-container {
+    height: var(--media-height-sm);
+  }
+  
+  .local-video-container {
+    width: 120px;
+    height: 90px;
+  }
+  
+  .media-control-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .media-container {
+    height: var(--media-height-lg);
+  }
+}

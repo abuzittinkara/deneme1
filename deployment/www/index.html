@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesli Sohbet - Docker Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            background-color: #4a69bd;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #4a69bd;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4a69bd;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover {
+            background-color: #3c5aa6;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        #status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .online {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .offline {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Sesli Sohbet</h1>
+        <p>Docker Demo</p>
+    </header>
+
+    <div class="container">
+        <div id="status" class="offline">
+            API Durumu: Kontrol ediliyor...
+        </div>
+
+        <div class="card">
+            <h3>API Endpointleri</h3>
+            <p>Aşağıdaki butonları kullanarak API endpointlerini test edebilirsiniz:</p>
+            <a href="/api/health" class="btn" target="_blank">Sağlık Kontrolü</a>
+            <a href="/api/info" class="btn" target="_blank">API Bilgisi</a>
+        </div>
+
+        <div class="card">
+            <h3>Docker Bilgileri</h3>
+            <p>Bu uygulama Docker container'ında çalışmaktadır. Docker yapılandırması hakkında daha fazla bilgi için <a href="https://github.com/yourusername/sesli-sohbet" target="_blank">GitHub</a> sayfasını ziyaret edin.</p>
+        </div>
+
+        <div class="card">
+            <h3>Özellikler</h3>
+            <ul>
+                <li>Node.js ve Express.js ile geliştirilmiş API</li>
+                <li>MongoDB veritabanı</li>
+                <li>Redis önbellek</li>
+                <li>Socket.IO gerçek zamanlı iletişim</li>
+                <li>Mediasoup WebRTC</li>
+                <li>Docker container'ları</li>
+                <li>Nginx reverse proxy</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Sesli Sohbet. Tüm hakları saklıdır.</p>
+    </footer>
+
+    <script>
+        // API durumunu kontrol et
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('status');
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    statusElement.className = 'online';
+                    statusElement.textContent = 'API Durumu: Çevrimiçi';
+                } else {
+                    statusElement.className = 'offline';
+                    statusElement.textContent = 'API Durumu: Hata';
+                }
+            } catch (error) {
+                statusElement.className = 'offline';
+                statusElement.textContent = 'API Durumu: Çevrimdışı';
+            }
+        }
+
+        // Sayfa yüklendiğinde API durumunu kontrol et
+        window.addEventListener('load', checkApiStatus);
+
+        // Her 30 saniyede bir API durumunu kontrol et
+        setInterval(checkApiStatus, 30000);
+    </script>
+</body>
+</html>

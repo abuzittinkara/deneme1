@@ -6,183 +6,128 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: sesli-sohbet-api:latest
-    container_name: sesli-sohbet-api
-    restart: always
+      args:
+        - NODE_ENV=${NODE_ENV:-production}
+    image: fisqos-api:latest
+    container_name: fisqos-api
+    restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PORT:-9092}:9092"
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MONGODB_URI=mongodb://mongo:27017/sesli-sohbet
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=9092
+      - HOST=0.0.0.0
+      - APP_NAME=Fisqos API
+      - APP_VERSION=1.0.0
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/fisqos}
+      - MONGODB_USER=${MONGODB_USER:-admin}
+      - MONGODB_PASSWORD=${MONGODB_PASSWORD:-password}
+      - MONGODB_DATABASE=${MONGODB_DATABASE:-fisqos}
+      - MONGODB_AUTH_SOURCE=${MONGODB_AUTH_SOURCE:-admin}
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=1h
-      - CORS_ORIGIN=https://seslisohbet.com
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - JWT_SECRET=${JWT_SECRET:-supersecretkey123456789}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-supersecretrefreshkey123456789}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - TZ=${TZ:-UTC}
     depends_on:
-      - mongo
-      - redis
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - sesli-sohbet-network
+      - fisqos-network
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
-    command: ["node", "app.js"]
+    command: ["node", "--max-old-space-size=512", "dist/src/app.js"]
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:9092/api/config/status"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 10s
 
-  # Socket.IO Servisi
-  socket:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: sesli-sohbet-socket:latest
-    container_name: sesli-sohbet-socket
-    restart: always
-    ports:
-      - "3001:3001"
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - MONGODB_URI=mongodb://mongo:27017/sesli-sohbet
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=1h
-      - CORS_ORIGIN=https://seslisohbet.com
-    depends_on:
-      - mongo
-      - redis
-    networks:
-      - sesli-sohbet-network
-    volumes:
-      - ./logs:/app/logs
-    command: ["node", "socket-server.js"]
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
-  # Mediasoup Servisi
-  mediasoup:
-    build:
-      context: .
-      dockerfile: Dockerfile.mediasoup
-    image: sesli-sohbet-mediasoup:latest
-    container_name: sesli-sohbet-mediasoup
-    restart: always
-    ports:
-      - "3002:3002"
-      - "10000-10999:10000-10999/udp" # RTC portları
-    environment:
-      - NODE_ENV=production
-      - PORT=3002
-      - MONGODB_URI=mongodb://mongo:27017/sesli-sohbet
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET}
-      - MEDIASOUP_ANNOUNCED_IP=${MEDIASOUP_ANNOUNCED_IP}
-      - CORS_ORIGIN=https://seslisohbet.com
-    depends_on:
-      - mongo
-      - redis
-    networks:
-      - sesli-sohbet-network
-    volumes:
-      - ./logs:/app/logs
-    command: ["node", "mediasoup-server.js"]
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    cap_add:
-      - NET_ADMIN # UDP portları için gerekli
-    sysctls:
-      - net.core.rmem_max=10485760
-      - net.core.wmem_max=10485760
 
   # MongoDB
-  mongo:
-    image: mongo:5
-    container_name: sesli-sohbet-mongo
-    restart: always
+  mongodb:
+    image: mongo:6.0
+    container_name: fisqos-mongodb
+    restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "${MONGODB_PORT:-27017}:27017"
     environment:
-      - MONGO_INITDB_DATABASE=sesli-sohbet
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-password}
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-fisqos}
     volumes:
-      - mongo-data:/data/db
-      - ./deployment/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - mongodb-data:/data/db
+      - ./config/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
-      - sesli-sohbet-network
+      - fisqos-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/sesli-sohbet --quiet
-      interval: 30s
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
       timeout: 10s
-      retries: 3
-      start_period: 30s
-    command: ["--wiredTigerCacheSizeGB", "1"]
+      retries: 5
+      start_period: 40s
+    command: ["--auth", "--bind_ip_all", "--wiredTigerCacheSizeGB", "1"]
 
   # Redis
   redis:
-    image: redis:6-alpine
-    container_name: sesli-sohbet-redis
-    restart: always
+    image: redis:7.0-alpine
+    container_name: fisqos-redis
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
-      - ./deployment/redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - sesli-sohbet-network
+      - fisqos-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
 
   # Nginx
   nginx:
-    image: nginx:1.21-alpine
-    container_name: sesli-sohbet-nginx
-    restart: always
+    image: nginx:1.25-alpine
+    container_name: fisqos-nginx
+    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
     volumes:
-      - ./deployment/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./deployment/ssl:/etc/letsencrypt:ro
-      - ./client/build:/var/www/seslisohbet.com:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/www:/var/www/html
+      - ./uploads:/var/www/uploads
       - nginx-logs:/var/log/nginx
     depends_on:
-      - api
-      - socket
-      - mediasoup
+      api:
+        condition: service_healthy
     networks:
-      - sesli-sohbet-network
+      - fisqos-network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 10s
 
 networks:
-  sesli-sohbet-network:
+  fisqos-network:
     driver: bridge
 
 volumes:
-  mongo-data:
+  mongodb-data:
   redis-data:
   nginx-logs:

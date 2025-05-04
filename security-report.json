@@ -1,0 +1,3332 @@
+[
+  {
+    "file": "src\\app.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\app.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\config\\env.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "SECRET: process.env['JWT_SECRET'] || (process.env.NODE_ENV === 'production'"
+  },
+  {
+    "file": "src\\config\\jwt.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TokensKey = `user_refresh_tokens:${user._id}`"
+  },
+  {
+    "file": "src\\config\\jwt.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TokensKey = `user_refresh_tokens:${user._id}`"
+  },
+  {
+    "file": "src\\config\\jwt.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TokensKey = `user_refresh_tokens:${userId}`"
+  },
+  {
+    "file": "src\\config\\jwt.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TokensKey = `user_refresh_tokens:${decoded.sub}`"
+  },
+  {
+    "file": "src\\config\\redis.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "keyPrefix: 'sesli-sohbet:'"
+  },
+  {
+    "file": "src\\controllers\\fileController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\fileController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\fileController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\notificationController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\notificationController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\middleware\\authorizationMiddleware.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\middleware\\authorizationMiddleware.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\middleware\\authorizationMiddleware.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\middleware\\rateLimit.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `rate_limit:${keyGenerator(req)}`"
+  },
+  {
+    "file": "src\\middleware\\sentryHandler.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key] = '[FILTERED]'"
+  },
+  {
+    "file": "src\\modules\\activityManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\activityManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\activityManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\activityManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password === 'Password123'"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'test-access-token'"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'test-refresh-token'"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token === 'test-refresh-token'"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'test-access-token-renewed'"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'test-refresh-token-renewed'"
+  },
+  {
+    "file": "src\\modules\\auth\\authManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "token === 'test-access-token'"
+  },
+  {
+    "file": "src\\modules\\fileUpload.ts",
+    "issue": "Insecure File Operations",
+    "severity": "MEDIUM",
+    "match": "fs.writeFile("
+  },
+  {
+    "file": "src\\modules\\group\\groupManager.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\modules\\group\\groupManager.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\modules\\group\\memberManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\group\\settingsManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\group\\statsManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `group:stats:${groupId}`"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\invitationManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\message\\messageManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `channel:${channelId}:messages:${limit}:${skip}`"
+  },
+  {
+    "file": "src\\modules\\message\\messageManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `channel:${channelId}:pinnedMessages`"
+  },
+  {
+    "file": "src\\modules\\message\\searchManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\message\\searchManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\message\\searchManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\message\\unreadManager.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `unread:count:${userId}`"
+  },
+  {
+    "file": "src\\modules\\searchManager.ts",
+    "issue": "Potential RegExp DoS",
+    "severity": "MEDIUM",
+    "match": "new RegExp(query.replace(/[-\\/\\\\^$*+?.()|[\\]{}]/g, '\\\\$&'), 'i')"
+  },
+  {
+    "file": "src\\modules\\user\\activityManager.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\modules\\user\\userService.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `user:${userId}`"
+  },
+  {
+    "file": "src\\modules\\user\\userService.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `user:${userId}`"
+  },
+  {
+    "file": "src\\modules\\user\\userService.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `user:${userId}`"
+  },
+  {
+    "file": "src\\routes\\api\\activities.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\friends.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\friends.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\friends.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\friends.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\friends.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\groups.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\invitations.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\notifications.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\notifications.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\notifications.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\notifications.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\users.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.username"
+  },
+  {
+    "file": "src\\routes\\api\\users.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\users.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\users.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.userId"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\routes\\api\\webhooks.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\routes\\channelRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\fileRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\fileRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\fileRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\groupRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\messageRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\routes\\userRoutes.ts",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "params.id"
+  },
+  {
+    "file": "src\\services\\messageService.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key = `channel:${channelId}:messages:${JSON.stringify(pagination)}:${JSON.stringify(filters)}`"
+  },
+  {
+    "file": "src\\socket\\socketEvents.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "auth:error', { message: 'Yetkilendirme hatası'"
+  },
+  {
+    "file": "src\\socket\\socketServer.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: '$2b$10$XpC5o8bIIl.//wqQVrUQ8.WZJ.uli58EOEF9zQqIzJVBM.1vwJET6'"
+  },
+  {
+    "file": "src\\test-error-tracking.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key: 'testValue'"
+  },
+  {
+    "file": "src\\tests\\integration\\api.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456789'"
+  },
+  {
+    "file": "src\\tests\\integration\\api.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'wrongpassword'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'password123'"
+  },
+  {
+    "file": "src\\tests\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'invalid-refresh-token'"
+  },
+  {
+    "file": "src\\utils\\db-helpers.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key] = `${Math.round(value as number / 1024 / 1024)} MB`"
+  },
+  {
+    "file": "src\\utils\\errors.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "AUTHORIZED = 'UNAUTHORIZED'"
+  },
+  {
+    "file": "src\\utils\\errors.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "KEY = 'DUPLICATE_KEY'"
+  },
+  {
+    "file": "src\\utils\\errors.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TOKEN = 'INVALID_TOKEN'"
+  },
+  {
+    "file": "src\\utils\\errors.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TOKEN_EXPIRED = 'TOKEN_EXPIRED'"
+  },
+  {
+    "file": "src\\utils\\errors.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "AUTH_TOKEN_MISSING = 'AUTH_TOKEN_MISSING'"
+  },
+  {
+    "file": "src\\utils\\errors.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "TOKEN = 'INVALID_REFRESH_TOKEN'"
+  },
+  {
+    "file": "src\\utils\\helpers.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "src\\utils\\i18n.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key Çeviri anahtarı (örn: \"common.welcome\""
+  },
+  {
+    "file": "src\\utils\\profiler.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Key} - Hata:`, { error: (error as Error).message, duration: timer.getDuration() });\n      throw error;\n    }\n  };\n  \n  return descriptor;\n}\n\n/**\n * Performans profilleme için fonksiyon çağrı sayısını ölçer\n */\nexport class FunctionCallCounter {\n  private counts: Map<string, number>;\n  \n  constructor() {\n    this.counts = new Map<string, number>();\n  }\n  \n  /**\n   * Fonksiyon çağrı sayısını artırır\n   * @param name - Fonksiyon adı\n   */\n  increment(name: string): void {\n    const count = this.counts.get(name) || 0;\n    this.counts.set(name, count + 1);\n  }\n  \n  /**\n   * Fonksiyon çağrı sayısını döndürür\n   * @param name - Fonksiyon adı\n   * @returns Çağrı sayısı\n   */\n  getCount(name: string): number {\n    return this.counts.get(name) || 0;\n  }\n  \n  /**\n   * Tüm fonksiyon çağrı sayılarını döndürür\n   * @returns Çağrı sayıları\n   */\n  getAllCounts(): Record<string, number> {\n    const result: Record<string, number> = {};\n    \n    for (const [name, count] of this.counts.entries()) {\n      result[name] = count;\n    }\n    \n    return result;\n  }\n  \n  /**\n   * Fonksiyon çağrı sayılarını günlüğe kaydeder\n   */\n  log(): void {\n    logger.info('"
+  },
+  {
+    "file": "src\\utils\\themeManager.ts",
+    "issue": "Insecure File Operations",
+    "severity": "MEDIUM",
+    "match": "fs.writeFileSync("
+  },
+  {
+    "file": "src\\validators\\user.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: z.string().min(1, { message: 'Şifre gereklidir'"
+  },
+  {
+    "file": "src\\validators\\user.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: z.string().min(1, { message: 'Mevcut şifre gereklidir'"
+  },
+  {
+    "file": "src\\validators\\user.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: z.string().min(1, { message: 'Şifre onayı gereklidir'"
+  },
+  {
+    "file": "src\\validators\\user.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "token: z.string().min(1, { message: 'Token gereklidir'"
+  },
+  {
+    "file": "src\\validators\\user.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: z.string().min(1, { message: 'Şifre onayı gereklidir'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'Password123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'Password123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'access-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'Password123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'access-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password: 'WrongPassword'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'new-access-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'new-refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'new-access-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'new-refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'invalid-refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Token: 'refresh-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\user.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "authToken = 'Bearer mock-token'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\user.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: 'OldPassword123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\user.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: 'NewPassword123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\user.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: 'OldPassword123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\user.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: 'WrongPassword123!'"
+  },
+  {
+    "file": "src\\__tests__\\integration\\user.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password: 'NewPassword123!'"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "authorization: 'Bearer valid-token'"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\auth.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "authorization: 'Bearer invalid-token'"
+  },
+  {
+    "file": "src\\__tests__\\models\\User.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: 'hashedpassword'"
+  },
+  {
+    "file": "src\\__tests__\\models\\User.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: 'hashedpassword'"
+  },
+  {
+    "file": "src\\__tests__\\models\\User.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: 'hashedpassword'"
+  },
+  {
+    "file": "src\\__tests__\\modules\\profileManager.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: 'old-hash'"
+  },
+  {
+    "file": "src\\__tests__\\modules\\profileManager.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: 'old-hash'"
+  },
+  {
+    "file": "src\\__tests__\\modules\\profileManager.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordHash: 'hashed-password'"
+  },
+  {
+    "file": "src\\__tests__\\setup.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "SECRET = 'test-jwt-secret'"
+  },
+  {
+    "file": "src\\__tests__\\utils\\securityUtils.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = 'encryption key'"
+  },
+  {
+    "file": "src\\__tests__\\utils\\securityUtils.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key).toContain('127.0.0.1:user123:');\n      expect(key.split('"
+  },
+  {
+    "file": "src\\__tests__\\utils\\securityUtils.test.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "secret = 'csrf-secret'"
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Ctrl</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Alt</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Alt</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Ctrl</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Ctrl</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Ctrl</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\help.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key\">Ctrl</span> + <span class=\"help-key\""
+  },
+  {
+    "file": "public\\html\\roomModals.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "passwordGroup\" style=\"display: none;\""
+  },
+  {
+    "file": "public\\html\\roomModals.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "PasswordInput\" class=\"form-label\""
+  },
+  {
+    "file": "public\\html\\roomModals.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"roomPasswordInput\""
+  },
+  {
+    "file": "public\\index.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"loginPasswordInput\""
+  },
+  {
+    "file": "public\\index.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"regPasswordInput\""
+  },
+  {
+    "file": "public\\index.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"regPasswordConfirmInput\""
+  },
+  {
+    "file": "public\\index.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "token: 'test-token'"
+  },
+  {
+    "file": "public\\index.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "token: 'test-token'"
+  },
+  {
+    "file": "public\\index.html",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\archiveManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\archiveManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\archiveManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\audioIndicators.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\audioIndicators.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\audioIndicators.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\audioIndicators.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\audioIndicators.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\audioIndicators.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\categoryManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\categoryManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\categoryManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\dmChat.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\dmChat.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\dmChat.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\emojiPicker.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\emojiPicker.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\emojiPicker.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\emojiPicker.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\emojiPicker.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\favorites.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\feedback.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\feedback.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\feedback.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\friendRequests.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\help.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\help.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\mediaPlayer.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messagePinning.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messagePinning.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messagePinning.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messagePinning.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messagePinning.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageQuoting.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageQuoting.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageReactions.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\messageReactions.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\microphoneHelper.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${groupId}:${channelId}`"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${groupId}:${channelId}`"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${groupId}:${channelId}`"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${groupId}:${channelId}`"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key.split(':');\n    if (!groupCounts[groupId]) {\n      groupCounts[groupId] = { unread: 0, mentions: 0 };\n    }\n    groupCounts[groupId].unread += unreadMessages[key];\n  });\n\n  Object.keys(unreadMentions).forEach(key => {\n    const [groupId, _] = key.split('"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\notifications.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\notificationSettings.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"currentPassword\""
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"newPassword\""
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"confirmPassword\""
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "PasswordBtn\" class=\"btn primary\""
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"usernameChangePassword\""
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\profileManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\readReceipts.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\readReceipts.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\readReceipts.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\readReceipts.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\readReceipts.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\reportManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\reportManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\richTextFormatter.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roleManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roleManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${localStorage.getItem('"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\roomManagement.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\scheduledMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\scheduledMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\scheduledMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\scheduledMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\scheduledMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\searchMessages.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\sessionManager.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password = prompt('Hesabınızı silmek için şifrenizi girin:');\n    if (!password) return;\n    \n    try {\n      const response = await fetch(`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\settings.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Authorization': `Bearer ${currentUser.token}`"
+  },
+  {
+    "file": "public\\js\\textChannel.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\textChannel.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\textChannel.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\textChannel.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "KEY = 'fisqos_tips_seen'"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "public\\js\\tips.js",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "public\\js\\ui-components.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\ui-components.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\ui-components.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userBlocking.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userBlocking.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userBlocking.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userBlocking.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userBlocking.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userBlocking.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userStatus.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userStatus.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\userStatus.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\voice-channel.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\js\\voice-channel.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "Params.id"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "Params.id"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "Params.id"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "Params.id"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Insecure Direct Object Reference",
+    "severity": "MEDIUM",
+    "match": "Params.id"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\script.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password-section\" class=\"settings-section\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password\" class=\"settings-label\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"currentPassword\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password\" class=\"settings-label\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"newPassword\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "Password\" class=\"settings-label\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password\" id=\"confirmPassword\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password-requirement\" id=\"req-length\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password-requirement\" id=\"req-uppercase\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password-requirement\" id=\"req-lowercase\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password-requirement\" id=\"req-number\""
+  },
+  {
+    "file": "public\\settings.html",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "password-requirement\" id=\"req-match\""
+  },
+  {
+    "file": "public\\src\\ts\\archiveManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\archiveManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\archiveManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\archiveManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\categoryManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\categoryManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\categoryManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\channelManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\dmChat.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\emojiPicker.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\emojiPicker.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\emojiPicker.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\emojiPicker.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\emojiPicker.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\emojiPicker.ts",
+    "issue": "Potential RegExp DoS",
+    "severity": "MEDIUM",
+    "match": "new RegExp(emojiData.code.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&'), 'g')"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\favorites.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\feedback.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\fileUpload.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\fileUpload.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\friendRequests.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\groupManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\groupManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\groupManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\groupManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\groupManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\groupManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\help.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\help.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\mediaPlayer.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\mediaPlayer.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messagePinning.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messagePinning.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messagePinning.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messagePinning.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messagePinning.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageQuoting.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageQuoting.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageReactions.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\messageReactions.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\microphoneHelper.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "KEY =\n  'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U'"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${data.groupId}:${data.channelId}`"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${data.groupId}:${data.channelId}`"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key.split(':');\n\n    // Grup rozeti\n    const groupBadge = document.querySelector(`"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key.startsWith(`${groupId}:`)) {\n      if (unreadMessages[key] !== undefined) {\n        total += unreadMessages[key];\n      }\n    }\n  });\n\n  return total;\n}\n\n/**\n * Bir kanalı okundu olarak işaretler\n * @param groupId - Grup ID'"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "key = `${groupId}:${channelId}`"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\notifications.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\notificationSettings.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\profileManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\profileManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\profileManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\profileManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\profileManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\readReceipts.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\readReceipts.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\readReceipts.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\readReceipts.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\readReceipts.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\reportManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\reportManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\richTextFormatter.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\richTextFormatter.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\richTextFormatter.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\richTextFormatter.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\richTextFormatter.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\roleManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\roleManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\scheduledMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\scheduledMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\scheduledMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\scheduledMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\scheduledMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\searchMessages.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\sessionManager.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\textChannel.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\textChannel.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\textChannel.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\textChannel.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "match": "KEY = 'fisqos_tips_seen'"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "public\\src\\ts\\tips.ts",
+    "issue": "Insecure Randomness",
+    "severity": "LOW",
+    "match": "Math.random()"
+  },
+  {
+    "file": "public\\src\\ts\\typingIndicator.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userBlocking.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userBlocking.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userBlocking.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userBlocking.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userBlocking.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userBlocking.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userSettings.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userSettings.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userSettings.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userSettings.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userStatus.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userStatus.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "public\\src\\ts\\userStatus.ts",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "scripts\\convertToTypeScript.js",
+    "issue": "Insecure File Operations",
+    "severity": "MEDIUM",
+    "match": "fs.writeFileSync("
+  },
+  {
+    "file": "scripts\\migrateJsToTs.ts",
+    "issue": "Insecure File Operations",
+    "severity": "MEDIUM",
+    "match": "fs.writeFileSync("
+  },
+  {
+    "file": "scripts\\security-scan.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "innerHTML"
+  },
+  {
+    "file": "scripts\\security-scan.js",
+    "issue": "Cross-Site Scripting (XSS)",
+    "severity": "HIGH",
+    "match": "outerHTML"
+  },
+  {
+    "file": "scripts\\ts-migration.js",
+    "issue": "Insecure File Operations",
+    "severity": "MEDIUM",
+    "match": "fs.writeFileSync("
+  },
+  {
+    "file": "scripts\\ts-strict-check.js",
+    "issue": "Insecure File Operations",
+    "severity": "MEDIUM",
+    "match": "fs.writeFileSync("
+  }
+]

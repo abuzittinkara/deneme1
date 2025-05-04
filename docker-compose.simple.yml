@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # API Servisi
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.minimal
+    image: sesli-sohbet-api:latest
+    container_name: sesli-sohbet-api
+    restart: unless-stopped
+    ports:
+      - "9999:9999"  # Dış port:İç port
+    environment:
+      - NODE_ENV=development
+      - PORT=9999
+      - MONGODB_URI=mongodb+srv://atlas-sample-dataset-load-680408694495e57614ee6672:IMKcxZTRUm0CfpDS@fisk.0fi7bee.mongodb.net/?retryWrites=true&w=majority&appName=fisk
+      - JWT_SECRET=supersecretkey123456789
+      - JWT_EXPIRES_IN=1d
+      - JWT_REFRESH_SECRET=supersecretrefreshkey123456789
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - CORS_ORIGIN=*
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    command: ["node", "dist/src/app.js"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9999/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - sesli-sohbet-network
+
+networks:
+  sesli-sohbet-network:
+    driver: bridge

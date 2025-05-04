@@ -1,0 +1,30 @@
+FROM node:20.13.1-bookworm-slim
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Gerekli paketleri yükle
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm init -y \
+    && npm install express cors dotenv \
+    && npm cache clean --force
+
+# Dosyaları kopyala
+COPY .env* ./
+COPY server.js ./
+
+# Ortam değişkenleri
+ENV NODE_ENV=development
+ENV PORT=9999
+
+# Uygulama portunu aç
+EXPOSE ${PORT}
+
+# Sağlık kontrolü
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/api/health || exit 1
+
+# Uygulamayı başlat
+CMD ["node", "server.js"]

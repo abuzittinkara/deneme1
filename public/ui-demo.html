@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI Bileşenleri Demo</title>
+  <link rel="stylesheet" href="css/ui-components.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      margin-top: 0;
+      color: #343a40;
+    }
+    
+    h2 {
+      margin-top: 30px;
+      color: #495057;
+      border-bottom: 1px solid #e9ecef;
+      padding-bottom: 10px;
+    }
+    
+    .demo-section {
+      margin-bottom: 30px;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    code {
+      background-color: #f8f9fa;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+      font-size: 14px;
+    }
+    
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>UI Bileşenleri Demo</h1>
+    <p>Bu sayfa, kullanıcı arayüzü bileşenlerini göstermek için bir demo sayfasıdır.</p>
+    
+    <div class="demo-section">
+      <h2>Toast Bildirimleri</h2>
+      <p>Kullanıcıya bilgi vermek için toast bildirimleri kullanabilirsiniz.</p>
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="UI.showToast('İşlem başarıyla tamamlandı!', 'success')">Başarılı</button>
+        <button class="btn btn-danger" onclick="UI.showToast('Bir hata oluştu!', 'error')">Hata</button>
+        <button class="btn btn-warning" onclick="UI.showToast('Dikkat! Bu bir uyarıdır.', 'warning')">Uyarı</button>
+        <button class="btn btn-info" onclick="UI.showToast('Bu bir bilgi mesajıdır.', 'info')">Bilgi</button>
+      </div>
+      <pre><code>UI.showToast('Mesaj', 'success|error|warning|info', 3000);</code></pre>
+    </div>
+    
+    <div class="demo-section">
+      <h2>Modal Dialog</h2>
+      <p>Kullanıcıdan bilgi almak veya bilgi göstermek için modal dialog kullanabilirsiniz.</p>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="showBasicModal()">Temel Modal</button>
+        <button class="btn btn-info" onclick="showCustomModal()">Özel Modal</button>
+        <button class="btn btn-secondary" onclick="showLargeModal()">Büyük Modal</button>
+      </div>
+      <pre><code>UI.showModal({
+  title: 'Modal Başlığı',
+  content: 'Modal içeriği',
+  buttons: [
+    { text: 'İptal', value: 'cancel', type: 'secondary' },
+    { text: 'Tamam', value: 'ok', type: 'primary' }
+  ],
+  closeOnBackdrop: true,
+  size: 'medium'
+}).then(result => {
+  console.log('Modal sonucu:', result);
+});</code></pre>
+    </div>
+    
+    <div class="demo-section">
+      <h2>Onay Dialog'u</h2>
+      <p>Kullanıcıdan onay almak için onay dialog'u kullanabilirsiniz.</p>
+      <div class="btn-group">
+        <button class="btn btn-danger" onclick="showConfirmDialog()">Onay Dialog'u</button>
+      </div>
+      <pre><code>UI.showConfirm('Bu işlemi gerçekten yapmak istiyor musunuz?', 'Onay')
+  .then(result => {
+    if (result) {
+      UI.showToast('İşlem onaylandı!', 'success');
+    } else {
+      UI.showToast('İşlem iptal edildi.', 'info');
+    }
+  });</code></pre>
+    </div>
+    
+    <div class="demo-section">
+      <h2>Uyarı Dialog'u</h2>
+      <p>Kullanıcıya uyarı göstermek için uyarı dialog'u kullanabilirsiniz.</p>
+      <div class="btn-group">
+        <button class="btn btn-warning" onclick="showAlertDialog()">Uyarı Dialog'u</button>
+      </div>
+      <pre><code>UI.showAlert('Bu bir uyarı mesajıdır!', 'Uyarı')
+  .then(() => {
+    UI.showToast('Uyarı kapatıldı.', 'info');
+  });</code></pre>
+    </div>
+    
+    <div class="demo-section">
+      <h2>Giriş Dialog'u</h2>
+      <p>Kullanıcıdan metin girmesini istemek için giriş dialog'u kullanabilirsiniz.</p>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="showPromptDialog()">Giriş Dialog'u</button>
+      </div>
+      <pre><code>UI.showPrompt('Lütfen adınızı girin:', '', 'Giriş')
+  .then(result => {
+    if (result) {
+      UI.showToast(`Merhaba, ${result}!`, 'success');
+    } else {
+      UI.showToast('Giriş iptal edildi.', 'info');
+    }
+  });</code></pre>
+    </div>
+    
+    <div class="demo-section">
+      <h2>Yükleniyor Göstergesi</h2>
+      <p>Uzun süren işlemler için yükleniyor göstergesi kullanabilirsiniz.</p>
+      <div class="btn-group">
+        <button class="btn btn-info" onclick="showLoading()">Yükleniyor Göstergesi</button>
+      </div>
+      <pre><code>const loading = UI.showLoading('Yükleniyor...');
+
+// 1 saniye sonra mesajı güncelle
+setTimeout(() => {
+  loading.updateMessage('Veriler alınıyor...');
+}, 1000);
+
+// 2 saniye sonra mesajı güncelle
+setTimeout(() => {
+  loading.updateMessage('İşlem tamamlanıyor...');
+}, 2000);
+
+// 3 saniye sonra yükleniyor göstergesini kapat
+setTimeout(() => {
+  loading.hide();
+  UI.showToast('İşlem tamamlandı!', 'success');
+}, 3000);</code></pre>
+    </div>
+  </div>
+  
+  <script src="js/ui-components.js"></script>
+  <script>
+    // Temel modal örneği
+    function showBasicModal() {
+      UI.showModal({
+        title: 'Temel Modal',
+        content: 'Bu bir temel modal örneğidir.',
+        buttons: [
+          { text: 'Kapat', value: 'close', type: 'secondary' }
+        ]
+      }).then(result => {
+        console.log('Modal sonucu:', result);
+      });
+    }
+    
+    // Özel modal örneği
+    function showCustomModal() {
+      const content = document.createElement('div');
+      
+      const message = document.createElement('p');
+      message.textContent = 'Bu bir özel modal örneğidir. Form elemanları ekleyebilirsiniz.';
+      
+      const formGroup = document.createElement('div');
+      formGroup.className = 'form-group';
+      
+      const label = document.createElement('label');
+      label.textContent = 'E-posta adresi:';
+      
+      const input = document.createElement('input');
+      input.type = 'email';
+      input.className = 'form-control';
+      input.placeholder = 'ornek@example.com';
+      
+      const formText = document.createElement('small');
+      formText.className = 'form-text';
+      formText.textContent = 'E-posta adresiniz başkalarıyla paylaşılmayacaktır.';
+      
+      formGroup.appendChild(label);
+      formGroup.appendChild(input);
+      formGroup.appendChild(formText);
+      
+      content.appendChild(message);
+      content.appendChild(formGroup);
+      
+      UI.showModal({
+        title: 'Özel Modal',
+        content: content,
+        buttons: [
+          { text: 'İptal', value: 'cancel', type: 'secondary' },
+          { text: 'Gönder', value: 'submit', type: 'primary' }
+        ]
+      }).then(result => {
+        if (result === 'submit') {
+          UI.showToast(`Form gönderildi: ${input.value}`, 'success');
+        }
+      });
+    }
+    
+    // Büyük modal örneği
+    function showLargeModal() {
+      let content = '<h3>Lorem Ipsum</h3>';
+      content += '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl.</p>';
+      content += '<p>Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl. Nullam euismod, nisl eget aliquam ultricies, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl.</p>';
+      content += '<h3>Neden Kullanırız?</h3>';
+      content += '<p>Yinelenen bir sayfa içeriğinin okuyucunun dikkatini dağıttığı bilinen bir gerçektir. Lorem Ipsum kullanmanın amacı, sürekli "buraya metin gelecek, buraya metin gelecek" yazmaya kıyasla daha dengeli bir harf dağılımı sağlayarak okunurluğu artırmasıdır.</p>';
+      content += '<p>Şimdi birçok masaüstü yayıncılık paketi ve web sayfa düzenleyicisi, varsayılan mıgır metinler olarak Lorem Ipsum kullanmaktadır. Ayrıca arama motorlarında "lorem ipsum" anahtar sözcükleri ile arama yapıldığında henüz tasarım aşamasında olan çok sayıda site listelenir. Yıllar içinde, bazen kazara, bazen bilinçli olarak (örneğin mizah katılarak), çeşitli sürümleri geliştirilmiştir.</p>';
+      
+      UI.showModal({
+        title: 'Büyük Modal',
+        content: content,
+        buttons: [
+          { text: 'Kapat', value: 'close', type: 'primary' }
+        ],
+        size: 'large'
+      });
+    }
+    
+    // Onay dialog'u örneği
+    function showConfirmDialog() {
+      UI.showConfirm('Bu işlemi gerçekten yapmak istiyor musunuz?', 'Onay')
+        .then(result => {
+          if (result) {
+            UI.showToast('İşlem onaylandı!', 'success');
+          } else {
+            UI.showToast('İşlem iptal edildi.', 'info');
+          }
+        });
+    }
+    
+    // Uyarı dialog'u örneği
+    function showAlertDialog() {
+      UI.showAlert('Bu bir uyarı mesajıdır!', 'Uyarı')
+        .then(() => {
+          UI.showToast('Uyarı kapatıldı.', 'info');
+        });
+    }
+    
+    // Giriş dialog'u örneği
+    function showPromptDialog() {
+      UI.showPrompt('Lütfen adınızı girin:', '', 'Giriş')
+        .then(result => {
+          if (result) {
+            UI.showToast(`Merhaba, ${result}!`, 'success');
+          } else {
+            UI.showToast('Giriş iptal edildi.', 'info');
+          }
+        });
+    }
+    
+    // Yükleniyor göstergesi örneği
+    function showLoading() {
+      const loading = UI.showLoading('Yükleniyor...');
+      
+      // 1 saniye sonra mesajı güncelle
+      setTimeout(() => {
+        loading.updateMessage('Veriler alınıyor...');
+      }, 1000);
+      
+      // 2 saniye sonra mesajı güncelle
+      setTimeout(() => {
+        loading.updateMessage('İşlem tamamlanıyor...');
+      }, 2000);
+      
+      // 3 saniye sonra yükleniyor göstergesini kapat
+      setTimeout(() => {
+        loading.hide();
+        UI.showToast('İşlem tamamlandı!', 'success');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

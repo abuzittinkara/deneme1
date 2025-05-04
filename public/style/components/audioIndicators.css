@@ -1,0 +1,344 @@
+/* Ses Seviyesi Göstergeleri */
+.audio-level-indicator {
+  display: flex;
+  align-items: center;
+  height: 6px;
+  width: 40px;
+  background-color: #333;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-left: 5px;
+}
+
+.audio-level-bar {
+  height: 100%;
+  background-color: #2ecc71;
+  border-radius: 3px;
+  transition: width 0.1s ease-out;
+}
+
+.audio-level-bar.speaking {
+  background-color: #c61884;
+}
+
+.audio-level-bar.muted {
+  background-color: #e74c3c;
+  width: 100% !important;
+}
+
+/* Kullanıcı Ses Göstergeleri */
+.user-audio-indicator {
+  display: flex;
+  align-items: center;
+  margin-left: 5px;
+}
+
+.user-audio-icon {
+  color: #aaa;
+  font-size: 16px !important;
+  margin-right: 3px;
+}
+
+.user-audio-icon.speaking {
+  color: #2ecc71;
+}
+
+.user-audio-icon.muted {
+  color: #e74c3c;
+}
+
+/* Ses Ayarları */
+.audio-settings-container {
+  padding: 15px;
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.audio-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #444;
+}
+
+.audio-settings-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.audio-settings-close {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #444;
+  color: #fff;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.audio-settings-close:hover {
+  background: #c61884;
+}
+
+.audio-settings-section {
+  margin-bottom: 15px;
+}
+
+.audio-settings-section-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #ddd;
+  margin-bottom: 10px;
+}
+
+.audio-settings-control {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.audio-settings-label {
+  flex: 1;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.audio-settings-slider {
+  flex: 2;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #444;
+  outline: none;
+}
+
+.audio-settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #c61884;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.audio-settings-slider::-webkit-slider-thumb:hover {
+  background: #d81e94;
+  transform: scale(1.1);
+}
+
+.audio-settings-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #c61884;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.audio-settings-slider::-moz-range-thumb:hover {
+  background: #d81e94;
+  transform: scale(1.1);
+}
+
+.audio-settings-value {
+  width: 40px;
+  text-align: right;
+  font-size: 14px;
+  color: #ddd;
+  margin-left: 10px;
+}
+
+.audio-device-select {
+  width: 100%;
+  padding: 8px;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+/* Ses Testi */
+.audio-test-button {
+  padding: 8px 12px;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.audio-test-button:hover {
+  background-color: #555;
+}
+
+.audio-test-button.testing {
+  background-color: #c61884;
+}
+
+/* Ses Seviyesi Ölçer */
+.audio-meter {
+  width: 100%;
+  height: 20px;
+  background-color: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 10px;
+  position: relative;
+}
+
+.audio-meter-bar {
+  height: 100%;
+  background: linear-gradient(to right, #2ecc71, #f1c40f, #e74c3c);
+  width: 0;
+  transition: width 0.1s ease-out;
+}
+
+.audio-meter-ticks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 5px;
+}
+
+.audio-meter-tick {
+  width: 1px;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Konuşma Animasyonu */
+@keyframes speaking-pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
+.speaking-indicator {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #2ecc71;
+  animation: speaking-pulse 1.5s infinite;
+  pointer-events: none;
+}
+
+/* Kullanıcı Durumu Göstergeleri */
+.user-status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+.user-status-indicator.online {
+  background-color: #2ecc71;
+}
+
+.user-status-indicator.idle {
+  background-color: #f39c12;
+}
+
+.user-status-indicator.dnd {
+  background-color: #e74c3c;
+}
+
+.user-status-indicator.offline {
+  background-color: #95a5a6;
+}
+
+.user-status-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.user-status-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 120px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.user-status-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Kullanıcı Durumu Menüsü */
+.user-status-menu {
+  position: absolute;
+  bottom: 60px;
+  left: 10px;
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  z-index: 100;
+  display: none;
+}
+
+.user-status-menu.active {
+  display: block;
+}
+
+.user-status-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.user-status-option:hover {
+  background-color: #3d3d3d;
+}
+
+.user-status-option.selected {
+  background-color: #444;
+}
+
+.user-status-option-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.user-status-option-text {
+  color: #ddd;
+  font-size: 14px;
+}

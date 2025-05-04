@@ -1,0 +1,427 @@
+/* Oda Yönetimi */
+.room-management {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.room-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.room-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background-color: #2d2d2d;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-item:hover {
+  background-color: #3d3d3d;
+  transform: translateY(-2px);
+}
+
+.room-item.active {
+  background-color: #c61884;
+}
+
+.room-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #444;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  color: #fff;
+  font-size: 18px;
+}
+
+.room-info {
+  flex: 1;
+}
+
+.room-name {
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.room-description {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.room-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.room-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #444;
+  border: none;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-action-btn:hover {
+  background-color: #c61884;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.room-header-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.room-create-btn {
+  padding: 8px 12px;
+  background-color: #c61884;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.room-create-btn:hover {
+  background-color: #d81e94;
+}
+
+/* Oda Modali */
+.room-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.room-modal-content {
+  width: 100%;
+  max-width: 500px;
+  background-color: #2d2d2d;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.room-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.room-modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.room-modal-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #444;
+  border: none;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-modal-close:hover {
+  background-color: #c61884;
+}
+
+.room-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #ddd;
+}
+
+.form-input {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #fff;
+}
+
+.form-textarea {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #fff;
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-cancel {
+  padding: 10px 15px;
+  background-color: #444;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-cancel:hover {
+  background-color: #555;
+}
+
+.form-submit {
+  padding: 10px 15px;
+  background-color: #c61884;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-submit:hover {
+  background-color: #d81e94;
+}
+
+/* Oda Detay */
+.room-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.room-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.room-detail-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.room-detail-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.room-detail-content {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.room-detail-section {
+  margin-bottom: 20px;
+}
+
+.room-detail-section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.room-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-detail-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-detail-info-label {
+  font-weight: bold;
+  color: #aaa;
+  width: 120px;
+}
+
+.room-detail-info-value {
+  color: #fff;
+}
+
+.room-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-member-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: #333;
+  border-radius: 4px;
+}
+
+.room-member-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #444;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.room-member-info {
+  flex: 1;
+}
+
+.room-member-name {
+  font-weight: bold;
+  color: #fff;
+}
+
+.room-member-role {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.room-member-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.room-member-action-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #444;
+  border: none;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.room-member-action-btn:hover {
+  background-color: #c61884;
+}
+
+.room-channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.room-channel-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: #333;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-channel-item:hover {
+  background-color: #3d3d3d;
+}
+
+.room-channel-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  color: #aaa;
+}
+
+.room-channel-info {
+  flex: 1;
+}
+
+.room-channel-name {
+  font-weight: bold;
+  color: #fff;
+}
+
+.room-channel-type {
+  font-size: 12px;
+  color: #aaa;
+}

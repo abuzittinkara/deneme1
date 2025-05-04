@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # API Servisi
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.distroless
+    image: sesli-sohbet-api:latest
+    container_name: sesli-sohbet-api
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    environment:
+      - NODE_ENV=development
+      - PORT=9999
+      - MONGODB_URI=mongodb://mongodb:27017/sesli-sohbet
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=supersecretkey123456789
+      - JWT_EXPIRES_IN=1d
+      - JWT_REFRESH_SECRET=supersecretrefreshkey123456789
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - CORS_ORIGIN=*
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+
+  # MongoDB Servisi
+  mongodb:
+    image: mongo:6.0
+    container_name: sesli-sohbet-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+
+  # Redis Servisi
+  redis:
+    image: redis:7.0-alpine
+    container_name: sesli-sohbet-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  sesli-sohbet-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  redis-data:

@@ -1,0 +1,67 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Derleme çıktıları
+dist
+build
+coverage
+.nyc_output
+
+# Ortam değişkenleri
+.env
+.env.*
+!.env.example
+
+# Loglar
+logs
+*.log
+
+# Yüklenen dosyalar
+uploads/*
+!uploads/.gitkeep
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# IDE ve editör dosyaları
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+
+# Test dosyaları
+__tests__
+test
+tests
+*.test.ts
+*.spec.ts
+
+# Dokümantasyon
+docs
+README.md
+CHANGELOG.md
+LICENSE
+
+# Diğer
+.cache
+.tmp
+tmp
+temp
+*.md
+*.sh
+*.yml
+*.yaml
+!docker-compose.yml
+!nginx/**/*.yml
+!nginx/**/*.yaml

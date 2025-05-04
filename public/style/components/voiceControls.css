@@ -1,0 +1,126 @@
+/* Ses Kontrolleri */
+.voice-controls {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #2d2d2d;
+  border-radius: 30px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.voice-control-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #444;
+  color: #fff;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.voice-control-btn:hover {
+  background: #555;
+  transform: translateY(-2px);
+}
+
+.voice-control-btn.active {
+  background: #c61884;
+}
+
+.voice-control-btn.active:hover {
+  background: #d81e94;
+}
+
+.voice-control-btn.disconnect {
+  background: #e74c3c;
+}
+
+.voice-control-btn.disconnect:hover {
+  background: #c0392b;
+}
+
+.voice-channel-status {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 10px;
+}
+
+.status-connected {
+  color: #2ecc71;
+}
+
+.status-disconnected {
+  color: #e74c3c;
+}
+
+/* Ses Kanalı Kullanıcıları */
+.voice-channel-users {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.voice-user-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  background: #353535;
+  transition: background 0.2s ease;
+}
+
+.voice-user-item:hover {
+  background: #444;
+}
+
+.voice-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #c61884;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 14px;
+  margin-right: 10px;
+}
+
+.voice-user-name {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+}
+
+.voice-user-status {
+  display: flex;
+  align-items: center;
+  color: #2ecc71;
+}
+
+.voice-user-status .material-icons {
+  font-size: 16px !important;
+}
+
+.voice-user-status.muted {
+  color: #e74c3c;
+}
+
+.voice-user-status.deafened {
+  color: #f39c12;
+}

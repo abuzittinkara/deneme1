@@ -1,0 +1,83 @@
+/* Fisqos Renk ve Stil Değişkenleri */
+
+:root {
+  /* Ana Renkler */
+  --color-primary: #c61884; /* Pembe ana renk */
+  --color-primary-dark: #a01368; /* Koyu pembe */
+  --color-primary-light: #e63da0; /* Açık pembe */
+
+  /* Gri Tonları */
+  --color-bg-darkest: #1a1a1a; /* En koyu gri (neredeyse siyah) */
+  --color-bg-darker: #202225; /* Çok koyu gri (sol panel) */
+  --color-bg-dark: #2d2d2d; /* Koyu gri (orta panel) */
+  --color-bg-medium: #36393f; /* Orta gri (ana içerik) */
+  --color-bg-light: #40444b; /* Açık gri (giriş alanları) */
+
+  /* Metin Renkleri */
+  --color-text-brightest: #ffffff; /* En parlak metin */
+  --color-text-bright: #dcddde; /* Parlak metin */
+  --color-text-normal: #b9bbbe; /* Normal metin */
+  --color-text-muted: #72767d; /* Soluk metin */
+
+  /* Durum Renkleri */
+  --color-success: #43b581; /* Başarı/Çevrimiçi */
+  --color-warning: #faa61a; /* Uyarı/Uzakta */
+  --color-danger: #f04747; /* Hata/Rahatsız Etmeyin */
+  --color-info: #7289da; /* Bilgi */
+
+  /* Kenarlık ve Ayırıcı Renkleri */
+  --color-border: #4f545c; /* Kenarlık rengi */
+  --color-divider: #2c2f33; /* Ayırıcı rengi */
+
+  /* Gölge ve Katman Renkleri */
+  --color-shadow: rgba(0, 0, 0, 0.3); /* Gölge rengi */
+  --color-overlay: rgba(0, 0, 0, 0.7); /* Katman rengi */
+
+  /* Yazı Tipi */
+  --font-primary: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  /* Yazı Tipi Boyutları */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-md: 1rem; /* 16px */
+  --font-size-lg: 1.25rem; /* 20px */
+  --font-size-xl: 1.5rem; /* 24px */
+
+  /* Yazı Tipi Ağırlıkları */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Boşluklar */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+
+  /* Yuvarlak Köşeler */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+  --radius-circle: 50%;
+
+  /* Gölgeler */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  /* Geçişler */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+
+  /* Z-indeksleri */
+  --z-index-dropdown: 1000;
+  --z-index-modal: 2000;
+  --z-index-tooltip: 3000;
+
+  /* Medya boyutları */
+  --media-height-sm: 200px;
+  --media-height-md: 300px;
+  --media-height-lg: 400px;
+}

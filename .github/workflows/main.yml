@@ -1,0 +1,118 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Lint
+      run: npm run lint
+    
+    - name: Build
+      run: npm run build
+    
+    - name: Test
+      run: npm test
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist/
+
+  test-coverage:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests with coverage
+      run: npm run test:coverage
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./coverage/
+        fail_ci_if_error: true
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build, test-coverage]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Deploy to Staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Burada gerçek deployment komutları olacak
+        # Örneğin: rsync, scp, ssh veya özel deployment araçları
+    
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests on staging environment..."
+        # Burada basit smoke testleri çalıştırılacak
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [build, test-coverage]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Deploy to Production
+      run: |
+        echo "Deploying to production environment..."
+        # Burada gerçek deployment komutları olacak
+        # Örneğin: rsync, scp, ssh veya özel deployment araçları
+    
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests on production environment..."
+        # Burada basit smoke testleri çalıştırılacak

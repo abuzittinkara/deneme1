@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hata - Sesli Sohbet</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .error-card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .error-code {
+      font-size: 6rem;
+      font-weight: bold;
+      color: #dc3545;
+      margin: 0;
+      line-height: 1;
+    }
+    
+    .error-title {
+      font-size: 2rem;
+      margin: 1rem 0;
+      color: #343a40;
+    }
+    
+    .error-message {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: #6c757d;
+    }
+    
+    .btn {
+      display: inline-block;
+      background-color: #007bff;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background-color: #0069d9;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #f1f3f5;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 576px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .error-code {
+        font-size: 4rem;
+      }
+      
+      .error-title {
+        font-size: 1.5rem;
+      }
+      
+      .error-message {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="error-card">
+      <h1 class="error-code" id="error-code">500</h1>
+      <h2 class="error-title" id="error-title">Sunucu Hatası</h2>
+      <p class="error-message" id="error-message">Üzgünüz, bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>
+      <a href="/" class="btn">Ana Sayfaya Dön</a>
+    </div>
+  </div>
+  
+  <footer class="footer">
+    <p>&copy; 2023 Sesli Sohbet. Tüm hakları saklıdır.</p>
+  </footer>
+  
+  <script>
+    // URL'den hata kodunu ve mesajını al
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code') || '500';
+    const message = urlParams.get('message') || 'Üzgünüz, bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
+    
+    // Hata koduna göre başlık belirle
+    let title = 'Sunucu Hatası';
+    
+    switch (code) {
+      case '400':
+        title = 'Geçersiz İstek';
+        break;
+      case '401':
+        title = 'Kimlik Doğrulama Gerekli';
+        break;
+      case '403':
+        title = 'Erişim Reddedildi';
+        break;
+      case '404':
+        title = 'Sayfa Bulunamadı';
+        break;
+      case '429':
+        title = 'Çok Fazla İstek';
+        break;
+      case '500':
+        title = 'Sunucu Hatası';
+        break;
+      case '503':
+        title = 'Hizmet Kullanılamıyor';
+        break;
+    }
+    
+    // Hata bilgilerini sayfaya ekle
+    document.getElementById('error-code').textContent = code;
+    document.getElementById('error-title').textContent = title;
+    document.getElementById('error-message').textContent = message;
+    
+    // Sayfa başlığını güncelle
+    document.title = `${code} ${title} - Sesli Sohbet`;
+  </script>
+</body>
+</html>

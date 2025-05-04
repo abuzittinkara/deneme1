@@ -1,0 +1,51 @@
+# Derleme aşaması
+FROM node:18-alpine AS builder
+
+# Python ve build araçlarını ekle
+RUN apk add --no-cache python3 py3-pip make g++ python3-dev
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Bağımlılıkları kopyala
+COPY package*.json ./
+
+# Bağımlılıkları yükle
+RUN npm ci
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# TypeScript derleme
+RUN npm run build
+
+# Üretim aşaması
+FROM node:18-alpine
+
+# Python ve build araçlarını ekle
+RUN apk add --no-cache python3 py3-pip make g++ python3-dev
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Sadece üretim bağımlılıklarını kopyala
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Derlenen dosyaları kopyala
+COPY --from=builder /app/dist ./dist
+COPY .env ./.env
+
+# Ortam değişkenleri
+ENV NODE_ENV=development
+ENV PORT=9999
+
+# Uygulama portunu aç
+EXPOSE ${PORT}
+
+# Sağlık kontrolü
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost:${PORT}/api/health || exit 1
+
+# Uygulamayı başlat
+CMD ["node", "dist/src/app.js"]

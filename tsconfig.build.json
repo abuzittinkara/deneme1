@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "noEmit": false,
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scripts",
+    "modules",
+    "middleware",
+    "routes",
+    "utils",
+    "config",
+    "models",
+    "socket",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
+}
