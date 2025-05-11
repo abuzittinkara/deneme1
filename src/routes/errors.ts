@@ -67,24 +67,29 @@ const router = express.Router();
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.get('/api/errors/stats', requireAuth, requireAdmin, createRouteHandler(async (req, res) => {
-  try {
-    // Hata istatistiklerini al
-    const stats = await getErrorStats();
+router.get(
+  '/api/errors/stats',
+  requireAuth,
+  requireAdmin,
+  createRouteHandler(async (req, res) => {
+    try {
+      // Hata istatistiklerini al
+      const stats = await getErrorStats();
 
-    return res.json({
-      success: true,
-      data: stats
-    });
-  } catch (error) {
-    logger.error('Hata istatistikleri alınırken hata oluştu', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+      return res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      logger.error('Hata istatistikleri alınırken hata oluştu', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-    throw createError('server', 'Hata istatistikleri alınırken hata oluştu');
-  }
-}));
+      throw createError('server', 'Hata istatistikleri alınırken hata oluştu');
+    }
+  })
+);
 
 /**
  * @swagger
@@ -116,24 +121,29 @@ router.get('/api/errors/stats', requireAuth, requireAdmin, createRouteHandler(as
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.post('/api/errors/clear-cache', requireAuth, requireAdmin, createRouteHandler(async (req, res) => {
-  try {
-    // Redis önbelleğini temizle
-    // Not: Bu işlev henüz uygulanmadı, Redis yapılandırmasına bağlı olarak uygulanacak
+router.post(
+  '/api/errors/clear-cache',
+  requireAuth,
+  requireAdmin,
+  createRouteHandler(async (req, res) => {
+    try {
+      // Redis önbelleğini temizle
+      // Not: Bu işlev henüz uygulanmadı, Redis yapılandırmasına bağlı olarak uygulanacak
 
-    return res.json({
-      success: true,
-      message: 'Hata önbelleği temizlendi'
-    });
-  } catch (error) {
-    logger.error('Hata önbelleği temizlenirken hata oluştu', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+      return res.json({
+        success: true,
+        message: 'Hata önbelleği temizlendi',
+      });
+    } catch (error) {
+      logger.error('Hata önbelleği temizlenirken hata oluştu', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-    throw createError('server', 'Hata önbelleği temizlenirken hata oluştu');
-  }
-}));
+      throw createError('server', 'Hata önbelleği temizlenirken hata oluştu');
+    }
+  })
+);
 
 /**
  * @swagger
@@ -172,26 +182,31 @@ router.post('/api/errors/clear-cache', requireAuth, requireAdmin, createRouteHan
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.post('/api/errors/test', requireAuth, requireAdmin, createRouteHandler(async (req, res) => {
-  // Sadece geliştirme modunda çalışır
-  if (!env.isDevelopment) {
-    throw createError('authorization', 'Bu endpoint sadece geliştirme modunda kullanılabilir');
-  }
+router.post(
+  '/api/errors/test',
+  requireAuth,
+  requireAdmin,
+  createRouteHandler(async (req, res) => {
+    // Sadece geliştirme modunda çalışır
+    if (!env.isDevelopment) {
+      throw createError('authorization', 'Bu endpoint sadece geliştirme modunda kullanılabilir');
+    }
 
-  // Hata türünü al
-  const errorType = req.body.type || 'server';
+    // Hata türünü al
+    const errorType = req.body.type || 'server';
 
-  // Hata mesajını al
-  const errorMessage = req.body.message || 'Test hatası';
+    // Hata mesajını al
+    const errorMessage = req.body.message || 'Test hatası';
 
-  // Hata oluştur
-  logger.info('Test hatası oluşturuluyor', {
-    type: errorType,
-    message: errorMessage
-  });
+    // Hata oluştur
+    logger.info('Test hatası oluşturuluyor', {
+      type: errorType,
+      message: errorMessage,
+    });
 
-  // createError fonksiyonu ile hata oluştur
-  throw createError(errorType, errorMessage, { test: true });
-}));
+    // createError fonksiyonu ile hata oluştur
+    throw createError(errorType, errorMessage, { test: true });
+  })
+);
 
 export default router;

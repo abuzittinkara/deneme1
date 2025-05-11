@@ -34,9 +34,10 @@ class NotificationService {
   }): Promise<NotificationDocument | null> {
     try {
       // Alıcıyı kontrol et
-      const recipientId = typeof data.recipient === 'string'
-        ? new mongoose.Types.ObjectId(data.recipient)
-        : data.recipient;
+      const recipientId =
+        typeof data.recipient === 'string'
+          ? new mongoose.Types.ObjectId(data.recipient)
+          : data.recipient;
 
       const recipient = await User.findById(recipientId);
 
@@ -48,9 +49,8 @@ class NotificationService {
       // Göndereni kontrol et (varsa)
       let senderId = undefined;
       if (data.sender) {
-        senderId = typeof data.sender === 'string'
-          ? new mongoose.Types.ObjectId(data.sender)
-          : data.sender;
+        senderId =
+          typeof data.sender === 'string' ? new mongoose.Types.ObjectId(data.sender) : data.sender;
 
         const sender = await User.findById(senderId);
 
@@ -66,9 +66,10 @@ class NotificationService {
       if (data.target) {
         target = {
           type: data.target.type,
-          id: typeof data.target.id === 'string'
-            ? new mongoose.Types.ObjectId(data.target.id)
-            : data.target.id
+          id:
+            typeof data.target.id === 'string'
+              ? new mongoose.Types.ObjectId(data.target.id)
+              : data.target.id,
         };
       }
 
@@ -81,7 +82,7 @@ class NotificationService {
         target,
         priority: data.priority || 'normal',
         expiresAt: data.expiresAt,
-        metadata: data.metadata || {}
+        metadata: data.metadata || {},
       });
 
       await notification.save();
@@ -92,14 +93,14 @@ class NotificationService {
       logger.info('Bildirim oluşturuldu', {
         notificationId: notification._id,
         recipientId,
-        type: data.type
+        type: data.type,
       });
 
       return notification as NotificationDocument;
     } catch (error) {
       logger.error('Bildirim oluşturulurken hata oluştu', {
         error: (error as Error).message,
-        data
+        data,
       });
       return null;
     }
@@ -116,40 +117,40 @@ class NotificationService {
     userId: string | mongoose.Types.ObjectId
   ): Promise<boolean> {
     try {
-      const id = typeof notificationId === 'string'
-        ? new mongoose.Types.ObjectId(notificationId)
-        : notificationId;
+      const id =
+        typeof notificationId === 'string'
+          ? new mongoose.Types.ObjectId(notificationId)
+          : notificationId;
 
-      const userObjectId = typeof userId === 'string'
-        ? new mongoose.Types.ObjectId(userId)
-        : userId;
+      const userObjectId =
+        typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
 
       // Bildirimi bul ve güncelle
       const result = await Notification.updateOne(
         {
           _id: id,
           recipient: userObjectId,
-          isRead: false
+          isRead: false,
         },
         {
           $set: {
             isRead: true,
-            readAt: new Date()
-          }
+            readAt: new Date(),
+          },
         }
       );
 
       if (result.modifiedCount === 0) {
         logger.warn('Bildirim okundu olarak işaretlenemedi', {
           notificationId,
-          userId
+          userId,
         });
         return false;
       }
 
       logger.info('Bildirim okundu olarak işaretlendi', {
         notificationId,
-        userId
+        userId,
       });
 
       // Bildirim okunduğunda Socket.IO ile gerçek zamanlı güncelleme gönder
@@ -160,7 +161,7 @@ class NotificationService {
       logger.error('Bildirim okundu olarak işaretlenirken hata oluştu', {
         error: (error as Error).message,
         notificationId,
-        userId
+        userId,
       });
       return false;
     }
@@ -173,27 +174,26 @@ class NotificationService {
    */
   async markAllAsRead(userId: string | mongoose.Types.ObjectId): Promise<boolean> {
     try {
-      const userObjectId = typeof userId === 'string'
-        ? new mongoose.Types.ObjectId(userId)
-        : userId;
+      const userObjectId =
+        typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
 
       // Tüm bildirimleri güncelle
       const result = await Notification.updateMany(
         {
           recipient: userObjectId,
-          isRead: false
+          isRead: false,
         },
         {
           $set: {
             isRead: true,
-            readAt: new Date()
-          }
+            readAt: new Date(),
+          },
         }
       );
 
       logger.info('Tüm bildirimler okundu olarak işaretlendi', {
         userId,
-        count: result.modifiedCount
+        count: result.modifiedCount,
       });
 
       // Tüm bildirimler okunduğunda Socket.IO ile gerçek zamanlı güncelleme gönder
@@ -203,7 +203,7 @@ class NotificationService {
     } catch (error) {
       logger.error('Tüm bildirimler okundu olarak işaretlenirken hata oluştu', {
         error: (error as Error).message,
-        userId
+        userId,
       });
       return false;
     }
@@ -220,31 +220,31 @@ class NotificationService {
     userId: string | mongoose.Types.ObjectId
   ): Promise<boolean> {
     try {
-      const id = typeof notificationId === 'string'
-        ? new mongoose.Types.ObjectId(notificationId)
-        : notificationId;
+      const id =
+        typeof notificationId === 'string'
+          ? new mongoose.Types.ObjectId(notificationId)
+          : notificationId;
 
-      const userObjectId = typeof userId === 'string'
-        ? new mongoose.Types.ObjectId(userId)
-        : userId;
+      const userObjectId =
+        typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
 
       // Bildirimi sil
       const result = await Notification.deleteOne({
         _id: id,
-        recipient: userObjectId
+        recipient: userObjectId,
       });
 
       if (result.deletedCount === 0) {
         logger.warn('Bildirim silinemedi', {
           notificationId,
-          userId
+          userId,
         });
         return false;
       }
 
       logger.info('Bildirim silindi', {
         notificationId,
-        userId
+        userId,
       });
 
       // Bildirim silindiğinde Socket.IO ile gerçek zamanlı güncelleme gönder
@@ -255,7 +255,7 @@ class NotificationService {
       logger.error('Bildirim silinirken hata oluştu', {
         error: (error as Error).message,
         notificationId,
-        userId
+        userId,
       });
       return false;
     }
@@ -268,18 +268,17 @@ class NotificationService {
    */
   async deleteAllNotifications(userId: string | mongoose.Types.ObjectId): Promise<boolean> {
     try {
-      const userObjectId = typeof userId === 'string'
-        ? new mongoose.Types.ObjectId(userId)
-        : userId;
+      const userObjectId =
+        typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
 
       // Tüm bildirimleri sil
       const result = await Notification.deleteMany({
-        recipient: userObjectId
+        recipient: userObjectId,
       });
 
       logger.info('Tüm bildirimler silindi', {
         userId,
-        count: result.deletedCount
+        count: result.deletedCount,
       });
 
       // Tüm bildirimler silindiğinde Socket.IO ile gerçek zamanlı güncelleme gönder
@@ -289,7 +288,7 @@ class NotificationService {
     } catch (error) {
       logger.error('Tüm bildirimler silinirken hata oluştu', {
         error: (error as Error).message,
-        userId
+        userId,
       });
       return false;
     }
@@ -317,9 +316,8 @@ class NotificationService {
     unreadCount: number;
   }> {
     try {
-      const userObjectId = typeof userId === 'string'
-        ? new mongoose.Types.ObjectId(userId)
-        : userId;
+      const userObjectId =
+        typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId;
 
       // Sorgu oluştur
       const query: any = { recipient: userObjectId };
@@ -335,10 +333,7 @@ class NotificationService {
       }
 
       // Sona erme tarihine göre filtrele
-      query.$or = [
-        { expiresAt: { $exists: false } },
-        { expiresAt: { $gt: new Date() } }
-      ];
+      query.$or = [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }];
 
       // Toplam sayıyı al
       const total = await Notification.countDocuments(query);
@@ -347,10 +342,7 @@ class NotificationService {
       const unreadCount = await Notification.countDocuments({
         recipient: userObjectId,
         isRead: false,
-        $or: [
-          { expiresAt: { $exists: false } },
-          { expiresAt: { $gt: new Date() } }
-        ]
+        $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
       });
 
       // Sıralama seçenekleri
@@ -368,19 +360,19 @@ class NotificationService {
       return {
         notifications: notifications as NotificationDocument[],
         total,
-        unreadCount
+        unreadCount,
       };
     } catch (error) {
       logger.error('Kullanıcı bildirimleri getirilirken hata oluştu', {
         error: (error as Error).message,
         userId,
-        options
+        options,
       });
 
       return {
         notifications: [],
         total: 0,
-        unreadCount: 0
+        unreadCount: 0,
       };
     }
   }
@@ -392,17 +384,17 @@ class NotificationService {
   async cleanupExpiredNotifications(): Promise<number> {
     try {
       const result = await Notification.deleteMany({
-        expiresAt: { $lt: new Date() }
+        expiresAt: { $lt: new Date() },
       });
 
       logger.info('Süresi dolmuş bildirimler temizlendi', {
-        count: result.deletedCount
+        count: result.deletedCount,
       });
 
       return result.deletedCount;
     } catch (error) {
       logger.error('Süresi dolmuş bildirimler temizlenirken hata oluştu', {
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       return 0;
     }
@@ -427,18 +419,18 @@ class NotificationService {
           priority: notification.priority,
           sender: notification.sender,
           target: notification.target,
-          metadata: notification.metadata
-        }
+          metadata: notification.metadata,
+        },
       });
 
       logger.debug('Gerçek zamanlı bildirim gönderildi', {
         notificationId: notification._id,
-        recipientId
+        recipientId,
       });
     } catch (error) {
       logger.error('Gerçek zamanlı bildirim gönderilirken hata oluştu', {
         error: (error as Error).message,
-        notificationId: notification._id
+        notificationId: notification._id,
       });
     }
   }
@@ -459,18 +451,18 @@ class NotificationService {
       io.to(`user:${userIdStr}`).emit('notification:update', {
         notificationId: notificationId.toString(),
         isRead: true,
-        readAt: new Date()
+        readAt: new Date(),
       });
 
       logger.debug('Bildirim güncellemesi gönderildi', {
         notificationId,
-        userId: userIdStr
+        userId: userIdStr,
       });
     } catch (error) {
       logger.error('Bildirim güncellemesi gönderilirken hata oluştu', {
         error: (error as Error).message,
         notificationId,
-        userId
+        userId,
       });
     }
   }
@@ -487,12 +479,12 @@ class NotificationService {
       io.to(`user:${userIdStr}`).emit('notification:all_read', {});
 
       logger.debug('Tüm bildirimler güncellemesi gönderildi', {
-        userId: userIdStr
+        userId: userIdStr,
       });
     } catch (error) {
       logger.error('Tüm bildirimler güncellemesi gönderilirken hata oluştu', {
         error: (error as Error).message,
-        userId
+        userId,
       });
     }
   }
@@ -511,18 +503,18 @@ class NotificationService {
 
       // Kullanıcının bağlı olduğu tüm soketlere silindi bildirimi gönder
       io.to(`user:${userIdStr}`).emit('notification:deleted', {
-        notificationId: notificationId.toString()
+        notificationId: notificationId.toString(),
       });
 
       logger.debug('Bildirim silindi bildirimi gönderildi', {
         notificationId,
-        userId: userIdStr
+        userId: userIdStr,
       });
     } catch (error) {
       logger.error('Bildirim silindi bildirimi gönderilirken hata oluştu', {
         error: (error as Error).message,
         notificationId,
-        userId
+        userId,
       });
     }
   }
@@ -539,12 +531,12 @@ class NotificationService {
       io.to(`user:${userIdStr}`).emit('notification:all_deleted', {});
 
       logger.debug('Tüm bildirimler silindi bildirimi gönderildi', {
-        userId: userIdStr
+        userId: userIdStr,
       });
     } catch (error) {
       logger.error('Tüm bildirimler silindi bildirimi gönderilirken hata oluştu', {
         error: (error as Error).message,
-        userId
+        userId,
       });
     }
   }
@@ -571,7 +563,7 @@ class NotificationService {
       content: message,
       priority: options.priority || 'normal',
       expiresAt: options.expiresAt,
-      metadata: options.metadata
+      metadata: options.metadata,
     });
   }
 
@@ -601,12 +593,12 @@ class NotificationService {
 
     // Bildirim içeriğini oluştur
     const content = t('notifications.new_message', {
-      sender: sender.get('name') && sender.get('surname')
-        ? `${sender.get('name')} ${sender.get('surname')}`
-        : sender.get('username'),
-      message: messageContent.length > 50
-        ? `${messageContent.substring(0, 50)}...`
-        : messageContent
+      sender:
+        sender.get('name') && sender.get('surname')
+          ? `${sender.get('name')} ${sender.get('surname')}`
+          : sender.get('username'),
+      message:
+        messageContent.length > 50 ? `${messageContent.substring(0, 50)}...` : messageContent,
     });
 
     return this.createNotification({
@@ -616,13 +608,13 @@ class NotificationService {
       content,
       target: {
         type: 'message',
-        id: messageId
+        id: messageId,
       },
       metadata: {
         channelId: channelId.toString(),
         messageId: messageId.toString(),
-        messageContent
-      }
+        messageContent,
+      },
     });
   }
 }

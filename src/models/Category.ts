@@ -41,11 +41,11 @@ const CategorySchema = new Schema<CategoryDocument, CategoryModel>(
     // Kategoriye ait kanallar
     channels: [{ type: Schema.Types.ObjectId, ref: 'Channel' }],
     // Kategori daraltılmış mı?
-    isCollapsed: { type: Boolean, default: false }
+    isCollapsed: { type: Boolean, default: false },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -54,7 +54,7 @@ CategorySchema.index({ group: 1, position: 1 });
 CategorySchema.index({ name: 'text' });
 
 // Statik metodlar
-CategorySchema.statics.findByGroup = function(
+CategorySchema.statics['findByGroup'] = function (
   groupId: mongoose.Types.ObjectId
 ): Promise<CategoryDocument[]> {
   return this.find({ group: groupId })
@@ -80,7 +80,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as CategoryModel;
 } else {
   // Gerçek model
-  Category = (mongoose.models.Category as CategoryModel) ||
+  Category =
+    (mongoose.models['Category'] as CategoryModel) ||
     mongoose.model<CategoryDocument, CategoryModel>('Category', CategorySchema);
 }
 

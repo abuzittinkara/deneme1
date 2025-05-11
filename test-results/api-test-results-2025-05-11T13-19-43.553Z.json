@@ -1,0 +1,131 @@
+{
+  "total": 8,
+  "success": 0,
+  "failed": 8,
+  "endpoints": [
+    {
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "status": 401,
+      "success": false,
+      "responseTime": 10090,
+      "error": "Request failed with status code 401",
+      "data": {
+        "success": false,
+        "message": "Geçersiz kullanıcı adı veya şifre",
+        "code": "INVALID_CREDENTIALS"
+      }
+    },
+    {
+      "endpoint": "/api/users",
+      "method": "GET",
+      "status": 401,
+      "success": false,
+      "responseTime": 18,
+      "error": "Request failed with status code 401",
+      "data": {
+        "success": false,
+        "error": {
+          "message": "Token bulunamadı",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/groups",
+      "method": "GET",
+      "status": 401,
+      "success": false,
+      "responseTime": 14,
+      "error": "Request failed with status code 401",
+      "data": {
+        "success": false,
+        "error": {
+          "message": "Token bulunamadı",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/channels",
+      "method": "GET",
+      "status": 401,
+      "success": false,
+      "responseTime": 10,
+      "error": "Request failed with status code 401",
+      "data": {
+        "success": false,
+        "error": {
+          "message": "Token bulunamadı",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/messages",
+      "method": "GET",
+      "status": 401,
+      "success": false,
+      "responseTime": 8,
+      "error": "Request failed with status code 401",
+      "data": {
+        "success": false,
+        "error": {
+          "message": "Token bulunamadı",
+          "code": "UNAUTHORIZED"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/direct-messages",
+      "method": "GET",
+      "status": 404,
+      "success": false,
+      "responseTime": 16,
+      "error": "Request failed with status code 404",
+      "data": {
+        "success": false,
+        "error": {
+          "message": "/api/direct-messages bulunamadı",
+          "code": "NOT_FOUND",
+          "statusCode": 404,
+          "stack": "AppError: /api/direct-messages bulunamadı\n    at notFoundHandler (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\src\\middleware\\advancedErrorHandler.ts:18:17)\n    at Layer.handle [as handle_request] (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:328:13)\n    at C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:286:9\n    at Function.process_params (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:646:15\n    at next (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:265:14)\n    at Function.handle (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:47:12)",
+          "path": "/api/direct-messages",
+          "method": "GET"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/notifications",
+      "method": "GET",
+      "status": 401,
+      "success": false,
+      "responseTime": 7,
+      "error": "Request failed with status code 401",
+      "data": {
+        "success": false,
+        "message": "Kimlik doğrulama başarısız: Token bulunamadı",
+        "code": "UNAUTHORIZED"
+      }
+    },
+    {
+      "endpoint": "/api/friends",
+      "method": "GET",
+      "status": 404,
+      "success": false,
+      "responseTime": 7,
+      "error": "Request failed with status code 404",
+      "data": {
+        "success": false,
+        "error": {
+          "message": "/api/friends bulunamadı",
+          "code": "NOT_FOUND",
+          "statusCode": 404,
+          "stack": "AppError: /api/friends bulunamadı\n    at notFoundHandler (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\src\\middleware\\advancedErrorHandler.ts:18:17)\n    at Layer.handle [as handle_request] (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:328:13)\n    at C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:286:9\n    at Function.process_params (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:346:12)\n    at next (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:646:15\n    at next (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:265:14)\n    at Function.handle (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\oxoco\\OneDrive\\Masaüstü\\1 TypeScript\\node_modules\\express\\lib\\router\\index.js:47:12)",
+          "path": "/api/friends",
+          "method": "GET"
+        }
+      }
+    }
+  ]
+}

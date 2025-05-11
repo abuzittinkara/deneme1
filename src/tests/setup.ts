@@ -15,18 +15,18 @@ export async function setupTestDatabase(): Promise<void> {
     // MongoDB bellek sunucusunu başlat
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
-    
+
     // Mongoose bağlantısını kur
     await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     } as any);
-    
+
     logger.info('Test veritabanı bağlantısı kuruldu', { uri: mongoUri });
   } catch (error) {
     logger.error('Test veritabanı kurulumu sırasında hata oluştu', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     throw error;
   }
@@ -37,17 +37,17 @@ export async function teardownTestDatabase(): Promise<void> {
   try {
     // Mongoose bağlantısını kapat
     await mongoose.disconnect();
-    
+
     // MongoDB bellek sunucusunu durdur
     if (mongoServer) {
       await mongoServer.stop();
     }
-    
+
     logger.info('Test veritabanı bağlantısı kapatıldı');
   } catch (error) {
     logger.error('Test veritabanı temizliği sırasında hata oluştu', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     throw error;
   }
@@ -57,17 +57,17 @@ export async function teardownTestDatabase(): Promise<void> {
 export async function clearCollections(): Promise<void> {
   try {
     const collections = mongoose.connection.collections;
-    
+
     for (const key in collections) {
       const collection = collections[key];
       await collection.deleteMany({});
     }
-    
+
     logger.info('Test koleksiyonları temizlendi');
   } catch (error) {
     logger.error('Test koleksiyonları temizlenirken hata oluştu', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     throw error;
   }
@@ -76,5 +76,5 @@ export async function clearCollections(): Promise<void> {
 export default {
   setupTestDatabase,
   teardownTestDatabase,
-  clearCollections
+  clearCollections,
 };

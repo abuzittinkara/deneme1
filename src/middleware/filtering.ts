@@ -27,18 +27,18 @@ declare global {
 export function filteringMiddleware(filterConfigs: FilterConfig[]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const filters: Record<string, any> = {};
-    
+
     for (const config of filterConfigs) {
       const queryParam = config.queryParam || config.field;
       const value = req.query[queryParam] as string;
-      
+
       if (value !== undefined) {
         // Değeri dönüştür (varsa)
         const transformedValue = config.transform ? config.transform(value) : value;
         filters[config.field] = transformedValue;
       }
     }
-    
+
     req.filters = filters;
     next();
   };
@@ -52,19 +52,19 @@ export function filteringMiddleware(filterConfigs: FilterConfig[]) {
  */
 export function createDateRangeFilter(field: string, startDate?: string, endDate?: string) {
   const filter: Record<string, any> = {};
-  
+
   if (startDate || endDate) {
     filter[field] = {};
-    
+
     if (startDate) {
       filter[field].$gte = new Date(startDate);
     }
-    
+
     if (endDate) {
       filter[field].$lte = new Date(endDate);
     }
   }
-  
+
   return filter;
 }
 
@@ -75,10 +75,14 @@ export function createDateRangeFilter(field: string, startDate?: string, endDate
  */
 export function createSearchFilter(fields: string[], searchTerm?: string) {
   if (!searchTerm) return {};
-  
+
+  // Arama metnini temizle ve güvenli hale getir
+  const sanitizedText = searchTerm.trim();
+  const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   return {
-    $or: fields.map(field => ({
-      [field]: { $regex: searchTerm, $options: 'i' }
-    }))
+    $or: fields.map((field) => ({
+      [field]: { $regex: new RegExp(escapedText, 'i') },
+    })),
   };
 }

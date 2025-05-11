@@ -105,7 +105,7 @@ class MemoryStore {
   removeFriendRequest(userId: string, requestId: string): void {
     if (this.friendRequests[userId]) {
       this.friendRequests[userId] = this.friendRequests[userId].filter(
-        req => req.id !== requestId
+        (req) => 'id' in req && req.id !== requestId
       );
     }
   }
@@ -145,66 +145,80 @@ class MemoryStore {
       }
 
       // Kullanıcıları yükle
+      // @ts-ignore - find metodu TypeScript tanımlarında yok ama Mongoose'da var
       const dbUsers = await User.find({ isActive: true });
-      dbUsers.forEach(user => {
-        const userId = user._id.toString();
+      dbUsers.forEach((user: any) => {
+        const userId = user._id ? user._id.toString() : '';
         this.users[userId] = {
           id: userId,
-          username: user.username,
-          name: user.name || '',
-          surname: user.surname || '',
-          status: user.status,
+          username: user.get('username') || '',
+          name: user.get('name') || '',
+          surname: user.get('surname') || '',
+          status: user.get('status') || 'offline',
+          email: user.get('email') || '',
           socketId: null,
           currentChannel: null,
           currentGroup: null,
-          joinedAt: user.createdAt?.toISOString() || new Date().toISOString(),
-          lastActivity: user.lastSeen?.toISOString() || new Date().toISOString(),
+          joinedAt: user.get('createdAt')?.toISOString() || new Date().toISOString(),
+          lastActivity: user.get('lastSeen')?.toISOString() || new Date().toISOString(),
           isTyping: false,
           isMuted: false,
-          isDeafened: false
+          isDeafened: false,
+          settings: {
+            theme: 'dark',
+            notifications: true,
+            sounds: true,
+            language: 'tr',
+          },
         };
       });
 
       // Grupları yükle
+      // @ts-ignore - find metodu TypeScript tanımlarında yok ama Mongoose'da var
       const dbGroups = await Group.find();
-      dbGroups.forEach(group => {
-        const groupId = group.groupId;
+      dbGroups.forEach((group: any) => {
+        const groupId = group.get('groupId') || group._id?.toString() || '';
 
         // App.ts için kullanılan grup yapısı
         this.groups[groupId] = {
           id: groupId,
-          name: group.name,
-          owner: group.owner.toString(),
-          users: group.users.map(u => u.toString()),
+          name: group.get('name') || '',
+          owner: group.get('owner')?.toString() || '',
+          ownerId: group.get('owner')?.toString() || '',
+          users: (group.get('users') || []).map((u: any) =>
+            u.toString ? u.toString() : String(u)
+          ),
           channels: {},
-          description: group.description || '',
-          createdAt: group.createdAt?.toISOString() || new Date().toISOString(),
-          updatedAt: group.updatedAt?.toISOString() || new Date().toISOString(),
-          members: group.users.map(u => u.toString()),
+          description: group.get('description') || '',
+          createdAt: group.get('createdAt')?.toISOString() || new Date().toISOString(),
+          updatedAt: group.get('updatedAt')?.toISOString() || new Date().toISOString(),
+          members: (group.get('users') || []).map((u: any) =>
+            u.toString ? u.toString() : String(u)
+          ),
           categories: [],
           settings: {
             isPublic: true,
             joinRequiresApproval: false,
-            allowInvites: true
-          }
+            allowInvites: true,
+          },
         };
 
         // GroupManager.ts için kullanılan grup yapısı
         this.groupsInternal[groupId] = {
-          owner: group.owner.toString(),
-          name: group.name,
+          owner: group.get('owner')?.toString() || '',
+          name: group.get('name') || '',
           users: [],
-          rooms: {}
+          rooms: {},
         };
       });
 
       logger.info('Bellek içi veri yapıları veritabanından yüklendi', {
         userCount: Object.keys(this.users).length,
-        groupCount: Object.keys(this.groups).length
+        groupCount: Object.keys(this.groups).length,
       });
     } catch (error) {
       logger.error('Bellek içi veri yapıları yüklenirken hata oluştu', {
-        error: (error as Error).message
+        error: (error as Error).message,
       });
 
       // Hata durumunda geliştirme verilerini kullan
@@ -222,16 +236,17 @@ class MemoryStore {
     const devUsers = [
       { id: 'dev-user-1', username: 'dev-user-1', name: 'Dev', surname: 'User 1' },
       { id: 'dev-user-2', username: 'dev-user-2', name: 'Dev', surname: 'User 2' },
-      { id: 'dev-user-3', username: 'dev-user-3', name: 'Dev', surname: 'User 3' }
+      { id: 'dev-user-3', username: 'dev-user-3', name: 'Dev', surname: 'User 3' },
     ];
 
-    devUsers.forEach(user => {
+    devUsers.forEach((user) => {
       this.users[user.id] = {
         id: user.id,
         username: user.username,
         name: user.name,
         surname: user.surname,
         status: 'online',
+        email: `${user.username}@example.com`,
         socketId: null,
         currentChannel: null,
         currentGroup: null,
@@ -244,8 +259,8 @@ class MemoryStore {
           theme: 'dark',
           language: 'tr',
           notifications: true,
-          sounds: true
-        }
+          sounds: true,
+        },
       };
     });
 
@@ -253,35 +268,36 @@ class MemoryStore {
     const devGroups = [
       { id: 'g-dev-1', name: 'Geliştirme Grubu 1', owner: 'dev-user-1' },
       { id: 'g-dev-2', name: 'Geliştirme Grubu 2', owner: 'dev-user-2' },
-      { id: 'g-dev-3', name: 'Geliştirme Grubu 3', owner: 'dev-user-3' }
+      { id: 'g-dev-3', name: 'Geliştirme Grubu 3', owner: 'dev-user-3' },
     ];
 
-    devGroups.forEach(group => {
+    devGroups.forEach((group) => {
       // App.ts için kullanılan grup yapısı
       this.groups[group.id] = {
         id: group.id,
         name: group.name,
         owner: group.owner,
-        users: devUsers.map(u => u.id),
+        ownerId: group.owner,
+        users: devUsers.map((u) => ({ id: u.id, username: u.username })),
         channels: {},
         description: `${group.name} açıklaması`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        members: devUsers.map(u => u.id),
+        members: devUsers.map((u) => u.id),
         categories: [],
         settings: {
           isPublic: true,
           joinRequiresApproval: false,
-          allowInvites: true
-        }
+          allowInvites: true,
+        },
       };
 
       // GroupManager.ts için kullanılan grup yapısı
       this.groupsInternal[group.id] = {
         owner: group.owner,
         name: group.name,
-        users: devUsers.map(u => ({ id: u.id, username: u.username })),
-        rooms: {}
+        users: devUsers.map((u) => ({ id: u.id, username: u.username })),
+        rooms: {},
       };
     });
 
@@ -290,46 +306,52 @@ class MemoryStore {
       { id: 'c-dev-1', name: 'genel', type: 'text', groupId: 'g-dev-1' },
       { id: 'c-dev-2', name: 'sesli-sohbet', type: 'voice', groupId: 'g-dev-1' },
       { id: 'c-dev-3', name: 'genel', type: 'text', groupId: 'g-dev-2' },
-      { id: 'c-dev-4', name: 'genel', type: 'text', groupId: 'g-dev-3' }
+      { id: 'c-dev-4', name: 'genel', type: 'text', groupId: 'g-dev-3' },
     ];
 
-    devChannels.forEach(channel => {
+    devChannels.forEach((channel) => {
       // App.ts için kullanılan kanal yapısı
       if (this.groups[channel.groupId]) {
-        this.groups[channel.groupId].channels[channel.id] = {
-          id: channel.id,
-          name: channel.name,
-          type: channel.type as 'text' | 'voice',
-          description: `${channel.name} kanalı`,
-          groupId: channel.groupId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          createdBy: this.groups[channel.groupId].owner,
-          members: devUsers.map(u => u.id),
-          messages: [],
-          settings: {
-            isPrivate: false,
-            allowReactions: true,
-            allowThreads: true,
-            allowAttachments: true
-          }
-        };
+        const group = this.groups[channel.groupId];
+        if (group) {
+          this.groups[channel.groupId].channels[channel.id] = {
+            id: channel.id,
+            name: channel.name,
+            type: channel.type as 'text' | 'voice',
+            description: `${channel.name} kanalı`,
+            groupId: channel.groupId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            createdBy: group.owner || '',
+            members: devUsers.map((u) => u.id),
+            messages: [],
+            settings: {
+              isPrivate: false,
+              allowReactions: true,
+              allowThreads: true,
+              allowAttachments: true,
+            },
+          };
+        }
       }
 
       // GroupManager.ts için kullanılan kanal yapısı
       if (this.groupsInternal[channel.groupId]) {
-        this.groupsInternal[channel.groupId].rooms[channel.id] = {
-          name: channel.name,
-          type: channel.type,
-          users: []
-        };
+        const groupInternal = this.groupsInternal[channel.groupId];
+        if (groupInternal && groupInternal.rooms) {
+          this.groupsInternal[channel.groupId].rooms[channel.id] = {
+            name: channel.name,
+            type: channel.type,
+            users: [],
+          };
+        }
       }
     });
 
     logger.info('Geliştirme modu için örnek veriler oluşturuldu', {
       userCount: devUsers.length,
       groupCount: devGroups.length,
-      channelCount: devChannels.length
+      channelCount: devChannels.length,
     });
   }
 

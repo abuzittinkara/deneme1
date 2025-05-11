@@ -1,0 +1,47 @@
+<!-- Görüntülü görüşme konteynırı -->
+<div id="call-container" class="call-container hidden">
+  <!-- Video konteynırları -->
+  <div class="videos-container">
+    <!-- Uzak videolar -->
+    <div id="remote-videos-container" class="remote-videos-container">
+      <!-- Uzak videolar buraya eklenecek -->
+    </div>
+    
+    <!-- Yerel video -->
+    <div class="local-video-container">
+      <video id="local-video" class="local-video" autoplay muted playsinline></video>
+    </div>
+  </div>
+  
+  <!-- Kontrol butonları -->
+  <div id="call-controls" class="call-controls">
+    <button id="mic-button" class="call-control-button">
+      <i class="fas fa-microphone"></i>
+    </button>
+    <button id="camera-button" class="call-control-button">
+      <i class="fas fa-video"></i>
+    </button>
+    <button id="screen-share-button" class="call-control-button">
+      <i class="fas fa-desktop"></i>
+    </button>
+    <button id="end-call-button" class="call-control-button end-call-button">
+      <i class="fas fa-phone-slash"></i>
+    </button>
+  </div>
+  
+  <!-- Yükleniyor animasyonu -->
+  <div id="call-loading" class="call-loading hidden">
+    <div class="call-loading-spinner"></div>
+    <p>Bağlanıyor...</p>
+  </div>
+</div>
+
+<!-- Görüşme davet modalı -->
+<div id="call-invite-modal" class="call-invite-modal hidden">
+  <h3>Görüntülü Görüşme</h3>
+  <p><span id="call-invite-username"></span> sizi görüntülü görüşmeye davet ediyor.</p>
+  <div class="call-invite-buttons">
+    <button id="call-invite-accept" class="call-invite-button call-invite-accept">Kabul Et</button>
+    <button id="call-invite-decline" class="call-invite-button call-invite-decline">Reddet</button>
+  </div>
+</div>

@@ -33,14 +33,7 @@ async function createWorkers(): Promise<void> {
       rtcMinPort: 10000,
       rtcMaxPort: 10100,
       logLevel: 'warn',
-      logTags: [
-        'info',
-        'ice',
-        'dtls',
-        'rtp',
-        'srtp',
-        'rtcp'
-      ]
+      logTags: ['info', 'ice', 'dtls', 'rtp', 'srtp', 'rtcp'],
     });
 
     worker.on('died', () => {
@@ -87,14 +80,14 @@ async function createRouter(roomId: string): Promise<mediasoupTypes.Router> {
       kind: 'audio',
       mimeType: 'audio/opus',
       clockRate: 48000,
-      channels: 2
+      channels: 2,
     },
     {
       kind: 'video',
       mimeType: 'video/VP8',
       clockRate: 90000,
-      parameters: {}
-    }
+      parameters: {},
+    },
   ];
   const router = await worker.createRouter({ mediaCodecs });
   routers[roomId] = router;
@@ -114,19 +107,21 @@ function getRouter(roomId: string): mediasoupTypes.Router | null {
  * Burada TURN sunucunuzu ekliyoruz => "iceServers"
  * Değerler .env içindeki ANNOUNCED_IP, TURN_USERNAME, TURN_CREDENTIAL değişkenlerinden okunuyor.
  */
-async function createWebRtcTransport(router: mediasoupTypes.Router): Promise<mediasoupTypes.WebRtcTransport> {
+async function createWebRtcTransport(
+  router: mediasoupTypes.Router
+): Promise<mediasoupTypes.WebRtcTransport> {
   // WebRTC transport için temel seçenekler
   const transportOptions: mediasoupTypes.WebRtcTransportOptions = {
     listenIps: [
       {
         ip: '0.0.0.0',
         // .env'de ANNOUNCED_IP tanımlıysa onu kullan, yoksa varsayılan IP
-        announcedIp: env.ANNOUNCED_IP || '31.57.154.104'
-      }
+        announcedIp: env.ANNOUNCED_IP || '31.57.154.104',
+      },
     ],
     enableUdp: true,
     enableTcp: true,
-    preferUdp: true
+    preferUdp: true,
   };
 
   // STUN/TURN sunucuları için özel yapılandırma
@@ -135,28 +130,28 @@ async function createWebRtcTransport(router: mediasoupTypes.Router): Promise<med
   // bu bilgileri ayrıca döndürebilirsiniz.
   const iceServers = [
     {
-      urls: 'stun:stun.l.google.com:19302'
+      urls: 'stun:stun.l.google.com:19302',
     },
     {
       urls: 'turn:global.relay.metered.ca:80',
       username: env.TURN_USERNAME || '6975c20c80cb0d79f1e4a4b6',
-      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda'
+      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda',
     },
     {
       urls: 'turn:global.relay.metered.ca:80?transport=tcp',
       username: env.TURN_USERNAME || '6975c20c80cb0d79f1e4a4b6',
-      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda'
+      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda',
     },
     {
       urls: 'turn:global.relay.metered.ca:443',
       username: env.TURN_USERNAME || '6975c20c80cb0d79f1e4a4b6',
-      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda'
+      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda',
     },
     {
       urls: 'turns:global.relay.metered.ca:443?transport=tcp',
       username: env.TURN_USERNAME || '6975c20c80cb0d79f1e4a4b6',
-      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda'
-    }
+      credential: env.TURN_CREDENTIAL || 'BCHrcOSfdcmZ/Dda',
+    },
   ];
 
   const transport = await router.createWebRtcTransport(transportOptions);
@@ -200,7 +195,7 @@ async function consume(
   const consumer = await transport.consume({
     producerId: producer.id,
     rtpCapabilities: router.rtpCapabilities,
-    paused: true
+    paused: true,
   });
   await consumer.resume();
   return consumer;
@@ -212,7 +207,7 @@ async function consume(
 async function closeTransport(transport: mediasoupTypes.WebRtcTransport): Promise<void> {
   if (transport && !transport.closed) {
     await transport.close();
-    logger.info(`SFU: transport closed`, { id: transport.id });
+    logger.info('SFU: transport closed', { id: transport.id });
   }
 }
 
@@ -222,7 +217,7 @@ async function closeTransport(transport: mediasoupTypes.WebRtcTransport): Promis
 async function closeProducer(producer: mediasoupTypes.Producer): Promise<void> {
   if (producer && !producer.closed) {
     await producer.close();
-    logger.info(`SFU: producer closed`, { id: producer.id });
+    logger.info('SFU: producer closed', { id: producer.id });
   }
 }
 
@@ -232,7 +227,7 @@ async function closeProducer(producer: mediasoupTypes.Producer): Promise<void> {
 async function closeConsumer(consumer: mediasoupTypes.Consumer): Promise<void> {
   if (consumer && !consumer.closed) {
     await consumer.close();
-    logger.info(`SFU: consumer closed`, { id: consumer.id });
+    logger.info('SFU: consumer closed', { id: consumer.id });
   }
 }
 
@@ -247,5 +242,5 @@ export {
   consume,
   closeTransport,
   closeProducer,
-  closeConsumer
+  closeConsumer,
 };

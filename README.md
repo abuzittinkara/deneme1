@@ -94,6 +94,10 @@ fisqos/
 └── tsconfig.json           # TypeScript derleyici ayarları
 ```
 
+## docker-demo/ Klasörü Hakkında
+
+Bu klasör, ana uygulamadan bağımsız olarak temel Node.js + Express + Docker örneklerini ve test ortamını içerir. Gerçek uygulama için değil, Docker ile deneme/öğrenme veya izole testler için kullanılabilir.
+
 ## Kurulum
 
 ### Gereksinimler
@@ -245,6 +249,34 @@ npm test
 # Test kapsamı raporu
 npm run test:coverage
 ```
+
+## API Versiyonlama, DB Migrasyon ve Roll-back
+
+- **API Versiyonlama:**
+  - Tüm yeni API endpoint’leri için `/api/v1/` gibi versiyonlu path kullanılması önerilir.
+  - Eski endpoint’ler kaldırılmadan önce en az bir ana sürüm boyunca desteklenmelidir.
+  - Versiyonlama stratejisi için [API.md](docs/API.md) dosyasına bakınız.
+
+- **Veritabanı Migrasyonları:**
+  - Yapısal değişiklikler için [migrate-mongo](https://github.com/seppevs/migrate-mongo) veya benzeri bir araç önerilir.
+  - Her migration dosyası, hem ileri (up) hem geri (down) adımlarını içermelidir.
+  - Migration örnekleri ve yönergeler için `docs/INSTALLATION.md` ve `docs/PERFORMANCE.md` dosyalarına bakınız.
+
+- **Roll-back:**
+  - Hatalı deploy veya migration durumunda, bir önceki migration’a geri dönülmeli ve uygulama eski sürüme alınmalıdır.
+  - Roll-back işlemleri için otomasyon scriptleri önerilir.
+  - Ayrıntılı süreç için `docs/INSTALLATION.md` ve `docs/SECURITY.md` dosyalarına bakınız.
+
+## Performans ve Dosya İşleme Notu
+
+Büyük dosya yüklemelerinde bloklama yaşamamak için Sharp ile birlikte CDN veya arka plan resize kuyruğu kullanılması önerilir. Ayrıntılar için [PERFORMANCE.md](docs/PERFORMANCE.md) dosyasına bakınız.
+
+## Statik ve Demo Dosyaların Temizliği
+
+- `public/` klasöründe eski, demo veya kullanılmayan dosyalar (ör. `index.html.bak`, `ui-demo.html`, `test.html`) manuel olarak temizlenmelidir.
+- Gereksiz demo/dökümantasyon dosyalarını ayrı bir `archive/` veya `legacy/` klasörüne taşımanız önerilir.
+- `libs/` klasöründe yalnızca güncel ve kullanılan dosyalar bırakılmalıdır (ör. `mediasoup-client.min.js`).
+- `uploads/` klasöründe eski dosyalar için otomatik temizlik scripti (`docker-scripts/cleanup-uploads.ps1`) kullanılabilir.
 
 ## Katkıda Bulunma
 

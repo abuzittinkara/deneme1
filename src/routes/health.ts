@@ -19,22 +19,35 @@ const router = express.Router();
  */
 async function checkDatabaseConnection() {
   try {
-    // Veritabanı bağlantısını kontrol et
-    if (mongoose.connection.readyState !== 1) {
+    // Veritabanı servisinden bağlantı durumunu al
+    const databaseService = await import('../services/databaseService').then((m) => m.default);
+
+    // Bağlantı durumunu kontrol et
+    if (!databaseService.isReady()) {
       return {
         healthy: false,
         status: 'disconnected',
-        error: 'Database connection is not established'
+        error: 'Database connection is not established',
       };
     }
 
-    // Ping komutu ile bağlantıyı test et
-    await mongoose.connection.db.admin().ping();
+    // Sağlık durumunu kontrol et
+    const health = await databaseService.checkHealth();
+
+    if (!health.isConnected) {
+      return {
+        healthy: false,
+        status: health.status || 'error',
+        error: health.error || 'Database health check failed',
+      };
+    }
 
     return {
       healthy: true,
       status: 'connected',
-      version: mongoose.version
+      version: mongoose.version,
+      responseTime: health.responseTime,
+      collections: health.collections,
     };
   } catch (error) {
     logger.error('Database health check error', { error });
@@ -42,7 +55,7 @@ async function checkDatabaseConnection() {
     return {
       healthy: false,
       status: 'error',
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -61,7 +74,7 @@ async function checkRedisConnection() {
         healthy: false,
         status: 'unhealthy',
         state: redisConnectionManager.getState(),
-        error: 'Redis connection is not healthy'
+        error: 'Redis connection is not healthy',
       };
     }
 
@@ -72,7 +85,7 @@ async function checkRedisConnection() {
       return {
         healthy: false,
         status: 'error',
-        error: 'Redis ping failed'
+        error: 'Redis ping failed',
       };
     }
 
@@ -84,7 +97,7 @@ async function checkRedisConnection() {
       healthy: true,
       status: 'connected',
       state: redisConnectionManager.getState(),
-      version
+      version,
     };
   } catch (error) {
     logger.error('Redis health check error', { error });
@@ -93,7 +106,7 @@ async function checkRedisConnection() {
       healthy: false,
       status: 'error',
       state: redisConnectionManager.getState(),
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -125,7 +138,7 @@ async function checkDiskSpace() {
 
       logStats = {
         fileCount: logFiles.length,
-        totalSize: `${(totalLogSize / 1024 / 1024).toFixed(2)} MB`
+        totalSize: `${(totalLogSize / 1024 / 1024).toFixed(2)} MB`,
       };
     }
 
@@ -135,7 +148,7 @@ async function checkDiskSpace() {
       usedPercentage: usedPercentage.toFixed(2),
       totalSpace: `${Math.round(totalSpace / 1024 / 1024 / 1024)} GB`,
       freeSpace: `${Math.round(freeSpace / 1024 / 1024 / 1024)} GB`,
-      logs: logStats
+      logs: logStats,
     };
   } catch (error) {
     logger.error('Disk space check error', { error });
@@ -143,7 +156,7 @@ async function checkDiskSpace() {
     return {
       healthy: false,
       status: 'error',
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -167,7 +180,7 @@ function checkMemoryUsage() {
       heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
       rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
-      external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`
+      external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`,
     };
   } catch (error) {
     logger.error('Memory usage check error', { error });
@@ -175,7 +188,7 @@ function checkMemoryUsage() {
     return {
       healthy: false,
       status: 'error',
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -197,7 +210,7 @@ function checkLoggingSystem() {
       healthy: logsExist && loggerHealthy,
       status: logsExist && loggerHealthy ? 'ok' : 'warning',
       logsDirectoryExists: logsExist,
-      loggerInitialized: loggerHealthy
+      loggerInitialized: loggerHealthy,
     };
   } catch (error) {
     logger.error('Logging system check error', { error });
@@ -205,7 +218,7 @@ function checkLoggingSystem() {
     return {
       healthy: false,
       status: 'error',
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -227,7 +240,7 @@ function checkSentryStatus() {
       healthy: sentryDsnDefined && sentryInitialized,
       status: sentryDsnDefined && sentryInitialized ? 'ok' : 'disabled',
       dsnConfigured: sentryDsnDefined,
-      initialized: sentryInitialized
+      initialized: sentryInitialized,
     };
   } catch (error) {
     logger.error('Sentry status check error', { error });
@@ -235,7 +248,7 @@ function checkSentryStatus() {
     return {
       healthy: false,
       status: 'error',
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -267,11 +280,12 @@ router.get('/health', async (_req: Request, res: Response) => {
     const sentryStatus = checkSentryStatus();
 
     // Genel sağlık durumu
-    const allHealthy = dbStatus.healthy &&
-                       redisStatus.healthy &&
-                       diskStatus.healthy &&
-                       memoryStatus.healthy &&
-                       loggingStatus.healthy;
+    const allHealthy =
+      dbStatus.healthy &&
+      redisStatus.healthy &&
+      diskStatus.healthy &&
+      memoryStatus.healthy &&
+      loggingStatus.healthy;
 
     const statusCode = allHealthy ? 200 : 503;
 
@@ -287,14 +301,14 @@ router.get('/health', async (_req: Request, res: Response) => {
       diskStatus: diskStatus.status,
       memoryStatus: memoryStatus.status,
       loggingStatus: loggingStatus.status,
-      sentryStatus: sentryStatus.status
+      sentryStatus: sentryStatus.status,
     });
 
     res.status(statusCode).json({
       status: allHealthy ? 'healthy' : 'unhealthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env['npm_package_version'] || '1.0.0',
       responseTime: `${responseTime}ms`,
       services: {
         database: dbStatus,
@@ -302,8 +316,8 @@ router.get('/health', async (_req: Request, res: Response) => {
         disk: diskStatus,
         memory: memoryStatus,
         logging: loggingStatus,
-        sentry: sentryStatus
-      }
+        sentry: sentryStatus,
+      },
     });
   } catch (error) {
     logger.error('Health check error', { error });
@@ -312,7 +326,7 @@ router.get('/health', async (_req: Request, res: Response) => {
       status: 'error',
       message: 'Health check failed',
       timestamp: new Date().toISOString(),
-      error: (error as Error).message
+      error: (error as Error).message,
     });
   }
 });
@@ -327,12 +341,12 @@ router.get('/ready', (req: Request, res: Response) => {
   if (isReady) {
     res.status(200).json({
       status: 'ready',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } else {
     res.status(503).json({
       status: 'not ready',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -353,14 +367,14 @@ router.get('/log-test', (req: Request, res: Response) => {
       user: req.user?.id || 'anonymous',
       ip: req.ip,
       userAgent: req.get('user-agent'),
-      requestId: req.headers['x-request-id']
+      requestId: req.headers['x-request-id'],
     });
 
     res.status(200).json({
       status: 'success',
       message: 'Log test completed',
       timestamp: new Date().toISOString(),
-      logDirectory: path.join(process.cwd(), 'logs')
+      logDirectory: path.join(process.cwd(), 'logs'),
     });
   } catch (error) {
     logger.error('Log test error', { error });
@@ -369,7 +383,7 @@ router.get('/log-test', (req: Request, res: Response) => {
       status: 'error',
       message: 'Log test failed',
       timestamp: new Date().toISOString(),
-      error: (error as Error).message
+      error: (error as Error).message,
     });
   }
 });
@@ -378,7 +392,7 @@ router.get('/log-test', (req: Request, res: Response) => {
  * Sentry testi endpoint'i
  */
 // @ts-ignore
-router.get('/sentry-test', (function(_req: Request, res: Response) {
+router.get('/sentry-test', function (_req: Request, res: Response) {
   try {
     // Sentry'nin yapılandırılıp yapılandırılmadığını kontrol et
     const hub = Sentry.getCurrentHub();
@@ -388,7 +402,7 @@ router.get('/sentry-test', (function(_req: Request, res: Response) {
       return res.status(503).json({
         status: 'error',
         message: 'Sentry is not initialized',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -402,20 +416,20 @@ router.get('/sentry-test', (function(_req: Request, res: Response) {
       scope.setTag('test', 'true');
       scope.setContext('test', {
         endpoint: '/sentry-test',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       Sentry.captureException(testError);
     });
 
     logger.info('Sentry test completed', {
       error: testError.message,
-      sentryInitialized
+      sentryInitialized,
     });
 
     res.status(200).json({
       status: 'success',
       message: 'Sentry test error sent',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Sentry test error', { error });
@@ -424,9 +438,9 @@ router.get('/sentry-test', (function(_req: Request, res: Response) {
       status: 'error',
       message: 'Sentry test failed',
       timestamp: new Date().toISOString(),
-      error: (error as Error).message
+      error: (error as Error).message,
     });
   }
-}));
+});
 
 export default router;

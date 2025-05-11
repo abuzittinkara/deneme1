@@ -5,7 +5,7 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { User } from '../../models/User';
-import { PasswordResetToken } from '../../models/PasswordResetToken';
+import PasswordResetToken from '../../models/PasswordResetToken';
 import { logger } from '../../utils/logger';
 import { NotFoundError, ValidationError, AuthenticationError } from '../../utils/errors';
 import * as emailService from '../../services/emailService';
@@ -45,7 +45,7 @@ export async function sendPasswordResetEmail(email: string): Promise<boolean> {
     const resetToken = new PasswordResetToken({
       userId: user._id,
       token: hashedToken,
-      expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRY)
+      expiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_EXPIRY),
     });
 
     await resetToken.save();
@@ -58,7 +58,7 @@ export async function sendPasswordResetEmail(email: string): Promise<boolean> {
     const username = user.get('username');
     await emailService.sendPasswordResetEmail(userEmail, {
       username,
-      resetUrl
+      resetUrl,
     });
 
     logger.info('Şifre sıfırlama e-postası gönderildi', { userId: user._id });
@@ -67,7 +67,7 @@ export async function sendPasswordResetEmail(email: string): Promise<boolean> {
   } catch (error) {
     logger.error('Şifre sıfırlama e-postası gönderme hatası', {
       error: (error as Error).message,
-      email
+      email,
     });
     throw error;
   }
@@ -87,7 +87,7 @@ export async function resetPassword(token: string, newPassword: string): Promise
     // Token'ı bul
     const resetToken = await PasswordResetToken.findOne({
       token: hashedToken,
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
     });
 
     if (!resetToken) {
@@ -114,17 +114,17 @@ export async function resetPassword(token: string, newPassword: string): Promise
     await user.save();
 
     // Token'ı sil
-    await PasswordResetToken.deleteMany({ userId: user._id });
+    await PasswordResetToken.deleteMany({ userId: user._id ? user._id : null });
 
     // Tüm cihazlardan çıkış yap
-    await authManager.logoutAllDevices(user._id.toString());
+    await authManager.logoutAllDevices(user._id ? user._id.toString() : '');
 
-    logger.info('Şifre başarıyla sıfırlandı', { userId: user._id });
+    logger.info('Şifre başarıyla sıfırlandı', { userId: user._id ? user._id.toString() : '' });
 
     return true;
   } catch (error) {
     logger.error('Şifre sıfırlama hatası', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
     throw error;
   }
@@ -169,7 +169,7 @@ export async function validatePasswordChange(
   } catch (error) {
     logger.error('Şifre değişikliği doğrulama hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -198,5 +198,5 @@ export default {
   sendPasswordResetEmail,
   resetPassword,
   validatePasswordChange,
-  isPasswordComplex
+  isPasswordComplex,
 };

@@ -7,7 +7,7 @@ import { logger } from './logger';
 
 /**
  * Express route handler'ları için asenkron işlemleri yönetir
- * 
+ *
  * @param fn - Asenkron route handler fonksiyonu
  * @returns Express middleware fonksiyonu
  */
@@ -20,9 +20,9 @@ export const asyncHandler = (
         error: error instanceof Error ? error.message : 'Bilinmeyen hata',
         stack: error instanceof Error ? error.stack : undefined,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
-      
+
       next(error);
     });
   };

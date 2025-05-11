@@ -41,70 +41,70 @@ export async function loadChannelsFromDB(groups: Groups): Promise<void> {
   try {
     // Geliştirme modunda mock veri kullan
     if (process.env.NODE_ENV === 'development') {
-      console.log("Geliştirme modunda mock kanal verileri kullanılıyor");
-      logger.info("Geliştirme modunda mock kanal verileri kullanılıyor");
+      console.log('Geliştirme modunda mock kanal verileri kullanılıyor');
+      logger.info('Geliştirme modunda mock kanal verileri kullanılıyor');
 
       // Mock kanal verileri
       const mockChannels = [
         { channelId: 'c-dev-1', groupId: 'g-dev-1', name: 'genel', type: 'text' },
         { channelId: 'c-dev-2', groupId: 'g-dev-1', name: 'sesli-sohbet', type: 'voice' },
         { channelId: 'c-dev-3', groupId: 'g-dev-2', name: 'genel', type: 'text' },
-        { channelId: 'c-dev-4', groupId: 'g-dev-3', name: 'genel', type: 'text' }
+        { channelId: 'c-dev-4', groupId: 'g-dev-3', name: 'genel', type: 'text' },
       ];
 
-      mockChannels.forEach(mockChannel => {
+      mockChannels.forEach((mockChannel) => {
         if (groups[mockChannel.groupId]) {
           groups[mockChannel.groupId].rooms[mockChannel.channelId] = {
             name: mockChannel.name,
             type: mockChannel.type,
-            users: []
+            users: [],
           };
         }
       });
 
-      logger.info("Mock kanallar yüklendi", { channelCount: mockChannels.length });
+      logger.info('Mock kanallar yüklendi', { channelCount: mockChannels.length });
       return;
     }
 
     // Üretim modunda gerçek veritabanından yükle
     const channelDocs = await ChannelHelper.find({}, null, { populate: 'group' });
-    channelDocs.forEach(channelDoc => {
+    channelDocs.forEach((channelDoc) => {
       const groupId = (channelDoc.group as any).groupId;
       if (groups[groupId]) {
         groups[groupId].rooms[channelDoc.channelId] = {
           name: channelDoc.name,
           type: channelDoc.type,
-          users: []
+          users: [],
         };
       }
     });
-    logger.info("loadChannelsFromDB tamamlandı", { channelCount: channelDocs.length });
+    logger.info('loadChannelsFromDB tamamlandı', { channelCount: channelDocs.length });
   } catch (error) {
-    logger.error("loadChannelsFromDB hatası", { error: (error as Error).message });
+    logger.error('loadChannelsFromDB hatası', { error: (error as Error).message });
 
     // Geliştirme modunda hata durumunda mock veri kullan
     if (process.env.NODE_ENV === 'development') {
-      logger.warn("Hata nedeniyle mock kanal verileri kullanılıyor");
+      logger.warn('Hata nedeniyle mock kanal verileri kullanılıyor');
 
       // Mock kanal verileri
       const mockChannels = [
         { channelId: 'c-dev-1', groupId: 'g-dev-1', name: 'genel', type: 'text' },
         { channelId: 'c-dev-2', groupId: 'g-dev-1', name: 'sesli-sohbet', type: 'voice' },
         { channelId: 'c-dev-3', groupId: 'g-dev-2', name: 'genel', type: 'text' },
-        { channelId: 'c-dev-4', groupId: 'g-dev-3', name: 'genel', type: 'text' }
+        { channelId: 'c-dev-4', groupId: 'g-dev-3', name: 'genel', type: 'text' },
       ];
 
-      mockChannels.forEach(mockChannel => {
+      mockChannels.forEach((mockChannel) => {
         if (groups[mockChannel.groupId]) {
           groups[mockChannel.groupId].rooms[mockChannel.channelId] = {
             name: mockChannel.name,
             type: mockChannel.type,
-            users: []
+            users: [],
           };
         }
       });
 
-      logger.info("Mock kanallar yüklendi", { channelCount: mockChannels.length });
+      logger.info('Mock kanallar yüklendi', { channelCount: mockChannels.length });
       return;
     }
 
@@ -128,14 +128,18 @@ export function sendRoomsListToUser(
   if (!groups[groupId]) return;
 
   const groupObj = groups[groupId];
-  const roomArray: ChannelListItem[] = Object.keys(groupObj.rooms).map(rId => ({
+  const roomArray: ChannelListItem[] = Object.keys(groupObj.rooms).map((rId) => ({
     id: rId,
     name: groupObj.rooms[rId].name,
-    type: groupObj.rooms[rId].type as ChannelType
+    type: groupObj.rooms[rId].type as ChannelType,
   }));
 
   io.to(socketId).emit('roomsList', roomArray);
-  logger.debug("Kullanıcıya kanal listesi gönderildi", { socketId, groupId, channelCount: roomArray.length });
+  logger.debug('Kullanıcıya kanal listesi gönderildi', {
+    socketId,
+    groupId,
+    channelCount: roomArray.length,
+  });
 }
 
 /**
@@ -152,14 +156,14 @@ export function broadcastRoomsListToGroup(
   if (!groups[groupId]) return;
 
   const groupObj = groups[groupId];
-  const roomArray: ChannelListItem[] = Object.keys(groupObj.rooms).map(rId => ({
+  const roomArray: ChannelListItem[] = Object.keys(groupObj.rooms).map((rId) => ({
     id: rId,
     name: groupObj.rooms[rId].name,
-    type: groupObj.rooms[rId].type as ChannelType
+    type: groupObj.rooms[rId].type as ChannelType,
   }));
 
   io.to(groupId).emit('roomsList', roomArray);
-  logger.debug("Gruba kanal listesi yayınlandı", { groupId, channelCount: roomArray.length });
+  logger.debug('Gruba kanal listesi yayınlandı', { groupId, channelCount: roomArray.length });
 }
 
 /**
@@ -180,28 +184,28 @@ export async function createChannel(
 ): Promise<ChannelListItem> {
   try {
     if (!groups[groupId]) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     // Grup sahibi kontrolü
     if (groups[groupId].owner !== username) {
-      throw new ForbiddenError("Bu grupta kanal oluşturma yetkiniz yok");
+      throw new ForbiddenError('Bu grupta kanal oluşturma yetkiniz yok');
     }
 
     const trimmedName = roomName.trim();
     if (!trimmedName) {
-      throw new ValidationError("Kanal adı boş olamaz");
+      throw new ValidationError('Kanal adı boş olamaz');
     }
 
     // Geçerli kanal tipi kontrolü
     if (roomType !== 'text' && roomType !== 'voice') {
-      throw new ValidationError("Geçersiz kanal tipi");
+      throw new ValidationError('Geçersiz kanal tipi');
     }
 
     // Grubu veritabanından bul
     const groupDoc = await GroupHelper.findOne({ groupId });
     if (!groupDoc) {
-      throw new NotFoundError("Grup veritabanında bulunamadı");
+      throw new NotFoundError('Grup veritabanında bulunamadı');
     }
 
     // Yeni kanal oluştur
@@ -210,7 +214,7 @@ export async function createChannel(
       channelId,
       name: trimmedName,
       group: groupDoc._id,
-      type: roomType
+      type: roomType,
     });
 
     await newChannel.save();
@@ -219,19 +223,24 @@ export async function createChannel(
     groups[groupId].rooms[channelId] = {
       name: trimmedName,
       type: roomType,
-      users: []
+      users: [],
     };
 
-    logger.info("Yeni kanal oluşturuldu", { groupId, channelId, name: trimmedName, type: roomType });
+    logger.info('Yeni kanal oluşturuldu', {
+      groupId,
+      channelId,
+      name: trimmedName,
+      type: roomType,
+    });
 
     return { id: channelId, channelId, name: trimmedName, type: roomType };
   } catch (error) {
-    logger.error("createChannel hatası", {
+    logger.error('createChannel hatası', {
       error: (error as Error).message,
       groupId,
       roomName,
       roomType,
-      username
+      username,
     });
     throw error;
   }
@@ -252,22 +261,22 @@ export async function deleteChannel(
 ): Promise<void> {
   try {
     if (!groups[groupId]) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     if (!groups[groupId].rooms[channelId]) {
-      throw new NotFoundError("Kanal bulunamadı");
+      throw new NotFoundError('Kanal bulunamadı');
     }
 
     // Grup sahibi kontrolü
     if (groups[groupId].owner !== username) {
-      throw new ForbiddenError("Bu kanalı silme yetkiniz yok");
+      throw new ForbiddenError('Bu kanalı silme yetkiniz yok');
     }
 
     // Kanalı veritabanından bul
     const channelDoc = await ChannelHelper.findOne({ channelId });
     if (!channelDoc) {
-      throw new NotFoundError("Kanal veritabanında bulunamadı");
+      throw new NotFoundError('Kanal veritabanında bulunamadı');
     }
 
     // Kanala ait mesajları sil
@@ -279,13 +288,13 @@ export async function deleteChannel(
     // Bellek içi gruptan kanalı sil
     delete groups[groupId].rooms[channelId];
 
-    logger.info("Kanal silindi", { groupId, channelId, username });
+    logger.info('Kanal silindi', { groupId, channelId, username });
   } catch (error) {
-    logger.error("deleteChannel hatası", {
+    logger.error('deleteChannel hatası', {
       error: (error as Error).message,
       groupId,
       channelId,
-      username
+      username,
     });
     throw error;
   }
@@ -309,27 +318,27 @@ export async function renameChannel(
 ): Promise<ChannelListItem> {
   try {
     if (!groups[groupId]) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     if (!groups[groupId].rooms[channelId]) {
-      throw new NotFoundError("Kanal bulunamadı");
+      throw new NotFoundError('Kanal bulunamadı');
     }
 
     // Grup sahibi kontrolü
     if (groups[groupId].owner !== username) {
-      throw new ForbiddenError("Bu kanalı yeniden adlandırma yetkiniz yok");
+      throw new ForbiddenError('Bu kanalı yeniden adlandırma yetkiniz yok');
     }
 
     const trimmedName = newName.trim();
     if (!trimmedName) {
-      throw new ValidationError("Kanal adı boş olamaz");
+      throw new ValidationError('Kanal adı boş olamaz');
     }
 
     // Kanalı veritabanında güncelle
     const channelDoc = await ChannelHelper.findOne({ channelId });
     if (!channelDoc) {
-      throw new NotFoundError("Kanal veritabanında bulunamadı");
+      throw new NotFoundError('Kanal veritabanında bulunamadı');
     }
 
     channelDoc.name = trimmedName;
@@ -338,25 +347,25 @@ export async function renameChannel(
     // Bellek içi kanalı güncelle
     groups[groupId].rooms[channelId].name = trimmedName;
 
-    logger.info("Kanal adı değiştirildi", {
+    logger.info('Kanal adı değiştirildi', {
       groupId,
       channelId,
       oldName: groups[groupId].rooms[channelId].name,
-      newName: trimmedName
+      newName: trimmedName,
     });
 
     return {
       id: channelId,
       name: trimmedName,
-      type: groups[groupId].rooms[channelId].type as ChannelType
+      type: groups[groupId].rooms[channelId].type as ChannelType,
     };
   } catch (error) {
-    logger.error("renameChannel hatası", {
+    logger.error('renameChannel hatası', {
       error: (error as Error).message,
       groupId,
       channelId,
       newName,
-      username
+      username,
     });
     throw error;
   }
@@ -384,7 +393,7 @@ export function addUserToChannel(
     if (!groups[groupId].rooms[channelId]) return;
 
     // Kullanıcı zaten kanalda mı kontrol et
-    const userIndex = groups[groupId].rooms[channelId].users.findIndex(u => u.id === socketId);
+    const userIndex = groups[groupId].rooms[channelId].users.findIndex((u) => u.id === socketId);
     if (userIndex === -1) {
       groups[groupId].rooms[channelId].users.push({ id: socketId, username });
     }
@@ -392,14 +401,14 @@ export function addUserToChannel(
     // Kullanıcının mevcut kanal bilgisini güncelle
     users[socketId].currentRoom = channelId;
 
-    logger.debug("Kullanıcı kanala eklendi", { groupId, channelId, username });
+    logger.debug('Kullanıcı kanala eklendi', { groupId, channelId, username });
   } catch (error) {
-    logger.error("addUserToChannel hatası", {
+    logger.error('addUserToChannel hatası', {
       error: (error as Error).message,
       groupId,
       channelId,
       socketId,
-      username
+      username,
     });
   }
 }
@@ -422,15 +431,17 @@ export function removeUserFromChannel(
     if (!groups[groupId].rooms[channelId]) return;
 
     // Kullanıcıyı kanaldan çıkar
-    groups[groupId].rooms[channelId].users = groups[groupId].rooms[channelId].users.filter(u => u.id !== socketId);
+    groups[groupId].rooms[channelId].users = groups[groupId].rooms[channelId].users.filter(
+      (u) => u.id !== socketId
+    );
 
-    logger.debug("Kullanıcı kanaldan çıkarıldı", { groupId, channelId, socketId });
+    logger.debug('Kullanıcı kanaldan çıkarıldı', { groupId, channelId, socketId });
   } catch (error) {
-    logger.error("removeUserFromChannel hatası", {
+    logger.error('removeUserFromChannel hatası', {
       error: (error as Error).message,
       groupId,
       channelId,
-      socketId
+      socketId,
     });
   }
 }
@@ -454,16 +465,16 @@ export function broadcastChannelUsers(
 
     io.to(`${groupId}::${channelId}`).emit('roomUsers', groups[groupId].rooms[channelId].users);
 
-    logger.debug("Kanal kullanıcıları yayınlandı", {
+    logger.debug('Kanal kullanıcıları yayınlandı', {
       groupId,
       channelId,
-      userCount: groups[groupId].rooms[channelId].users.length
+      userCount: groups[groupId].rooms[channelId].users.length,
     });
   } catch (error) {
-    logger.error("broadcastChannelUsers hatası", {
+    logger.error('broadcastChannelUsers hatası', {
       error: (error as Error).message,
       groupId,
-      channelId
+      channelId,
     });
   }
 }
@@ -482,18 +493,18 @@ export function broadcastAllChannelsData(
   try {
     if (!groups[groupId]) return;
 
-    Object.keys(groups[groupId].rooms).forEach(roomId => {
+    Object.keys(groups[groupId].rooms).forEach((roomId) => {
       io.to(`${groupId}::${roomId}`).emit('roomUsers', groups[groupId].rooms[roomId].users);
     });
 
-    logger.debug("Tüm kanal verileri yayınlandı", {
+    logger.debug('Tüm kanal verileri yayınlandı', {
       groupId,
-      channelCount: Object.keys(groups[groupId].rooms).length
+      channelCount: Object.keys(groups[groupId].rooms).length,
     });
   } catch (error) {
-    logger.error("broadcastAllChannelsData hatası", {
+    logger.error('broadcastAllChannelsData hatası', {
       error: (error as Error).message,
-      groupId
+      groupId,
     });
   }
 }
@@ -508,5 +519,5 @@ export default {
   addUserToChannel,
   removeUserFromChannel,
   broadcastChannelUsers,
-  broadcastAllChannelsData
+  broadcastAllChannelsData,
 };

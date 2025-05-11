@@ -7,11 +7,12 @@ import path from 'path';
 import fs from 'fs';
 
 // .env dosyasını yükle
-const envFile = process.env.NODE_ENV === 'test'
-  ? '.env.test'
-  : process.env.NODE_ENV === 'production'
-    ? '.env.production'
-    : '.env';
+const envFile =
+  process.env.NODE_ENV === 'test'
+    ? '.env.test'
+    : process.env.NODE_ENV === 'production'
+      ? '.env.production'
+      : '.env';
 
 const envPath = path.resolve(process.cwd(), envFile);
 
@@ -32,6 +33,9 @@ if (fs.existsSync(envPath)) {
  * @param required - Zorunlu mu
  * @returns Ortam değişkeni değeri
  */
+// Logger modülünü içe aktar
+import logger from '../utils/logger';
+
 function getEnvVar(key: string, defaultValue?: string, required = false): string {
   const value = process.env[key] || defaultValue;
 
@@ -58,7 +62,7 @@ function getEnvVarAsNumber(key: string, defaultValue?: number, required = false)
   if (isNaN(numberValue)) {
     const errorMessage = `${key} ortam değişkeni geçerli bir sayı değil: ${stringValue}`;
     logger.error(errorMessage);
-    return defaultValue || 0;
+    return defaultValue !== undefined ? defaultValue : 0;
   }
 
   return numberValue;
@@ -99,13 +103,44 @@ export const env = {
   MONGODB_AUTH_SOURCE: getEnvVar('MONGODB_AUTH_SOURCE', 'admin'),
   MONGODB_SSL: getEnvVar('MONGODB_SSL', 'false'),
   MONGODB_RETRY_WRITES: getEnvVarAsBoolean('MONGODB_RETRY_WRITES', true),
-  MONGODB_MAX_POOL_SIZE: getEnvVarAsNumber('MONGODB_MAX_POOL_SIZE', process.env.NODE_ENV === 'production' ? 20 : 10),
-  MONGODB_MIN_POOL_SIZE: getEnvVarAsNumber('MONGODB_MIN_POOL_SIZE', process.env.NODE_ENV === 'production' ? 5 : 2),
+  MONGODB_MAX_POOL_SIZE: getEnvVarAsNumber(
+    'MONGODB_MAX_POOL_SIZE',
+    process.env.NODE_ENV === 'production' ? 20 : 10
+  ),
+  MONGODB_MIN_POOL_SIZE: getEnvVarAsNumber(
+    'MONGODB_MIN_POOL_SIZE',
+    process.env.NODE_ENV === 'production' ? 5 : 2
+  ),
+  MONGODB_ENABLED: getEnvVar('MONGODB_ENABLED', 'true'),
+  MONGODB_DEBUG: getEnvVar(
+    'MONGODB_DEBUG',
+    process.env.NODE_ENV === 'development' ? 'true' : 'false'
+  ),
+  MONGODB_MONITOR_QUERIES: getEnvVarAsBoolean(
+    'MONGODB_MONITOR_QUERIES',
+    process.env.NODE_ENV === 'production'
+  ),
+  MONGODB_SLOW_QUERY_THRESHOLD: getEnvVarAsNumber('MONGODB_SLOW_QUERY_THRESHOLD', 1000), // 1 saniye
+
+  // Atlas SQL ayarları
+  ATLAS_SQL_URI: getEnvVar('ATLAS_SQL_URI', ''),
+  ATLAS_SQL_USER: getEnvVar('ATLAS_SQL_USER'),
+  ATLAS_SQL_PASSWORD: getEnvVar('ATLAS_SQL_PASSWORD'),
+  ATLAS_SQL_DATABASE: getEnvVar('ATLAS_SQL_DATABASE', 'myVirtualDatabase'),
+  ATLAS_SQL_ENABLED: getEnvVar('ATLAS_SQL_ENABLED', 'true'),
 
   // JWT ayarları
-  JWT_SECRET: getEnvVar('JWT_SECRET', process.env.NODE_ENV === 'production' ? '' : 'dev-jwt-secret', process.env.NODE_ENV === 'production'),
+  JWT_SECRET: getEnvVar(
+    'JWT_SECRET',
+    process.env.NODE_ENV === 'production' ? '' : 'dev-jwt-secret',
+    process.env.NODE_ENV === 'production'
+  ),
   JWT_EXPIRES_IN: getEnvVar('JWT_EXPIRES_IN', '15m'), // Güvenlik için 15 dakika
-  JWT_REFRESH_SECRET: getEnvVar('JWT_REFRESH_SECRET', process.env.NODE_ENV === 'production' ? '' : 'dev-jwt-refresh-secret', process.env.NODE_ENV === 'production'),
+  JWT_REFRESH_SECRET: getEnvVar(
+    'JWT_REFRESH_SECRET',
+    process.env.NODE_ENV === 'production' ? '' : 'dev-jwt-refresh-secret',
+    process.env.NODE_ENV === 'production'
+  ),
   JWT_REFRESH_EXPIRES_IN: getEnvVar('JWT_REFRESH_EXPIRES_IN', '7d'),
   JWT_ALGORITHM: getEnvVar('JWT_ALGORITHM', 'HS256'),
   JWT_ISSUER: getEnvVar('JWT_ISSUER', 'fisqos-api'),
@@ -128,7 +163,13 @@ export const env = {
   ADMIN_URL: getEnvVar('ADMIN_URL', 'http://localhost:9092/admin'),
 
   // Redis ayarları
-  REDIS_ENABLED: getEnvVar('REDIS_ENABLED', process.env.NODE_ENV === 'production' ? 'true' : 'false'),
+  REDIS_ENABLED: getEnvVar(
+    'REDIS_ENABLED',
+    process.env.NODE_ENV === 'production' ? 'true' : 'false'
+  ),
+  get REDIS_ENABLED_BOOL(): boolean {
+    return process.env['REDIS_ENABLED'] === 'true';
+  },
   REDIS_HOST: getEnvVar('REDIS_HOST', 'localhost'),
   REDIS_PORT: getEnvVar('REDIS_PORT', '6379'),
   REDIS_PASSWORD: getEnvVar('REDIS_PASSWORD'),
@@ -139,10 +180,17 @@ export const env = {
   // CORS ayarları
   CORS_ORIGIN: getEnvVar('CORS_ORIGIN', '*'),
   CORS_METHODS: getEnvVar('CORS_METHODS', 'GET,POST,PUT,DELETE,OPTIONS'),
-  CORS_ALLOWED_HEADERS: getEnvVar('CORS_ALLOWED_HEADERS', 'Content-Type,Authorization,X-Requested-With'),
+  CORS_ALLOWED_HEADERS: getEnvVar(
+    'CORS_ALLOWED_HEADERS',
+    'Content-Type,Authorization,X-Requested-With'
+  ),
   CORS_EXPOSED_HEADERS: getEnvVar('CORS_EXPOSED_HEADERS', 'Content-Range,X-Total-Count'),
   CORS_CREDENTIALS: getEnvVarAsBoolean('CORS_CREDENTIALS', true),
   CORS_MAX_AGE: getEnvVarAsNumber('CORS_MAX_AGE', 86400), // 24 saat
+
+  // Özellik bayrakları
+  FEATURE_RATE_LIMIT: getEnvVarAsBoolean('FEATURE_RATE_LIMIT', true),
+  FEATURE_CSRF: getEnvVarAsBoolean('FEATURE_CSRF', false),
 
   // Sentry ayarları
   SENTRY_DSN: getEnvVar('SENTRY_DSN'),
@@ -152,27 +200,63 @@ export const env = {
 
   // Mediasoup ayarları
   ANNOUNCED_IP: getEnvVar('ANNOUNCED_IP', 'localhost'),
-  TURN_USERNAME: getEnvVar('TURN_USERNAME', process.env.NODE_ENV === 'production' ? '' : 'dev-turn-user', process.env.NODE_ENV === 'production'),
-  TURN_CREDENTIAL: getEnvVar('TURN_CREDENTIAL', process.env.NODE_ENV === 'production' ? '' : 'dev-turn-credential', process.env.NODE_ENV === 'production'),
+  TURN_USERNAME: getEnvVar(
+    'TURN_USERNAME',
+    process.env.NODE_ENV === 'production' ? '' : 'dev-turn-user',
+    process.env.NODE_ENV === 'production'
+  ),
+  TURN_CREDENTIAL: getEnvVar(
+    'TURN_CREDENTIAL',
+    process.env.NODE_ENV === 'production' ? '' : 'dev-turn-credential',
+    process.env.NODE_ENV === 'production'
+  ),
 
   // Socket.IO ayarları
-  SOCKET_ADMIN_UI_ENABLED: getEnvVar('SOCKET_ADMIN_UI_ENABLED', process.env.NODE_ENV === 'production' ? 'false' : 'true'),
+  SOCKET_ADMIN_UI_ENABLED: getEnvVar(
+    'SOCKET_ADMIN_UI_ENABLED',
+    process.env.NODE_ENV === 'production' ? 'false' : 'true'
+  ),
   SOCKET_ADMIN_UI_USERNAME: getEnvVar('SOCKET_ADMIN_UI_USERNAME', 'admin'),
   SOCKET_ADMIN_UI_PASSWORD: getEnvVar('SOCKET_ADMIN_UI_PASSWORD', 'admin'),
-  SKIP_SOCKET_AUTH: getEnvVar('SKIP_SOCKET_AUTH', process.env.NODE_ENV === 'production' ? 'false' : 'true'),
+  SKIP_SOCKET_AUTH: getEnvVar(
+    'SKIP_SOCKET_AUTH',
+    process.env.NODE_ENV === 'production' ? 'false' : 'true'
+  ),
 
   // Dosya yükleme ayarları
   UPLOAD_DIR: getEnvVar('UPLOAD_DIR', 'uploads'),
   TEMP_UPLOAD_DIR: getEnvVar('TEMP_UPLOAD_DIR', 'uploads/temp'),
   MAX_FILE_SIZE: getEnvVarAsNumber('MAX_FILE_SIZE', 10 * 1024 * 1024), // 10MB
   ALLOWED_FILE_TYPES: getEnvVar('ALLOWED_FILE_TYPES', 'image,document,audio,video'),
-  REQUIRE_AUTH_FOR_UPLOADS: getEnvVar('REQUIRE_AUTH_FOR_UPLOADS', process.env.NODE_ENV === 'production' ? 'true' : 'false'),
+  REQUIRE_AUTH_FOR_UPLOADS: getEnvVar(
+    'REQUIRE_AUTH_FOR_UPLOADS',
+    process.env.NODE_ENV === 'production' ? 'true' : 'false'
+  ),
 
   // Güvenlik ayarları
   RATE_LIMIT_WINDOW_MS: getEnvVarAsNumber('RATE_LIMIT_WINDOW_MS', 15 * 60 * 1000), // 15 dakika
   RATE_LIMIT_MAX: getEnvVarAsNumber('RATE_LIMIT_MAX', 100), // 15 dakikada 100 istek
   ALLOWED_HOSTS: getEnvVar('ALLOWED_HOSTS', ''),
   BCRYPT_SALT_ROUNDS: getEnvVarAsNumber('BCRYPT_SALT_ROUNDS', 12),
+  SECURE_COOKIES: getEnvVarAsBoolean('SECURE_COOKIES', process.env.NODE_ENV === 'production'),
+  COOKIE_SECRET: getEnvVar(
+    'COOKIE_SECRET',
+    process.env.NODE_ENV === 'production' ? '' : 'dev-cookie-secret'
+  ),
+  CSRF_SECRET: getEnvVar(
+    'CSRF_SECRET',
+    process.env.NODE_ENV === 'production' ? '' : 'dev-csrf-secret'
+  ),
+  XSS_PROTECTION: getEnvVarAsBoolean('XSS_PROTECTION', true),
+  CONTENT_SECURITY_POLICY: getEnvVarAsBoolean(
+    'CONTENT_SECURITY_POLICY',
+    process.env.NODE_ENV === 'production'
+  ),
+  REFERRER_POLICY: getEnvVar('REFERRER_POLICY', 'same-origin'),
+  FRAME_OPTIONS: getEnvVar('FRAME_OPTIONS', 'SAMEORIGIN'),
+  HSTS_MAX_AGE: getEnvVarAsNumber('HSTS_MAX_AGE', 15552000), // 180 gün
+  HSTS_INCLUDE_SUBDOMAINS: getEnvVarAsBoolean('HSTS_INCLUDE_SUBDOMAINS', true),
+  HSTS_PRELOAD: getEnvVarAsBoolean('HSTS_PRELOAD', false),
 
   // i18n ayarları
   DEFAULT_LANGUAGE: getEnvVar('DEFAULT_LANGUAGE', 'tr'),
@@ -180,6 +264,9 @@ export const env = {
 
   // Paket bilgileri
   npm_package_version: getEnvVar('npm_package_version', '1.0.0'),
+  get packageVersion(): string {
+    return process.env['npm_package_version'] || '1.0.0';
+  },
 
   // Yardımcı fonksiyonlar ve özellikler
   isDevelopment: getEnvVar('NODE_ENV', 'development') === 'development',
@@ -196,6 +283,8 @@ export const env = {
   FEATURE_COMPRESSION: getEnvVarAsBoolean('FEATURE_COMPRESSION', true),
   FEATURE_HELMET: getEnvVarAsBoolean('FEATURE_HELMET', true),
   FEATURE_CORS: getEnvVarAsBoolean('FEATURE_CORS', true),
+  FEATURE_CSRF: getEnvVarAsBoolean('FEATURE_CSRF', true),
+  FEATURE_BRUTE_FORCE_PROTECTION: getEnvVarAsBoolean('FEATURE_BRUTE_FORCE_PROTECTION', true),
   FEATURE_MORGAN: getEnvVarAsBoolean('FEATURE_MORGAN', true),
 };
 
@@ -224,8 +313,10 @@ if (env.isProduction) {
       compression: env.FEATURE_COMPRESSION,
       helmet: env.FEATURE_HELMET,
       cors: env.FEATURE_CORS,
-      morgan: env.FEATURE_MORGAN
-    }
+      morgan: env.FEATURE_MORGAN,
+      csrf: env.FEATURE_CSRF,
+      bruteForceProtection: env.FEATURE_BRUTE_FORCE_PROTECTION,
+    },
   });
 } else {
   // Geliştirme ortamında ortam değişkenlerinin durumunu logla
@@ -234,7 +325,7 @@ if (env.isProduction) {
     port: env.PORT,
     host: env.HOST,
     mongodbUri: env.MONGODB_URI || 'localhost:27017',
-    redisEnabled: env.REDIS_ENABLED === 'true'
+    redisEnabled: env.REDIS_ENABLED === 'true',
   });
 }
 

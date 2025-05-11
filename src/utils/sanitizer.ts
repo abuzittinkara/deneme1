@@ -37,28 +37,53 @@ export function sanitizeXss(text: string | undefined | null): string {
     // sanitize-html kütüphanesini kullan
     return sanitizeHtml(text, {
       allowedTags: [
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
-        'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
-        'b', 'i', 'strong', 'em', 'mark', 'small', 'del', 'ins', 'sub', 'sup',
-        'a', 'img', 'span', 'div'
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'p',
+        'br',
+        'hr',
+        'ul',
+        'ol',
+        'li',
+        'blockquote',
+        'pre',
+        'code',
+        'b',
+        'i',
+        'strong',
+        'em',
+        'mark',
+        'small',
+        'del',
+        'ins',
+        'sub',
+        'sup',
+        'a',
+        'img',
+        'span',
+        'div',
       ],
       allowedAttributes: {
         a: ['href', 'target', 'rel', 'title'],
         img: ['src', 'alt', 'title', 'width', 'height'],
-        '*': ['class', 'id', 'style']
+        '*': ['class', 'id', 'style'],
       },
       allowedStyles: {
         '*': {
-          'color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
+          color: [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
           'text-align': [/^left$/, /^right$/, /^center$/, /^justify$/],
-          'font-size': [/^\d+(?:px|em|rem|%)$/]
-        }
-      }
+          'font-size': [/^\d+(?:px|em|rem|%)$/],
+        },
+      },
     });
   } catch (error) {
     logger.error('HTML sanitizasyon hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      input: text.substring(0, 100) + (text.length > 100 ? '...' : '')
+      input: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
     });
 
     // Hata durumunda tüm HTML etiketlerini kaldır
@@ -124,7 +149,7 @@ export function sanitizeUrl(url: string | undefined | null): string {
   } catch (error) {
     logger.error('URL sanitizasyon hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      url
+      url,
     });
 
     return '';
@@ -148,15 +173,15 @@ export function sanitizeFilename(filename: string | undefined | null): string {
     // Basename'i sanitize et
     const sanitizedBasename = basename
       .replace(/[^\w\s.-]/g, '_') // Alfanümerik olmayan karakterleri _ ile değiştir
-      .replace(/\s+/g, '_')       // Boşlukları _ ile değiştir
-      .replace(/_{2,}/g, '_')     // Birden fazla _ karakterini tek _ ile değiştir
-      .replace(/^[.-]+/g, '_')    // Başlangıçtaki . ve - karakterlerini _ ile değiştir
-      .replace(/[.-]+$/g, '_');   // Sondaki . ve - karakterlerini _ ile değiştir
+      .replace(/\s+/g, '_') // Boşlukları _ ile değiştir
+      .replace(/_{2,}/g, '_') // Birden fazla _ karakterini tek _ ile değiştir
+      .replace(/^[.-]+/g, '_') // Başlangıçtaki . ve - karakterlerini _ ile değiştir
+      .replace(/[.-]+$/g, '_'); // Sondaki . ve - karakterlerini _ ile değiştir
 
     // Uzantıyı sanitize et
     const sanitizedExtname = extname
-      .replace(/[^\w.]/g, '')     // Alfanümerik olmayan karakterleri kaldır
-      .toLowerCase();             // Küçük harfe çevir
+      .replace(/[^\w.]/g, '') // Alfanümerik olmayan karakterleri kaldır
+      .toLowerCase(); // Küçük harfe çevir
 
     // Sanitize edilmiş dosya adını oluştur
     let result = sanitizedBasename + sanitizedExtname;
@@ -168,7 +193,7 @@ export function sanitizeFilename(filename: string | undefined | null): string {
   } catch (error) {
     logger.error('Dosya adı sanitizasyon hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      filename
+      filename,
     });
 
     // Hata durumunda güvenli bir dosya adı döndür
@@ -191,7 +216,7 @@ export function sanitizeText(input: string | undefined | null): string {
   } catch (error) {
     logger.error('Metin sanitizasyon hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      input: input.substring(0, 100) + (input.length > 100 ? '...' : '')
+      input: input.substring(0, 100) + (input.length > 100 ? '...' : ''),
     });
 
     return '';
@@ -221,7 +246,7 @@ export function sanitizeAll(input: string | undefined | null): string {
   } catch (error) {
     logger.error('Genel sanitizasyon hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      input: input.substring(0, 100) + (input.length > 100 ? '...' : '')
+      input: input.substring(0, 100) + (input.length > 100 ? '...' : ''),
     });
 
     // Hata durumunda tüm HTML etiketlerini kaldır
@@ -236,5 +261,5 @@ export default {
   sanitizeUrl,
   sanitizeFilename,
   sanitizeText,
-  sanitizeAll
+  sanitizeAll,
 };

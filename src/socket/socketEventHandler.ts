@@ -36,21 +36,26 @@ export interface AuthenticatedSocket extends Socket {
  * @returns Hata yakalama ile sarılmış işleyici
  */
 export function createSocketEventHandler(handler: SocketEventHandler): SocketEventHandler {
-  return async (socket: AuthenticatedSocket, data: any, callback?: (response: SocketResponse) => void) => {
+  return async (
+    socket: AuthenticatedSocket,
+    data: any,
+    callback?: (response: SocketResponse) => void
+  ) => {
     try {
       // Başlangıç zamanını kaydet (performans izleme için)
       const startTime = Date.now();
-      
+
       // İşleyiciyi çağır
       await handler(socket, data, callback);
-      
+
       // Performans metriklerini logla
       const duration = Date.now() - startTime;
-      if (duration > 100) { // 100ms'den uzun süren işlemleri logla
+      if (duration > 100) {
+        // 100ms'den uzun süren işlemleri logla
         logger.debug('Yavaş socket işlemi', {
           event: socket.eventNames().join(','),
           userId: socket.user?.id,
-          duration: `${duration}ms`
+          duration: `${duration}ms`,
         });
       }
     } catch (error) {
@@ -60,17 +65,17 @@ export function createSocketEventHandler(handler: SocketEventHandler): SocketEve
         stack: (error as Error).stack,
         event: socket.eventNames().join(','),
         userId: socket.user?.id,
-        data
+        data,
       });
-      
+
       // Hata yanıtı gönder
       if (typeof callback === 'function') {
         callback({
           success: false,
           error: {
             message: (error as Error).message || 'Bir hata oluştu',
-            code: (error as any).code || 'INTERNAL_ERROR'
-          }
+            code: (error as any).code || 'INTERNAL_ERROR',
+          },
         });
       }
     }
@@ -78,5 +83,5 @@ export function createSocketEventHandler(handler: SocketEventHandler): SocketEve
 }
 
 export default {
-  createSocketEventHandler
+  createSocketEventHandler,
 };

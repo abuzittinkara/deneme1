@@ -3,6 +3,17 @@
  * İstemci tarafı TypeScript modüllerini içe aktarır
  */
 
+// Socket.IO istemcisini içe aktar
+import io from 'socket.io-client';
+
+// Socket.IO bağlantısını oluştur
+export const socket = io();
+
+// Tema, erişilebilirlik ve performans yöneticilerini içe aktar
+import themeManager from './themeManager';
+import accessibilityManager from './accessibilityManager';
+import performanceMonitor from './performanceMonitor';
+
 // Modülleri içe aktar
 import { initFileUpload } from './fileUpload';
 import { initMessageManager } from './messageManager';
@@ -163,7 +174,45 @@ window.startScreenShare = startScreenShare;
 window.stopScreenShare = stopScreenShare;
 window.sessionManager = initSessionManager;
 
+// Socket.IO bağlantısını global değişkene ekle
+window.socket = socket;
+
 // Sayfa yüklendiğinde çalıştır
 document.addEventListener('DOMContentLoaded', () => {
   console.log('TypeScript modülleri yüklendi');
+
+  // Tema, erişilebilirlik ve performans yöneticilerini başlat
+  themeManager.init();
+  accessibilityManager.init();
+
+  // Geliştirme modunda performans izlemeyi başlat
+  if (process.env.NODE_ENV !== 'production') {
+    performanceMonitor.init();
+    console.log('Performans izleme etkinleştirildi (geliştirme modu)');
+  }
+
+  // Socket.IO bağlantısını başlat
+  socket.on('connect', () => {
+    console.log('Socket.IO bağlantısı kuruldu:', socket.id);
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Socket.IO bağlantı hatası:', error);
+  });
+
+  // Tema değiştirme düğmesini ekle
+  const headerControls = document.querySelector('.chat-header-controls');
+  if (headerControls) {
+    const themeToggleButton = document.createElement('button');
+    themeToggleButton.className = 'control-btn';
+    themeToggleButton.setAttribute('data-theme-toggle', '');
+    themeToggleButton.innerHTML = '<span class="material-icons">brightness_6</span>';
+    themeToggleButton.title = 'Temayı Değiştir';
+
+    themeToggleButton.addEventListener('click', () => {
+      themeManager.toggleTheme();
+    });
+
+    headerControls.appendChild(themeToggleButton);
+  }
 });

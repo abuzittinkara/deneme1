@@ -69,9 +69,7 @@ export const getChannels = createAuthRouteHandler(async (req: AuthRequest, res: 
   // Kullanıcı grup üyesi mi kontrol et
   const userId = getDocId(user);
   const groupUsers = getDocField<any, 'users'>(group, 'users', []);
-  const isMember = groupUsers.some((memberId: any) =>
-    memberId.toString() === userId
-  );
+  const isMember = groupUsers.some((memberId: any) => memberId.toString() === userId);
 
   if (!isMember) {
     throw new ForbiddenError('Bu grubun üyesi değilsiniz');
@@ -86,12 +84,12 @@ export const getChannels = createAuthRouteHandler(async (req: AuthRequest, res: 
   logger.info('Grup kanalları getirildi', {
     userId,
     groupId,
-    channelCount: channels.length
+    channelCount: channels.length,
   });
 
   return res.json({
     success: true,
-    data: channels
+    data: channels,
   });
 });
 
@@ -207,7 +205,7 @@ export const createChannel = createAuthRouteHandler(async (req: AuthRequest, res
     type,
     group: groupId,
     createdBy: userId,
-    isPrivate: isPrivate || false
+    isPrivate: isPrivate || false,
   });
 
   await channel.save();
@@ -217,7 +215,7 @@ export const createChannel = createAuthRouteHandler(async (req: AuthRequest, res
     groupId,
     channelId: channel._id,
     channelName: name,
-    channelType: type
+    channelType: type,
   });
 
   return res.status(201).json({
@@ -230,8 +228,8 @@ export const createChannel = createAuthRouteHandler(async (req: AuthRequest, res
       isPrivate: channel.isPrivate,
       group: channel.group,
       createdBy: channel.createdBy,
-      createdAt: channel.createdAt
-    }
+      createdAt: channel.createdAt,
+    },
   });
 });
 
@@ -300,9 +298,7 @@ export const getChannelById = createAuthRouteHandler(async (req: AuthRequest, re
   const userId = getDocId(user);
   const groupData = group.toObject();
   const groupUsers = groupData.users || [];
-  const isMember = groupUsers.some((memberId: any) =>
-    memberId.toString() === userId
-  );
+  const isMember = groupUsers.some((memberId: any) => memberId.toString() === userId);
 
   if (!isMember) {
     throw new ForbiddenError('Bu grubun üyesi değilsiniz');
@@ -311,12 +307,12 @@ export const getChannelById = createAuthRouteHandler(async (req: AuthRequest, re
   logger.info('Kanal detayları getirildi', {
     userId,
     channelId,
-    groupId
+    groupId,
   });
 
   return res.json({
     success: true,
-    data: channel
+    data: channel,
   });
 });
 
@@ -412,7 +408,7 @@ export const updateChannel = createAuthRouteHandler(async (req: AuthRequest, res
   updateDocFields<IChannel>(channel, {
     ...(name && { name }),
     ...(description !== undefined && { description }),
-    ...(isPrivate !== undefined && { isPrivate })
+    ...(isPrivate !== undefined && { isPrivate }),
   });
 
   await channel.save();
@@ -421,7 +417,7 @@ export const updateChannel = createAuthRouteHandler(async (req: AuthRequest, res
     userId,
     channelId,
     groupId,
-    updates: { name, description, isPrivate }
+    updates: { name, description, isPrivate },
   });
 
   return res.json({
@@ -433,8 +429,8 @@ export const updateChannel = createAuthRouteHandler(async (req: AuthRequest, res
       type: getDocField<IChannel, 'type'>(channel, 'type', 'text'),
       isPrivate: getDocField<IChannel, 'isPrivate'>(channel, 'isPrivate', false),
       group: groupId,
-      updatedAt: new Date()
-    }
+      updatedAt: new Date(),
+    },
   });
 });
 
@@ -521,15 +517,15 @@ export const deleteChannel = createAuthRouteHandler(async (req: AuthRequest, res
     channelId,
     groupId,
     channelName: getDocField<IChannel, 'name'>(channel, 'name', ''),
-    channelType: getDocField<IChannel, 'type'>(channel, 'type', 'text')
+    channelType: getDocField<IChannel, 'type'>(channel, 'type', 'text'),
   });
 
   return res.json({
     success: true,
     data: {
       message: 'Kanal başarıyla silindi',
-      id: channelId
-    }
+      id: channelId,
+    },
   });
 });
 
@@ -613,9 +609,7 @@ export const getChannelUsers = createAuthRouteHandler(async (req: AuthRequest, r
   const userId = getDocId(user);
   const groupData = group as any;
   const members = groupData.members || [];
-  const isMember = members.some((member: any) =>
-    getDocId(member.user) === userId
-  );
+  const isMember = members.some((member: any) => getDocId(member.user) === userId);
 
   if (!isMember) {
     throw new ForbiddenError('Bu grubun üyesi değilsiniz');
@@ -630,19 +624,19 @@ export const getChannelUsers = createAuthRouteHandler(async (req: AuthRequest, r
     profilePicture: member.user.profilePicture,
     status: member.user.status,
     role: member.role,
-    joinedAt: member.joinedAt
+    joinedAt: member.joinedAt,
   }));
 
   logger.info('Kanal kullanıcıları getirildi', {
     userId,
     channelId,
     groupId,
-    userCount: users.length
+    userCount: users.length,
   });
 
   return res.json({
     success: true,
-    data: users
+    data: users,
   });
 });
 
@@ -652,5 +646,5 @@ export default {
   getChannelById,
   updateChannel,
   deleteChannel,
-  getChannelUsers
+  getChannelUsers,
 };

@@ -36,7 +36,7 @@ router.get(
       .optional()
       .isInt({ min: 0 })
       .withMessage('Skip 0 veya daha büyük olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -55,9 +55,13 @@ router.get(
     } catch (error) {
       logger.error('Arkadaşları getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
-      return res.status(500).json(createErrorResponse('Arkadaşlar getirilirken bir hata oluştu', 'FRIENDS_FETCH_ERROR'));
+      return res
+        .status(500)
+        .json(
+          createErrorResponse('Arkadaşlar getirilirken bir hata oluştu', 'FRIENDS_FETCH_ERROR')
+        );
     }
   })
 );
@@ -85,7 +89,7 @@ router.get(
       .optional()
       .isInt({ min: 0 })
       .withMessage('Skip 0 veya daha büyük olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -104,9 +108,16 @@ router.get(
     } catch (error) {
       logger.error('Arkadaşlık isteklerini getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
-      return res.status(500).json(createErrorResponse('Arkadaşlık istekleri getirilirken bir hata oluştu', 'FRIEND_REQUESTS_FETCH_ERROR'));
+      return res
+        .status(500)
+        .json(
+          createErrorResponse(
+            'Arkadaşlık istekleri getirilirken bir hata oluştu',
+            'FRIEND_REQUESTS_FETCH_ERROR'
+          )
+        );
     }
   })
 );
@@ -119,16 +130,12 @@ router.get(
 router.post(
   '/request/:userId',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const senderId = req.user!.id;
-      const { userId: receiverId } = req.params;
+      const receiverId = req.params['userId'] || '';
 
       const result = await friendManager.sendFriendRequest(senderId, receiverId);
 
@@ -137,7 +144,7 @@ router.post(
       logger.error('Arkadaşlık isteği gönderme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        receiverId: req.params.userId
+        receiverId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -172,16 +179,12 @@ router.post(
 router.post(
   '/accept/:userId',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const receiverId = req.user!.id;
-      const { userId: senderId } = req.params;
+      const senderId = req.params['userId'] || '';
 
       const result = await friendManager.acceptFriendRequest(senderId, receiverId);
 
@@ -190,7 +193,7 @@ router.post(
       logger.error('Arkadaşlık isteği kabul etme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        senderId: req.params.userId
+        senderId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -221,16 +224,12 @@ router.post(
 router.post(
   '/reject/:userId',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const receiverId = req.user!.id;
-      const { userId: senderId } = req.params;
+      const senderId = req.params['userId'] || '';
 
       await friendManager.rejectFriendRequest(senderId, receiverId);
 
@@ -239,7 +238,7 @@ router.post(
       logger.error('Arkadaşlık isteği reddetme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        senderId: req.params.userId
+        senderId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -266,16 +265,12 @@ router.post(
 router.delete(
   '/cancel/:userId',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const senderId = req.user!.id;
-      const { userId: receiverId } = req.params;
+      const receiverId = req.params['userId'] || '';
 
       await friendManager.cancelFriendRequest(senderId, receiverId);
 
@@ -284,7 +279,7 @@ router.delete(
       logger.error('Arkadaşlık isteği iptal etme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        receiverId: req.params.userId
+        receiverId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -311,16 +306,12 @@ router.delete(
 router.delete(
   '/:userId',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
-      const { userId: friendId } = req.params;
+      const friendId = req.params['userId'] || '';
 
       await friendManager.removeFriend(userId, friendId);
 
@@ -329,7 +320,7 @@ router.delete(
       logger.error('Arkadaşlıktan çıkarma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        friendId: req.params.userId
+        friendId: req.params['userId'],
       });
 
       // Hata mesajını belirle

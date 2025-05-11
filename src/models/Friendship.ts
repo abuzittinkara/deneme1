@@ -23,22 +23,22 @@ const friendshipSchema = new Schema<FriendshipDocument>(
     user1: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     user2: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     status: {
       type: String,
       enum: Object.values(FriendshipStatus),
       default: FriendshipStatus.ACCEPTED,
-      required: true
-    }
+      required: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -48,9 +48,7 @@ friendshipSchema.index({ user1: 1, status: 1 });
 friendshipSchema.index({ user2: 1, status: 1 });
 
 // Model arayüzü
-export interface FriendshipModel extends mongoose.Model<FriendshipDocument> {
-  // Özel model metodları buraya eklenebilir
-}
+export type FriendshipModel = mongoose.Model<FriendshipDocument>;
 
 // Model oluştur
 let Friendship: FriendshipModel;
@@ -69,7 +67,9 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as FriendshipModel;
 } else {
   // Gerçek model
-  Friendship = mongoose.model<FriendshipDocument, FriendshipModel>('Friendship', friendshipSchema);
+  Friendship =
+    (mongoose.models['Friendship'] as FriendshipModel) ||
+    mongoose.model<FriendshipDocument, FriendshipModel>('Friendship', friendshipSchema);
 }
 
 export default Friendship;

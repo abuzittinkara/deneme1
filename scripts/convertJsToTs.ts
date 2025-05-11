@@ -98,7 +98,7 @@ async function convertJsToTs(filePath: string): Promise<void> {
 
     // module.exports = { ... } yapısını export { ... } yapısına dönüştür
     const moduleExportsMatch = tsContent.match(/module\.exports\s+=\s+{([^}]+)}/);
-    if (moduleExportsMatch) {
+    if (moduleExportsMatch && moduleExportsMatch[1]) {
       const exportItems = moduleExportsMatch[1].trim().split(',').map(item => item.trim());
       tsContent = tsContent.replace(/module\.exports\s+=\s+{([^}]+)}/, `export {\n  ${exportItems.join(',\n  ')}\n}`);
     }

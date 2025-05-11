@@ -2,7 +2,7 @@
  * src/test.ts
  * Basit bir test dosyası
  */
-console.log("Test başlıyor...");
+console.log('Test başlıyor...');
 
 // MongoDB bağlantı bilgilerini içe aktar
 import { MONGODB_URI, MONGODB_URI_SAFE } from './config/database';
@@ -15,22 +15,22 @@ import mongoose from 'mongoose';
 const mongooseOptions = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000
+  serverSelectionTimeoutMS: 5000,
 };
 
 async function testMongoDBConnection() {
-  console.log("MongoDB bağlantısı test ediliyor...");
-  
+  console.log('MongoDB bağlantısı test ediliyor...');
+
   try {
     // MongoDB'ye bağlan
     await mongoose.connect(MONGODB_URI, mongooseOptions);
-    console.log("MongoDB bağlantısı başarılı!");
-    
+    console.log('MongoDB bağlantısı başarılı!');
+
     // Bağlantıyı kapat
     await mongoose.connection.close();
-    console.log("MongoDB bağlantısı kapatıldı");
+    console.log('MongoDB bağlantısı kapatıldı');
   } catch (error) {
-    console.error("MongoDB bağlantı hatası:", error);
+    console.error('MongoDB bağlantı hatası:', error);
   } finally {
     process.exit(0);
   }

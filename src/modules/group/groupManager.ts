@@ -5,11 +5,12 @@
 import mongoose from 'mongoose';
 import { Group, GroupDocument } from '../../models/Group';
 import { User, UserDocument } from '../../models/User';
-import { GroupMember, GroupMemberDocument } from '../../models/GroupMember';
+import GroupMember, { GroupMemberDocument } from '../../models/GroupMember';
 import { Channel, ChannelDocument } from '../../models/Channel';
 import { logger } from '../../utils/logger';
 import { NotFoundError, ValidationError, ForbiddenError } from '../../utils/errors';
 import { toObjectId, createModelHelper } from '../../utils/mongoose-helpers';
+import crypto from 'crypto';
 
 // Tip güvenli model yardımcıları
 const GroupHelper = createModelHelper<GroupDocument, typeof Group>(Group);
@@ -45,8 +46,8 @@ export async function getUserGroups(userId: string): Promise<any[]> {
         select: 'groupId name description type icon',
         populate: {
           path: 'icon',
-          select: 'url'
-        }
+          select: 'url',
+        },
       })
       .exec();
 
@@ -59,20 +60,20 @@ export async function getUserGroups(userId: string): Promise<any[]> {
         description: group.description,
         type: group.type,
         icon: group.icon?.url,
-        joinedAt: membership.joinedAt
+        joinedAt: membership.joinedAt,
       };
     });
 
     logger.debug('Kullanıcının grupları getirildi', {
       userId,
-      count: groups.length
+      count: groups.length,
     });
 
     return groups;
   } catch (error) {
     logger.error('Kullanıcının gruplarını getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -99,7 +100,7 @@ export async function getGroupDetails(groupId: string, userId: string): Promise<
     // Kullanıcının grupta olup olmadığını kontrol et
     const membership = await GroupMemberHelper.findOne({
       group: group._id,
-      user: toObjectId(userId)
+      user: toObjectId(userId),
     }).exec();
 
     // Gizli grup kontrolü
@@ -128,22 +129,22 @@ export async function getGroupDetails(groupId: string, userId: string): Promise<
         username: (group.owner as any).username,
         name: (group.owner as any).name,
         surname: (group.owner as any).surname,
-        profilePicture: (group.owner as any).profilePicture?.toString()
+        profilePicture: (group.owner as any).profilePicture?.toString(),
       },
       channels: channels.map((channel: ChannelDocument) => ({
         id: channel.channelId,
         name: channel.name,
         description: channel.description,
-        type: channel.type
+        type: channel.type,
       })),
       memberCount,
       isMember: !!membership,
-      createdAt: group.createdAt
+      createdAt: group.createdAt,
     };
 
     logger.debug('Grup detayları getirildi', {
       groupId,
-      userId
+      userId,
     });
 
     return groupDetails;
@@ -151,7 +152,7 @@ export async function getGroupDetails(groupId: string, userId: string): Promise<
     logger.error('Grup detaylarını getirme hatası', {
       error: (error as Error).message,
       groupId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -182,7 +183,7 @@ export async function createGroup(params: CreateGroupParams): Promise<any> {
       description,
       type,
       owner: toObjectId(ownerId),
-      users: [toObjectId(ownerId)]
+      users: [toObjectId(ownerId)],
     });
 
     // Grup üyeliği oluştur
@@ -190,7 +191,7 @@ export async function createGroup(params: CreateGroupParams): Promise<any> {
       group: group._id,
       user: toObjectId(ownerId),
       roles: [],
-      joinedAt: new Date()
+      joinedAt: new Date(),
     });
 
     // Kullanıcının gruplar listesini güncelle
@@ -205,7 +206,7 @@ export async function createGroup(params: CreateGroupParams): Promise<any> {
       name: 'genel',
       description: 'Genel sohbet kanalı',
       group: group._id,
-      type: 'text'
+      type: 'text',
       // members alanı ChannelDocument tipinde tanımlı değil, bu yüzden hata veriyor
       // Bu alanı kullanmak yerine, kanalı oluşturduktan sonra üyeleri ekleyebiliriz
     });
@@ -219,7 +220,7 @@ export async function createGroup(params: CreateGroupParams): Promise<any> {
     logger.info('Grup oluşturuldu', {
       groupId: group.groupId,
       ownerId,
-      name
+      name,
     });
 
     // Oluşturulan grup bilgilerini döndür
@@ -230,22 +231,22 @@ export async function createGroup(params: CreateGroupParams): Promise<any> {
       type: group.type,
       owner: {
         id: owner._id.toString(),
-        username: owner.username
+        username: owner.username,
       },
       channels: [
         {
           id: generalChannel.channelId,
           name: generalChannel.name,
           description: generalChannel.description,
-          type: generalChannel.type
-        }
+          type: generalChannel.type,
+        },
       ],
-      createdAt: group.createdAt
+      createdAt: group.createdAt,
     };
   } catch (error) {
     logger.error('Grup oluşturma hatası', {
       error: (error as Error).message,
-      params
+      params,
     });
     throw error;
   }
@@ -257,7 +258,7 @@ export async function createGroup(params: CreateGroupParams): Promise<any> {
  */
 function generateGroupId(): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = crypto.randomBytes(4).toString('hex');
   return `g-${timestamp}-${random}`;
 }
 
@@ -267,14 +268,14 @@ function generateGroupId(): string {
  */
 function generateChannelId(): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = crypto.randomBytes(4).toString('hex');
   return `c-${timestamp}-${random}`;
 }
 
 const groupManager = {
   getUserGroups,
   getGroupDetails,
-  createGroup
+  createGroup,
 };
 
 export default groupManager;

@@ -20,7 +20,7 @@ export enum WebhookEvent {
   CHANNEL_DELETED = 'channel.deleted',
   GROUP_CREATED = 'group.created',
   GROUP_UPDATED = 'group.updated',
-  GROUP_DELETED = 'group.deleted'
+  GROUP_DELETED = 'group.deleted',
 }
 
 // Webhook arayüzü
@@ -52,7 +52,11 @@ export interface WebhookDocument extends Document, IWebhook {
 // Mongoose Model tipini genişleten özel model tipi
 export interface WebhookModel extends CommonModelStaticMethods<WebhookDocument> {
   // Özel statik metodlar
-  findByEvent(event: WebhookEvent, groupId?: mongoose.Types.ObjectId, channelId?: mongoose.Types.ObjectId): Promise<WebhookDocument[]>;
+  findByEvent(
+    event: WebhookEvent,
+    groupId?: mongoose.Types.ObjectId,
+    channelId?: mongoose.Types.ObjectId
+  ): Promise<WebhookDocument[]>;
   findByGroup(groupId: mongoose.Types.ObjectId): Promise<WebhookDocument[]>;
   findByChannel(channelId: mongoose.Types.ObjectId): Promise<WebhookDocument[]>;
   generateSecret(): string;
@@ -64,65 +68,67 @@ const WebhookSchema = new Schema<WebhookDocument, WebhookModel>(
     // Webhook adı
     name: {
       type: String,
-      required: true
+      required: true,
     },
     // Webhook URL'si
     url: {
       type: String,
-      required: true
+      required: true,
     },
     // Webhook gizli anahtarı
     secret: {
       type: String,
-      required: true
+      required: true,
     },
     // Webhook olayları
-    events: [{
-      type: String,
-      enum: Object.values(WebhookEvent),
-      required: true
-    }],
+    events: [
+      {
+        type: String,
+        enum: Object.values(WebhookEvent),
+        required: true,
+      },
+    ],
     // Webhook'un ait olduğu grup (isteğe bağlı)
     group: {
       type: Schema.Types.ObjectId,
-      ref: 'Group'
+      ref: 'Group',
     },
     // Webhook'un ait olduğu kanal (isteğe bağlı)
     channel: {
       type: Schema.Types.ObjectId,
-      ref: 'Channel'
+      ref: 'Channel',
     },
     // Webhook'u oluşturan kullanıcı
     creator: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     // Webhook aktif mi?
     isActive: {
       type: Boolean,
-      default: true
+      default: true,
     },
     // Son tetiklenme zamanı
     lastTriggeredAt: {
-      type: Date
+      type: Date,
     },
     // Başarısız tetiklenme sayısı
     failureCount: {
       type: Number,
-      default: 0
+      default: 0,
     },
     // Son başarısız tetiklenme zamanı
     lastFailureAt: {
-      type: Date
+      type: Date,
     },
     // Son başarısız tetiklenme nedeni
     lastFailureReason: {
-      type: String
-    }
+      type: String,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -135,22 +141,22 @@ WebhookSchema.index({ isActive: 1 });
 WebhookSchema.index({ failureCount: 1 });
 
 // Metotlar
-WebhookSchema.methods.generateSignature = function(payload: string): string {
+WebhookSchema.methods['generateSignature'] = function (payload: string): string {
   return crypto
-    .createHmac('sha256', this.secret)
+    .createHmac('sha256', this['secret'] || '')
     .update(payload)
     .digest('hex');
 };
 
 // Statik metodlar
-WebhookSchema.statics.findByEvent = function(
+WebhookSchema.statics['findByEvent'] = function (
   event: WebhookEvent,
   groupId?: mongoose.Types.ObjectId,
   channelId?: mongoose.Types.ObjectId
 ): Promise<WebhookDocument[]> {
   const query: any = {
     events: event,
-    isActive: true
+    isActive: true,
   };
 
   if (groupId) {
@@ -164,25 +170,29 @@ WebhookSchema.statics.findByEvent = function(
   return (this.find(query) as any).exec();
 };
 
-WebhookSchema.statics.findByGroup = function(
+WebhookSchema.statics['findByGroup'] = function (
   groupId: mongoose.Types.ObjectId
 ): Promise<WebhookDocument[]> {
-  return (this.find({
-    group: groupId,
-    isActive: true
-  }) as any).exec();
+  return (
+    this.find({
+      group: groupId,
+      isActive: true,
+    }) as any
+  ).exec();
 };
 
-WebhookSchema.statics.findByChannel = function(
+WebhookSchema.statics['findByChannel'] = function (
   channelId: mongoose.Types.ObjectId
 ): Promise<WebhookDocument[]> {
-  return (this.find({
-    channel: channelId,
-    isActive: true
-  }) as any).exec();
+  return (
+    this.find({
+      channel: channelId,
+      isActive: true,
+    }) as any
+  ).exec();
 };
 
-WebhookSchema.statics.generateSecret = function(): string {
+WebhookSchema.statics['generateSecret'] = function (): string {
   return crypto.randomBytes(32).toString('hex');
 };
 
@@ -207,7 +217,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as WebhookModel;
 } else {
   // Gerçek model
-  Webhook = (mongoose.models.Webhook as WebhookModel) ||
+  Webhook =
+    (mongoose.models['Webhook'] as WebhookModel) ||
     mongoose.model<WebhookDocument, WebhookModel>('Webhook', WebhookSchema);
 }
 

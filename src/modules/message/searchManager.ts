@@ -14,7 +14,9 @@ import { toObjectId } from '../../utils/mongoose-helpers';
 
 // Model yardımcıları
 const MessageHelper = createModelHelper<MessageDocument, typeof Message>(Message);
-const DirectMessageHelper = createModelHelper<DirectMessageDocument, typeof DirectMessage>(DirectMessage);
+const DirectMessageHelper = createModelHelper<DirectMessageDocument, typeof DirectMessage>(
+  DirectMessage
+);
 const ChannelHelper = createModelHelper<ChannelDocument, typeof Channel>(Channel);
 const GroupHelper = createModelHelper<GroupDocument, typeof Group>(Group);
 
@@ -60,13 +62,17 @@ export async function searchChannelMessages(params: SearchParams): Promise<Searc
       hasReactions,
       isPinned,
       limit = 20,
-      skip = 0
+      skip = 0,
     } = params;
+
+    // Arama metnini temizle ve güvenli hale getir
+    const sanitizedText = query.trim();
+    const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     // Sorgu nesnesi oluştur
     const searchQuery: any = {
       isDeleted: false,
-      content: { $regex: query, $options: 'i' }
+      content: { $regex: new RegExp(escapedText, 'i') },
     };
 
     // Kanal filtreleme
@@ -75,7 +81,7 @@ export async function searchChannelMessages(params: SearchParams): Promise<Searc
     } else if (groupId) {
       // Grup ID'sine göre kanalları bul
       const channels = await Channel.find({ group: toObjectId(groupId) });
-      searchQuery.channel = { $in: channels.map(c => c._id) };
+      searchQuery.channel = { $in: channels.map((c) => c._id) };
     }
 
     // Gönderen kullanıcı filtreleme
@@ -105,27 +111,23 @@ export async function searchChannelMessages(params: SearchParams): Promise<Searc
     const total = await MessageHelper.countDocuments(searchQuery);
 
     // Mesajları getir
-    const messages = await MessageHelper.find(
-      searchQuery,
-      null,
-      {
-        sort: { timestamp: -1 },
-        skip,
-        limit,
-        populate: [
-          { path: 'user', select: 'username name surname profilePicture' },
-          { path: 'channel', select: 'name' },
-          {
-            path: 'quotedMessage',
-            populate: {
-              path: 'user',
-              select: 'username profilePicture'
-            }
-          }
-        ],
-        lean: true
-      }
-    );
+    const messages = await MessageHelper.find(searchQuery, null, {
+      sort: { timestamp: -1 },
+      skip,
+      limit,
+      populate: [
+        { path: 'user', select: 'username name surname profilePicture' },
+        { path: 'channel', select: 'name' },
+        {
+          path: 'quotedMessage',
+          populate: {
+            path: 'user',
+            select: 'username profilePicture',
+          },
+        },
+      ],
+      lean: true,
+    });
 
     logger.info('Kanal mesajlarında arama yapıldı', {
       userId,
@@ -133,19 +135,19 @@ export async function searchChannelMessages(params: SearchParams): Promise<Searc
       channelId,
       groupId,
       total,
-      found: messages.length
+      found: messages.length,
     });
 
     return {
       messages,
       total,
-      hasMore: skip + messages.length < total
+      hasMore: skip + messages.length < total,
     };
   } catch (error) {
     logger.error('Kanal mesajlarında arama hatası', {
       error: (error as Error).message,
       userId: params.userId,
-      query: params.query
+      query: params.query,
     });
     throw error;
   }
@@ -167,24 +169,25 @@ export async function searchDirectMessages(params: SearchParams): Promise<Search
       hasAttachments,
       hasReactions,
       limit = 20,
-      skip = 0
+      skip = 0,
     } = params;
+
+    // Arama metnini temizle ve güvenli hale getir
+    const sanitizedText = query.trim();
+    const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     // Sorgu nesnesi oluştur
     const searchQuery: any = {
       isDeleted: false,
-      content: { $regex: query, $options: 'i' },
-      $or: [
-        { sender: toObjectId(userId) },
-        { recipient: toObjectId(userId) }
-      ]
+      content: { $regex: new RegExp(escapedText, 'i') },
+      $or: [{ sender: toObjectId(userId) }, { recipient: toObjectId(userId) }],
     };
 
     // Belirli bir kullanıcıyla olan mesajlaşma
     if (fromUserId) {
       searchQuery.$or = [
         { sender: toObjectId(userId), recipient: toObjectId(fromUserId) },
-        { sender: toObjectId(fromUserId), recipient: toObjectId(userId) }
+        { sender: toObjectId(fromUserId), recipient: toObjectId(userId) },
       ];
     }
 
@@ -207,46 +210,42 @@ export async function searchDirectMessages(params: SearchParams): Promise<Search
     const total = await DirectMessageHelper.countDocuments(searchQuery);
 
     // Mesajları getir
-    const messages = await DirectMessageHelper.find(
-      searchQuery,
-      null,
-      {
-        sort: { timestamp: -1 },
-        skip,
-        limit,
-        populate: [
-          { path: 'sender', select: 'username name surname profilePicture' },
-          { path: 'recipient', select: 'username name surname profilePicture' },
-          {
-            path: 'replyTo',
-            populate: {
-              path: 'sender',
-              select: 'username profilePicture'
-            }
-          }
-        ],
-        lean: true
-      }
-    );
+    const messages = await DirectMessageHelper.find(searchQuery, null, {
+      sort: { timestamp: -1 },
+      skip,
+      limit,
+      populate: [
+        { path: 'sender', select: 'username name surname profilePicture' },
+        { path: 'recipient', select: 'username name surname profilePicture' },
+        {
+          path: 'replyTo',
+          populate: {
+            path: 'sender',
+            select: 'username profilePicture',
+          },
+        },
+      ],
+      lean: true,
+    });
 
     logger.info('Direkt mesajlarda arama yapıldı', {
       userId,
       query,
       fromUserId,
       total,
-      found: messages.length
+      found: messages.length,
     });
 
     return {
       messages,
       total,
-      hasMore: skip + messages.length < total
+      hasMore: skip + messages.length < total,
     };
   } catch (error) {
     logger.error('Direkt mesajlarda arama hatası', {
       error: (error as Error).message,
       userId: params.userId,
-      query: params.query
+      query: params.query,
     });
     throw error;
   }
@@ -259,27 +258,20 @@ export async function searchDirectMessages(params: SearchParams): Promise<Search
  */
 export async function searchAllMessages(params: SearchParams): Promise<SearchResult> {
   try {
-    const {
-      query,
-      userId,
-      startDate,
-      endDate,
-      limit = 20,
-      skip = 0
-    } = params;
+    const { query, userId, startDate, endDate, limit = 20, skip = 0 } = params;
 
     // Kanal mesajlarında ara
     const channelResults = await searchChannelMessages({
       ...params,
       limit: Math.floor(limit / 2),
-      skip: Math.floor(skip / 2)
+      skip: Math.floor(skip / 2),
     });
 
     // Direkt mesajlarda ara
     const dmResults = await searchDirectMessages({
       ...params,
       limit: Math.ceil(limit / 2),
-      skip: Math.ceil(skip / 2)
+      skip: Math.ceil(skip / 2),
     });
 
     // Sonuçları birleştir ve tarihe göre sırala
@@ -293,19 +285,19 @@ export async function searchAllMessages(params: SearchParams): Promise<SearchRes
       userId,
       query,
       total,
-      found: combinedMessages.length
+      found: combinedMessages.length,
     });
 
     return {
       messages: combinedMessages,
       total,
-      hasMore: skip + combinedMessages.length < total
+      hasMore: skip + combinedMessages.length < total,
     };
   } catch (error) {
     logger.error('Tüm mesajlarda arama hatası', {
       error: (error as Error).message,
       userId: params.userId,
-      query: params.query
+      query: params.query,
     });
     throw error;
   }
@@ -314,5 +306,5 @@ export async function searchAllMessages(params: SearchParams): Promise<SearchRes
 export default {
   searchChannelMessages,
   searchDirectMessages,
-  searchAllMessages
+  searchAllMessages,
 };

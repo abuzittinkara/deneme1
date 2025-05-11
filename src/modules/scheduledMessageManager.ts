@@ -15,7 +15,9 @@ import { logger } from '../utils/logger';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
 
 // Model yardımcıları
-const ScheduledMessageHelper = createModelHelper<ScheduledMessageDocument, typeof ScheduledMessage>(ScheduledMessage);
+const ScheduledMessageHelper = createModelHelper<ScheduledMessageDocument, typeof ScheduledMessage>(
+  ScheduledMessage
+);
 const MessageHelper = createModelHelper<MessageDocument, typeof Message>(Message);
 const DmMessageHelper = createModelHelper<DmMessageDocument, typeof DmMessage>(DmMessage);
 const ChannelHelper = createModelHelper<ChannelDocument, typeof Channel>(Channel);
@@ -101,15 +103,15 @@ async function checkScheduledMessages(
   const scheduledMessages = await ScheduledMessageHelper.find(
     {
       scheduledTime: { $lte: now },
-      sent: false
+      sent: false,
     },
     null,
     {
       populate: [
         { path: 'sender', select: 'username' },
         { path: 'channel' },
-        { path: 'group', select: 'name' }
-      ]
+        { path: 'group', select: 'name' },
+      ],
     }
   );
 
@@ -135,17 +137,17 @@ async function checkScheduledMessages(
 
       if (senderSocket) {
         io.to(senderSocket.id).emit('scheduledMessageSent', {
-          id: scheduledMessage._id
+          id: scheduledMessage._id,
         });
       }
 
       logger.info('Zamanlanmış mesaj gönderildi', {
-        messageId: scheduledMessage._id
+        messageId: scheduledMessage._id,
       });
     } catch (err) {
       logger.error('Zamanlanmış mesaj gönderme hatası', {
         error: (err as Error).message,
-        messageId: scheduledMessage._id
+        messageId: scheduledMessage._id,
       });
     }
   }
@@ -188,7 +190,7 @@ async function sendScheduledChannelMessage(
     channel: (scheduledMessage.channel as any)._id,
     sender: scheduledMessage.sender,
     content: formattedContent,
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 
   // newMessage.save() artık gerekli değil, MessageHelper.create() zaten kaydediyor
@@ -201,50 +203,50 @@ async function sendScheduledChannelMessage(
       content: newMessage.content,
       username: (scheduledMessage.sender as any).username,
       timestamp: newMessage.timestamp,
-      isScheduled: true
-    }
+      isScheduled: true,
+    },
   });
 
   logger.debug('Zamanlanmış kanal mesajı gönderildi', {
     messageId: newMessage._id,
-    channelId: (scheduledMessage.channel as any).channelId
+    channelId: (scheduledMessage.channel as any).channelId,
   });
 }
-
-
 
 /**
  * Kullanıcının zamanlanmış mesajlarını getir
  * @param userId - Kullanıcı ID'si
  * @returns Zamanlanmış mesajlar dizisi
  */
-export async function getUserScheduledMessages(userId: string): Promise<ScheduledMessageDocument[]> {
+export async function getUserScheduledMessages(
+  userId: string
+): Promise<ScheduledMessageDocument[]> {
   try {
     const messages = await ScheduledMessageHelper.find(
       {
         sender: userId,
-        sent: false
+        sent: false,
       },
       null,
       {
         sort: { scheduledTime: 1 },
         populate: [
           { path: 'channel', select: 'name' },
-          { path: 'group', select: 'name' }
-        ]
+          { path: 'group', select: 'name' },
+        ],
       }
     );
 
     logger.info('Kullanıcının zamanlanmış mesajları getirildi', {
       userId,
-      count: messages.length
+      count: messages.length,
     });
 
     return messages;
   } catch (error) {
     logger.error('Zamanlanmış mesajları getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -281,13 +283,13 @@ export async function cancelScheduledMessage(
 
     return {
       success: true,
-      messageId: messageId.toString()
+      messageId: messageId.toString(),
     };
   } catch (error) {
     logger.error('Zamanlanmış mesaj iptal hatası', {
       error: (error as Error).message,
       messageId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -353,7 +355,7 @@ export async function createScheduledMessage(
       channel: channel._id,
       group: groupId ? group?._id : undefined,
       sent: false,
-      createdAt: new Date()
+      createdAt: new Date(),
     });
 
     logger.info('Zamanlanmış mesaj oluşturuldu', {
@@ -361,7 +363,7 @@ export async function createScheduledMessage(
       userId,
       channelId,
       groupId,
-      scheduledTime
+      scheduledTime,
     });
 
     return scheduledMessage;
@@ -370,7 +372,7 @@ export async function createScheduledMessage(
       error: (error as Error).message,
       userId,
       channelId,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -381,5 +383,5 @@ export default {
   stopScheduledMessageManager,
   getUserScheduledMessages,
   cancelScheduledMessage,
-  createScheduledMessage
+  createScheduledMessage,
 };

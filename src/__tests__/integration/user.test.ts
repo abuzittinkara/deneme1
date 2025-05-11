@@ -23,10 +23,10 @@ jest.mock('mongoose', () => {
           find: jest.fn(),
           insertOne: jest.fn(),
           updateOne: jest.fn(),
-          deleteOne: jest.fn()
-        })
-      }
-    }
+          deleteOne: jest.fn(),
+        }),
+      },
+    },
   };
 });
 
@@ -36,14 +36,14 @@ jest.mock('../../modules/profileManager');
 
 describe('User API', () => {
   let authToken: string;
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock auth token
     authToken = 'Bearer mock-token';
   });
-  
+
   describe('GET /api/users/me', () => {
     it('should get current user profile successfully', async () => {
       // Mock getUserProfile fonksiyonu
@@ -55,15 +55,15 @@ describe('User API', () => {
         email: 'test@example.com',
         status: 'online',
         lastSeen: new Date(),
-        profilePicture: 'picture-id'
+        profilePicture: 'picture-id',
       });
-      
+
       const response = await request(app)
         .get('/api/users/me')
         .set('Authorization', authToken)
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toEqual({
         success: true,
         data: {
@@ -74,29 +74,29 @@ describe('User API', () => {
           email: 'test@example.com',
           status: 'online',
           lastSeen: expect.any(String),
-          profilePicture: 'picture-id'
-        }
+          profilePicture: 'picture-id',
+        },
       });
-      
+
       expect(userManager.getCurrentUser).toHaveBeenCalled();
     });
-    
+
     it('should return error for unauthenticated user', async () => {
       const response = await request(app)
         .get('/api/users/me')
         .expect('Content-Type', /json/)
         .expect(401);
-      
+
       expect(response.body).toEqual({
         success: false,
         message: 'Kimlik doğrulama başarısız: Token bulunamadı',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
-      
+
       expect(userManager.getCurrentUser).not.toHaveBeenCalled();
     });
   });
-  
+
   describe('GET /api/users/:username', () => {
     it('should get user profile by username successfully', async () => {
       // Mock getUserByUsername fonksiyonu
@@ -107,15 +107,15 @@ describe('User API', () => {
         surname: 'User',
         status: 'online',
         lastSeen: new Date(),
-        profilePicture: 'picture-id'
+        profilePicture: 'picture-id',
       });
-      
+
       const response = await request(app)
         .get('/api/users/testuser')
         .set('Authorization', authToken)
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toEqual({
         success: true,
         data: {
@@ -125,35 +125,35 @@ describe('User API', () => {
           surname: 'User',
           status: 'online',
           lastSeen: expect.any(String),
-          profilePicture: 'picture-id'
-        }
+          profilePicture: 'picture-id',
+        },
       });
-      
+
       expect(userManager.getUserByUsername).toHaveBeenCalledWith('testuser');
     });
-    
+
     it('should return error for non-existent user', async () => {
       // Mock getUserByUsername fonksiyonu
       (userManager.getUserByUsername as jest.Mock).mockRejectedValue(
         new Error('Kullanıcı bulunamadı')
       );
-      
+
       const response = await request(app)
         .get('/api/users/nonexistent')
         .set('Authorization', authToken)
         .expect('Content-Type', /json/)
         .expect(404);
-      
+
       expect(response.body).toEqual({
         success: false,
         message: 'Kullanıcı bulunamadı',
-        code: 'NOT_FOUND'
+        code: 'NOT_FOUND',
       });
-      
+
       expect(userManager.getUserByUsername).toHaveBeenCalledWith('nonexistent');
     });
   });
-  
+
   describe('PUT /api/users/me/profile', () => {
     it('should update user profile successfully', async () => {
       // Mock updateUserProfile fonksiyonu
@@ -167,10 +167,10 @@ describe('User API', () => {
         customStatus: 'New status',
         preferences: {
           theme: 'light',
-          notifications: false
-        }
+          notifications: false,
+        },
       });
-      
+
       const profileData = {
         name: 'New Name',
         surname: 'New Surname',
@@ -179,17 +179,17 @@ describe('User API', () => {
         customStatus: 'New status',
         preferences: {
           theme: 'light',
-          notifications: false
-        }
+          notifications: false,
+        },
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/profile')
         .set('Authorization', authToken)
         .send(profileData)
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toEqual({
         success: true,
         message: 'Profil başarıyla güncellendi',
@@ -203,119 +203,119 @@ describe('User API', () => {
           customStatus: 'New status',
           preferences: {
             theme: 'light',
-            notifications: false
-          }
-        }
+            notifications: false,
+          },
+        },
       });
-      
+
       expect(profileManager.updateUserProfile).toHaveBeenCalledWith(
         expect.any(String),
         profileData
       );
     });
-    
+
     it('should return validation error for invalid data', async () => {
       const invalidData = {
-        email: 'invalid-email'
+        email: 'invalid-email',
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/profile')
         .set('Authorization', authToken)
         .send(invalidData)
         .expect('Content-Type', /json/)
         .expect(400);
-      
+
       expect(response.body).toEqual({
         success: false,
         message: 'Doğrulama hatası',
         code: 'VALIDATION_ERROR',
-        errors: expect.any(Array)
+        errors: expect.any(Array),
       });
-      
+
       expect(profileManager.updateUserProfile).not.toHaveBeenCalled();
     });
   });
-  
+
   describe('PUT /api/users/me/password', () => {
     it('should change password successfully', async () => {
       // Mock changeUserPassword fonksiyonu
       (profileManager.changeUserPassword as jest.Mock).mockResolvedValue({
         success: true,
-        message: 'Şifre başarıyla güncellendi'
+        message: 'Şifre başarıyla güncellendi',
       });
-      
+
       const passwordData = {
         currentPassword: 'OldPassword123!',
-        newPassword: 'NewPassword123!'
+        newPassword: 'NewPassword123!',
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/password')
         .set('Authorization', authToken)
         .send(passwordData)
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toEqual({
         success: true,
-        message: 'Şifre başarıyla güncellendi'
+        message: 'Şifre başarıyla güncellendi',
       });
-      
+
       expect(profileManager.changeUserPassword).toHaveBeenCalledWith(
         expect.any(String),
         passwordData.currentPassword,
         passwordData.newPassword
       );
     });
-    
+
     it('should return validation error for weak password', async () => {
       const weakPasswordData = {
         currentPassword: 'OldPassword123!',
-        newPassword: '123' // Çok kısa
+        newPassword: '123', // Çok kısa
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/password')
         .set('Authorization', authToken)
         .send(weakPasswordData)
         .expect('Content-Type', /json/)
         .expect(400);
-      
+
       expect(response.body).toEqual({
         success: false,
         message: 'Doğrulama hatası',
         code: 'VALIDATION_ERROR',
-        errors: expect.any(Array)
+        errors: expect.any(Array),
       });
-      
+
       expect(profileManager.changeUserPassword).not.toHaveBeenCalled();
     });
-    
+
     it('should return error for incorrect current password', async () => {
       // Mock changeUserPassword fonksiyonu
       (profileManager.changeUserPassword as jest.Mock).mockRejectedValue(
         new Error('Mevcut şifre hatalı')
       );
-      
+
       const passwordData = {
         currentPassword: 'WrongPassword123!',
-        newPassword: 'NewPassword123!'
+        newPassword: 'NewPassword123!',
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/password')
         .set('Authorization', authToken)
         .send(passwordData)
         .expect('Content-Type', /json/)
         .expect(400);
-      
+
       expect(response.body).toEqual({
         success: false,
         message: 'Mevcut şifre hatalı',
-        code: 'VALIDATION_ERROR'
+        code: 'VALIDATION_ERROR',
       });
-      
+
       expect(profileManager.changeUserPassword).toHaveBeenCalledWith(
         expect.any(String),
         passwordData.currentPassword,
@@ -323,59 +323,59 @@ describe('User API', () => {
       );
     });
   });
-  
+
   describe('PUT /api/users/me/status', () => {
     it('should update user status successfully', async () => {
       // Mock updateUserStatus fonksiyonu
       (userManager.updateUserStatus as jest.Mock).mockResolvedValue({
         success: true,
-        status: 'away'
+        status: 'away',
       });
-      
+
       const statusData = {
-        status: 'away'
+        status: 'away',
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/status')
         .set('Authorization', authToken)
         .send(statusData)
         .expect('Content-Type', /json/)
         .expect(200);
-      
+
       expect(response.body).toEqual({
         success: true,
         message: 'Durum güncellendi',
         data: {
-          status: 'away'
-        }
+          status: 'away',
+        },
       });
-      
+
       expect(userManager.updateUserStatus).toHaveBeenCalledWith(
         expect.any(String),
         statusData.status
       );
     });
-    
+
     it('should return validation error for invalid status', async () => {
       const invalidStatusData = {
-        status: 'invalid-status'
+        status: 'invalid-status',
       };
-      
+
       const response = await request(app)
         .put('/api/users/me/status')
         .set('Authorization', authToken)
         .send(invalidStatusData)
         .expect('Content-Type', /json/)
         .expect(400);
-      
+
       expect(response.body).toEqual({
         success: false,
         message: 'Doğrulama hatası',
         code: 'VALIDATION_ERROR',
-        errors: expect.any(Array)
+        errors: expect.any(Array),
       });
-      
+
       expect(userManager.updateUserStatus).not.toHaveBeenCalled();
     });
   });

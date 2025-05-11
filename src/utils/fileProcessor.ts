@@ -21,7 +21,7 @@ export const FILE_SIZE_LIMITS = {
   audio: 50 * 1024 * 1024, // 50 MB
   video: 100 * 1024 * 1024, // 100 MB
   document: 20 * 1024 * 1024, // 20 MB
-  other: 5 * 1024 * 1024 // 5 MB
+  other: 5 * 1024 * 1024, // 5 MB
 };
 
 // İzin verilen dosya uzantıları
@@ -30,17 +30,17 @@ export const ALLOWED_EXTENSIONS = {
   audio: ['.mp3', '.wav', '.ogg', '.m4a', '.aac'],
   video: ['.mp4', '.webm', '.mov', '.avi', '.mkv'],
   document: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.md'],
-  other: ['.zip', '.rar', '.7z', '.tar', '.gz']
+  other: ['.zip', '.rar', '.7z', '.tar', '.gz'],
 };
 
-// Dosya yükleme dizinleri
+// Dosya yükleme dizinleri - güvenli yollar kullanarak
 export const UPLOAD_DIRS = {
-  image: path.join(__dirname, '..', '..', 'uploads', 'images'),
-  audio: path.join(__dirname, '..', '..', 'uploads', 'audio'),
-  video: path.join(__dirname, '..', '..', 'uploads', 'video'),
-  document: path.join(__dirname, '..', '..', 'uploads', 'documents'),
-  other: path.join(__dirname, '..', '..', 'uploads', 'other'),
-  temp: path.join(__dirname, '..', '..', 'uploads', 'temp')
+  image: path.resolve(path.join(__dirname, '..', '..', 'uploads', 'images')),
+  audio: path.resolve(path.join(__dirname, '..', '..', 'uploads', 'audio')),
+  video: path.resolve(path.join(__dirname, '..', '..', 'uploads', 'video')),
+  document: path.resolve(path.join(__dirname, '..', '..', 'uploads', 'documents')),
+  other: path.resolve(path.join(__dirname, '..', '..', 'uploads', 'other')),
+  temp: path.resolve(path.join(__dirname, '..', '..', 'uploads', 'temp')),
 };
 
 // Dosya işleme seçenekleri
@@ -89,12 +89,12 @@ class FileProcessor {
   private readonly fsMkdir = promisify(fs.mkdir);
   private readonly fsUnlink = promisify(fs.unlink);
   private readonly fsCopyFile = promisify(fs.copyFile);
-  
+
   constructor() {
     // Yükleme dizinlerini oluştur
     this.initializeUploadDirectories();
   }
-  
+
   /**
    * Yükleme dizinlerini oluşturur
    */
@@ -104,13 +104,15 @@ class FileProcessor {
       for (const dir of Object.values(UPLOAD_DIRS)) {
         await this.ensureDirectoryExists(dir);
       }
-      
+
       logger.info('Yükleme dizinleri oluşturuldu');
     } catch (error) {
-      logger.error('Yükleme dizinleri oluşturulurken hata oluştu', { error: (error as Error).message });
+      logger.error('Yükleme dizinleri oluşturulurken hata oluştu', {
+        error: (error as Error).message,
+      });
     }
   }
-  
+
   /**
    * Dizinin var olduğundan emin olur
    * @param dir Dizin yolu
@@ -123,7 +125,7 @@ class FileProcessor {
       await this.fsMkdir(dir, { recursive: true });
     }
   }
-  
+
   /**
    * Dosya türünü belirler
    * @param mimeType MIME türü
@@ -148,20 +150,20 @@ class FileProcessor {
     ) {
       return 'document';
     }
-    
+
     // Uzantıya göre dosya türünü belirle
     const ext = extension.toLowerCase();
-    
+
     for (const [type, extensions] of Object.entries(ALLOWED_EXTENSIONS)) {
       if (extensions.includes(ext)) {
         return type as FileType;
       }
     }
-    
+
     // Varsayılan olarak diğer
     return 'other';
   }
-  
+
   /**
    * Dosya uzantısının izin verilip verilmediğini kontrol eder
    * @param extension Dosya uzantısı
@@ -172,7 +174,7 @@ class FileProcessor {
     const ext = extension.toLowerCase();
     return ALLOWED_EXTENSIONS[fileType].includes(ext);
   }
-  
+
   /**
    * Dosya boyutunun izin verilen limiti aşıp aşmadığını kontrol eder
    * @param size Dosya boyutu
@@ -182,7 +184,7 @@ class FileProcessor {
   public isAllowedSize(size: number, fileType: FileType): boolean {
     return size <= FILE_SIZE_LIMITS[fileType];
   }
-  
+
   /**
    * Dosyayı işler
    * @param file Dosya
@@ -196,29 +198,35 @@ class FileProcessor {
     try {
       // Dosya uzantısını al
       const extension = path.extname(file.originalname).toLowerCase();
-      
+
       // Dosya türünü belirle
       const fileType = this.getFileType(file.mimetype, extension);
-      
+
       // Dosya uzantısını kontrol et
       if (!this.isAllowedExtension(extension, fileType)) {
         throw new ValidationError(`İzin verilmeyen dosya uzantısı: ${extension}`);
       }
-      
+
       // Dosya boyutunu kontrol et
       if (!this.isAllowedSize(file.size, fileType)) {
         throw new ValidationError(`Dosya boyutu çok büyük: ${file.size} byte`);
       }
-      
+
       // Benzersiz dosya adı oluştur
       const fileName = `${uuidv4()}${extension}`;
-      
-      // Dosya yolunu belirle
-      const filePath = path.join(UPLOAD_DIRS[fileType], fileName);
-      
+
+      // Dosya yolunu güvenli bir şekilde belirle
+      const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = path.resolve(path.join(UPLOAD_DIRS[fileType], sanitizedFileName));
+
+      // Yol geçişi kontrolü
+      if (!filePath.startsWith(UPLOAD_DIRS[fileType])) {
+        throw new ValidationError('Geçersiz dosya yolu');
+      }
+
       // Dosya URL'sini belirle
       const fileUrl = `${env.API_URL}/uploads/${fileType}s/${fileName}`;
-      
+
       // İşlenmiş dosya nesnesi
       const processedFile: ProcessedFile = {
         originalName: file.originalname,
@@ -227,9 +235,9 @@ class FileProcessor {
         fileUrl,
         fileType,
         mimeType: file.mimetype,
-        size: file.size
+        size: file.size,
       };
-      
+
       // Dosya türüne göre işle
       if (fileType === 'image') {
         // Görüntü işleme
@@ -238,31 +246,31 @@ class FileProcessor {
         // Diğer dosya türleri için sadece kopyala
         await this.fsCopyFile(file.path, filePath);
       }
-      
+
       // Geçici dosyayı sil
       await this.fsUnlink(file.path);
-      
+
       return processedFile;
     } catch (error) {
-      logger.error('Dosya işlenirken hata oluştu', { 
+      logger.error('Dosya işlenirken hata oluştu', {
         error: (error as Error).message,
-        file: file.originalname
+        file: file.originalname,
       });
-      
+
       // Geçici dosyayı sil
       try {
         await this.fsUnlink(file.path);
       } catch (unlinkError) {
-        logger.error('Geçici dosya silinirken hata oluştu', { 
+        logger.error('Geçici dosya silinirken hata oluştu', {
           error: (unlinkError as Error).message,
-          file: file.path
+          file: file.path,
         });
       }
-      
+
       throw error;
     }
   }
-  
+
   /**
    * Görüntüyü işler
    * @param sourcePath Kaynak dosya yolu
@@ -279,62 +287,67 @@ class FileProcessor {
     try {
       // Sharp nesnesi oluştur
       let image = sharp(sourcePath);
-      
+
       // Görüntü meta verilerini al
       const metadata = await image.metadata();
-      
+
       // Boyutları kaydet
       if (metadata.width && metadata.height) {
         processedFile.dimensions = {
           width: metadata.width,
-          height: metadata.height
+          height: metadata.height,
         };
       }
-      
+
       // Meta verileri kaydet
       if (options.metadata) {
         processedFile.metadata = metadata;
       }
-      
+
       // Yeniden boyutlandırma
       if (options.resize) {
         image = image.resize({
           width: options.resize.width,
           height: options.resize.height,
-          fit: options.resize.fit || 'cover'
+          fit: options.resize.fit || 'cover',
         });
-        
+
         // Yeniden boyutlandırılmış görüntünün meta verilerini güncelle
         const resizedMetadata = await image.metadata();
-        
+
         if (resizedMetadata.width && resizedMetadata.height) {
           processedFile.dimensions = {
             width: resizedMetadata.width,
-            height: resizedMetadata.height
+            height: resizedMetadata.height,
           };
         }
       }
-      
+
       // Formatı değiştir
       if (options.format) {
         image = image.toFormat(options.format, {
           quality: options.quality || 80,
-          progressive: true
+          progressive: true,
         });
-        
+
         // Dosya adını ve yolunu güncelle
         const newExtension = `.${options.format}`;
-        const newFileName = path.basename(processedFile.fileName, path.extname(processedFile.fileName)) + newExtension;
-        
+        const newFileName =
+          path.basename(processedFile.fileName, path.extname(processedFile.fileName)) +
+          newExtension;
+
         processedFile.fileName = newFileName;
         processedFile.filePath = path.join(path.dirname(targetPath), newFileName);
-        processedFile.fileUrl = processedFile.fileUrl.replace(path.extname(processedFile.fileUrl), newExtension);
+        processedFile.fileUrl = processedFile.fileUrl.replace(
+          path.extname(processedFile.fileUrl),
+          newExtension
+        );
         processedFile.mimeType = `image/${options.format}`;
       }
       // Sıkıştırma
       else if (options.compress) {
         const format = path.extname(targetPath).substring(1);
-        
+
         if (format === 'jpeg' || format === 'jpg') {
           image = image.jpeg({ quality: options.quality || 80, progressive: true });
         } else if (format === 'png') {
@@ -343,86 +356,83 @@ class FileProcessor {
           image = image.webp({ quality: options.quality || 80 });
         }
       }
-      
+
       // Görüntüyü kaydet
       await image.toFile(processedFile.filePath);
-      
+
       // Dosya boyutunu güncelle
       const stats = fs.statSync(processedFile.filePath);
       processedFile.size = stats.size;
-      
+
       // Küçük resim oluştur
       if (options.generateThumbnail) {
         await this.generateThumbnail(sourcePath, processedFile);
       }
     } catch (error) {
-      logger.error('Görüntü işlenirken hata oluştu', { 
+      logger.error('Görüntü işlenirken hata oluştu', {
         error: (error as Error).message,
         sourcePath,
-        targetPath
+        targetPath,
       });
       throw error;
     }
   }
-  
+
   /**
    * Küçük resim oluşturur
    * @param sourcePath Kaynak dosya yolu
    * @param processedFile İşlenmiş dosya nesnesi
    */
-  private async generateThumbnail(
-    sourcePath: string,
-    processedFile: ProcessedFile
-  ): Promise<void> {
+  private async generateThumbnail(sourcePath: string, processedFile: ProcessedFile): Promise<void> {
     try {
-      // Küçük resim adını oluştur
-      const thumbnailFileName = `thumb_${processedFile.fileName}`;
-      
-      // Küçük resim yolunu belirle
-      const thumbnailPath = path.join(UPLOAD_DIRS.image, thumbnailFileName);
-      
+      // Küçük resim adını oluştur ve güvenli hale getir
+      const thumbnailFileName = `thumb_${processedFile.fileName}`.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+      // Küçük resim yolunu güvenli bir şekilde belirle
+      const thumbnailPath = path.resolve(path.join(UPLOAD_DIRS.image, thumbnailFileName));
+
+      // Yol geçişi kontrolü
+      if (!thumbnailPath.startsWith(UPLOAD_DIRS.image)) {
+        throw new Error('Geçersiz küçük resim yolu');
+      }
+
       // Küçük resim URL'sini belirle
       const thumbnailUrl = `${env.API_URL}/uploads/images/${thumbnailFileName}`;
-      
+
       // Küçük resim oluştur
-      const thumbnail = sharp(sourcePath)
-        .resize(200, 200, { fit: 'cover' })
-        .jpeg({ quality: 70 });
-      
+      const thumbnail = sharp(sourcePath).resize(200, 200, { fit: 'cover' }).jpeg({ quality: 70 });
+
       // Küçük resmi kaydet
       await thumbnail.toFile(thumbnailPath);
-      
+
       // Küçük resim meta verilerini al
       const metadata = await thumbnail.metadata();
-      
+
       // Küçük resim bilgilerini kaydet
       processedFile.thumbnail = {
         fileName: thumbnailFileName,
         filePath: thumbnailPath,
         fileUrl: thumbnailUrl,
         width: metadata.width || 200,
-        height: metadata.height || 200
+        height: metadata.height || 200,
       };
     } catch (error) {
-      logger.error('Küçük resim oluşturulurken hata oluştu', { 
+      logger.error('Küçük resim oluşturulurken hata oluştu', {
         error: (error as Error).message,
         sourcePath,
-        fileName: processedFile.fileName
+        fileName: processedFile.fileName,
       });
       // Küçük resim oluşturma hatası kritik değil, devam et
     }
   }
-  
+
   /**
    * Dosyayı veritabanına kaydeder
    * @param processedFile İşlenmiş dosya
    * @param userId Kullanıcı ID
    * @returns Kaydedilen dosya
    */
-  public async saveFileToDatabase(
-    processedFile: ProcessedFile,
-    userId: string
-  ): Promise<any> {
+  public async saveFileToDatabase(processedFile: ProcessedFile, userId: string): Promise<any> {
     try {
       // Dosya nesnesini oluştur
       const file = new File({
@@ -437,29 +447,29 @@ class FileProcessor {
         duration: processedFile.duration,
         thumbnail: processedFile.thumbnail,
         metadata: processedFile.metadata,
-        uploadedBy: userId
+        uploadedBy: userId,
       });
-      
+
       // Dosyayı kaydet
       await file.save();
-      
-      logger.info('Dosya veritabanına kaydedildi', { 
+
+      logger.info('Dosya veritabanına kaydedildi', {
         fileId: file._id,
         fileName: processedFile.fileName,
-        userId
+        userId,
       });
-      
+
       return file;
     } catch (error) {
-      logger.error('Dosya veritabanına kaydedilirken hata oluştu', { 
+      logger.error('Dosya veritabanına kaydedilirken hata oluştu', {
         error: (error as Error).message,
         fileName: processedFile.fileName,
-        userId
+        userId,
       });
       throw error;
     }
   }
-  
+
   /**
    * Dosyayı siler
    * @param fileId Dosya ID
@@ -470,39 +480,63 @@ class FileProcessor {
     try {
       // Dosyayı bul
       const file = await File.findOne({ _id: fileId });
-      
+
       if (!file) {
         logger.warn('Silinecek dosya bulunamadı', { fileId, userId });
         return false;
       }
-      
+
       // Yetki kontrolü
       if (file.uploadedBy.toString() !== userId) {
         logger.warn('Dosyayı silme yetkisi yok', { fileId, userId, uploadedBy: file.uploadedBy });
         return false;
       }
-      
-      // Dosyayı diskten sil
+
+      // Dosyayı diskten güvenli bir şekilde sil
       if (fs.existsSync(file.filePath)) {
-        await this.fsUnlink(file.filePath);
+        // Yol geçişi kontrolü
+        const resolvedFilePath = path.resolve(file.filePath);
+        const uploadsBasePath = path.resolve(path.join(__dirname, '..', '..', 'uploads'));
+
+        if (!resolvedFilePath.startsWith(uploadsBasePath)) {
+          logger.warn('Güvenli olmayan dosya silme girişimi engellendi', {
+            fileId,
+            filePath: file.filePath,
+            resolvedPath: resolvedFilePath,
+          });
+        } else {
+          await this.fsUnlink(file.filePath);
+        }
       }
-      
-      // Küçük resmi sil (varsa)
+
+      // Küçük resmi güvenli bir şekilde sil (varsa)
       if (file.thumbnail && file.thumbnail.filePath && fs.existsSync(file.thumbnail.filePath)) {
-        await this.fsUnlink(file.thumbnail.filePath);
+        // Yol geçişi kontrolü
+        const resolvedThumbnailPath = path.resolve(file.thumbnail.filePath);
+        const uploadsBasePath = path.resolve(path.join(__dirname, '..', '..', 'uploads'));
+
+        if (!resolvedThumbnailPath.startsWith(uploadsBasePath)) {
+          logger.warn('Güvenli olmayan küçük resim silme girişimi engellendi', {
+            fileId,
+            thumbnailPath: file.thumbnail.filePath,
+            resolvedPath: resolvedThumbnailPath,
+          });
+        } else {
+          await this.fsUnlink(file.thumbnail.filePath);
+        }
       }
-      
+
       // Dosyayı veritabanından sil
       await file.deleteOne();
-      
+
       logger.info('Dosya silindi', { fileId, userId });
-      
+
       return true;
     } catch (error) {
-      logger.error('Dosya silinirken hata oluştu', { 
+      logger.error('Dosya silinirken hata oluştu', {
         error: (error as Error).message,
         fileId,
-        userId
+        userId,
       });
       return false;
     }

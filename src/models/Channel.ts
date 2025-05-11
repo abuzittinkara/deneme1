@@ -36,7 +36,10 @@ export interface ChannelDocument extends TypedDocument<IChannel> {
 
 // Kanal modeli arayüzü
 export interface ChannelModel extends FullModelType<IChannel> {
-  findByNameAndGroup(name: string, groupId: mongoose.Types.ObjectId): Promise<ChannelDocument | null>;
+  findByNameAndGroup(
+    name: string,
+    groupId: mongoose.Types.ObjectId
+  ): Promise<ChannelDocument | null>;
 }
 
 // Kanal şeması
@@ -62,16 +65,16 @@ const ChannelSchema = new Schema<ChannelDocument, ChannelModel>(
     allowedUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     archivedAt: { type: Date },
     archivedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User' }
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
 // Statik metodlar
-ChannelSchema.statics.findByNameAndGroup = function(
+ChannelSchema.statics['findByNameAndGroup'] = function (
   name: string,
   groupId: mongoose.Types.ObjectId
 ): Promise<ChannelDocument | null> {
@@ -81,24 +84,10 @@ ChannelSchema.statics.findByNameAndGroup = function(
 // Kanal modeli
 let ChannelModel_: ChannelModel;
 
-// Geliştirme modunda mock model oluştur
-if (process.env.NODE_ENV === 'development') {
-  // Mock model
-  ChannelModel_ = {
-    find: () => Promise.resolve([]),
-    findById: () => Promise.resolve(null),
-    findOne: () => Promise.resolve(null),
-    create: () => Promise.resolve({} as any),
-    updateOne: () => Promise.resolve({ modifiedCount: 0 }),
-    deleteOne: () => Promise.resolve({ deletedCount: 0 }),
-    countDocuments: () => Promise.resolve(0),
-    findByNameAndGroup: () => Promise.resolve(null),
-  } as unknown as ChannelModel;
-} else {
-  // Gerçek model
-  ChannelModel_ = (mongoose.models.Channel as ChannelModel) ||
-    mongoose.model<ChannelDocument, ChannelModel>('Channel', ChannelSchema);
-}
+// Gerçek model
+ChannelModel_ =
+  (mongoose.models['Channel'] as ChannelModel) ||
+  mongoose.model<ChannelDocument, ChannelModel>('Channel', ChannelSchema);
 
 // Hem default export hem de named export sağla
 export const Channel = ChannelModel_;

@@ -8,7 +8,7 @@ import { env } from './env';
 import {
   monitorDatabaseConnection,
   createIndexes,
-  optimizeDatabaseConnection
+  optimizeDatabaseConnection,
 } from '../utils/db-helpers';
 
 // MongoDB bağlantı bilgileri
@@ -17,6 +17,7 @@ const MONGODB_PASSWORD = env.MONGODB_PASSWORD;
 const MONGODB_HOST = env.MONGODB_HOST;
 const MONGODB_DATABASE = env.MONGODB_DATABASE || '';
 const MONGODB_OPTIONS = 'retryWrites=true&w=majority&appName=Fisqos';
+const MONGODB_ENABLED = env.MONGODB_ENABLED !== 'false';
 
 // MongoDB bağlantı URL'si
 let MONGODB_URI = env.MONGODB_URI;
@@ -32,13 +33,17 @@ if (!MONGODB_URI && MONGODB_USER && MONGODB_PASSWORD && MONGODB_HOST) {
   } else {
     // Üretim ortamında bağlantı bilgileri eksikse hata fırlat
     if (env.NODE_ENV === 'production') {
-      throw new Error('MongoDB bağlantı bilgileri eksik. MONGODB_URI veya MONGODB_USER, MONGODB_PASSWORD ve MONGODB_HOST ortam değişkenlerini ayarlayın.');
+      throw new Error(
+        'MongoDB bağlantı bilgileri eksik. MONGODB_URI veya MONGODB_USER, MONGODB_PASSWORD ve MONGODB_HOST ortam değişkenlerini ayarlayın.'
+      );
     }
   }
 }
 
 // Güvenli bağlantı URL'si (şifre gizlenmiş)
-const MONGODB_URI_SAFE = MONGODB_URI ? MONGODB_URI.replace(/:[^:@]+@/, ':****@') : 'mongodb://localhost:27017/fisqos_dev';
+const MONGODB_URI_SAFE = MONGODB_URI
+  ? MONGODB_URI.replace(/:[^:@]+@/, ':****@')
+  : 'mongodb://localhost:27017/fisqos_dev';
 
 // MongoDB bağlantı URL'sini ve güvenli versiyonunu dışa aktar
 export { MONGODB_URI, MONGODB_URI_SAFE };
@@ -47,22 +52,24 @@ export { MONGODB_URI, MONGODB_URI_SAFE };
 export const mongooseOptions: mongoose.ConnectOptions = {
   // useNewUrlParser ve useUnifiedTopology artık varsayılan olarak true
   autoIndex: process.env.NODE_ENV !== 'production', // Üretimde indeksleri otomatik oluşturma
-  serverSelectionTimeoutMS: 30000, // 30 saniye
-  socketTimeoutMS: 60000, // 60 saniye
+  serverSelectionTimeoutMS: 45000, // 45 saniye (artırıldı)
+  socketTimeoutMS: 90000, // 90 saniye (artırıldı)
   family: 4, // IPv4
-  connectTimeoutMS: 30000, // 30 saniye
-  heartbeatFrequencyMS: 10000, // 10 saniye
-  maxPoolSize: process.env.NODE_ENV === 'production' ? 20 : 10, // Üretimde daha fazla bağlantı
-  minPoolSize: process.env.NODE_ENV === 'production' ? 5 : 1, // Minimum bağlantı sayısı
+  connectTimeoutMS: 45000, // 45 saniye (artırıldı)
+  heartbeatFrequencyMS: 15000, // 15 saniye (artırıldı)
+  maxPoolSize: process.env.NODE_ENV === 'production' ? 30 : 15, // Üretimde daha fazla bağlantı (artırıldı)
+  minPoolSize: process.env.NODE_ENV === 'production' ? 8 : 2, // Minimum bağlantı sayısı (artırıldı)
   // Yeni Mongoose 7.x+ özellikleri
-  maxConnecting: 10, // Aynı anda maksimum bağlantı kurma sayısı
+  maxConnecting: 15, // Aynı anda maksimum bağlantı kurma sayısı (artırıldı)
   retryWrites: true, // Yazma işlemlerini yeniden dene
   retryReads: true, // Okuma işlemlerini yeniden dene
   // Üretim ortamında daha sıkı ayarlar
-  ...(process.env.NODE_ENV === 'production' ? {
-    compressors: 'zlib', // Veri sıkıştırma
-    zlibCompressionLevel: 6, // Sıkıştırma seviyesi (0-9)
-  } : {})
+  ...(process.env.NODE_ENV === 'production'
+    ? {
+      compressors: 'zlib', // Veri sıkıştırma
+      zlibCompressionLevel: 6, // Sıkıştırma seviyesi (0-9)
+    }
+    : {}),
 };
 
 /**
@@ -74,7 +81,7 @@ export const connectionState = {
   connectAttempts: 0,
   maxConnectAttempts: 5,
   reconnectTimeout: null as NodeJS.Timeout | null,
-  isInitialized: false
+  isInitialized: false,
 };
 
 /**
@@ -84,13 +91,27 @@ export const connectionState = {
  */
 export async function connectToDatabase(forceConnect = false): Promise<mongoose.Connection> {
   try {
+    // MongoDB devre dışı bırakıldıysa, bağlantı kurmadan dön
+    if (!MONGODB_ENABLED) {
+      logger.info('MongoDB devre dışı bırakıldı, bağlantı kurulmayacak');
+      return mongoose.connection;
+    }
+
+    // Bağlantı URI'si kontrol et
+    if (!MONGODB_URI) {
+      throw new Error('MongoDB bağlantı URI\'si tanımlanmamış');
+    }
+
     // Eğer zaten bağlanıyorsa veya son bağlantı denemesinden bu yana 5 saniye geçmediyse bekle
     if (
       !forceConnect &&
       (connectionState.isConnecting ||
-      (Date.now() - connectionState.lastConnectAttempt < 5000 && connectionState.connectAttempts > 0))
+        (Date.now() - connectionState.lastConnectAttempt < 5000 &&
+          connectionState.connectAttempts > 0))
     ) {
-      logger.debug('MongoDB bağlantısı zaten kuruluyor veya son denemeden bu yana çok az zaman geçti');
+      logger.debug(
+        'MongoDB bağlantısı zaten kuruluyor veya son denemeden bu yana çok az zaman geçti'
+      );
       return mongoose.connection;
     }
 
@@ -127,7 +148,7 @@ export async function connectToDatabase(forceConnect = false): Promise<mongoose.
     logger.info('MongoDB bağlantısı başarılı', {
       uri: MONGODB_URI_SAFE,
       attempt: connectionState.connectAttempts,
-      database: mongoose.connection.db.databaseName
+      database: mongoose.connection.db?.databaseName || 'unknown',
     });
 
     // Bağlantı durumunu sıfırla
@@ -137,11 +158,13 @@ export async function connectToDatabase(forceConnect = false): Promise<mongoose.
     // İndeksleri oluştur
     if (env.NODE_ENV === 'production') {
       try {
-        await createIndexes();
+        // Tüm modelleri al
+        const models = Object.values(mongoose.models);
+        await createIndexes(models);
         logger.info('MongoDB indeksleri başarıyla oluşturuldu');
       } catch (indexError) {
         logger.error('MongoDB indeksleri oluşturulurken hata oluştu', {
-          error: (indexError as Error).message
+          error: (indexError as Error).message,
         });
         // İndeks hatası bağlantıyı engellemez
       }
@@ -154,14 +177,16 @@ export async function connectToDatabase(forceConnect = false): Promise<mongoose.
     logger.error('MongoDB bağlantı hatası', {
       error: (error as Error).message,
       stack: (error as Error).stack,
-      attempt: connectionState.connectAttempts
+      attempt: connectionState.connectAttempts,
     });
 
     // Maksimum deneme sayısını aşmadıysa yeniden dene
     if (connectionState.connectAttempts < connectionState.maxConnectAttempts) {
-      const retryDelay = Math.min(1000 * Math.pow(2, connectionState.connectAttempts), 30000); // Üstel geri çekilme, maksimum 30 saniye
+      const retryDelay = Math.min(1000 * Math.pow(2, connectionState.connectAttempts), 60000); // Üstel geri çekilme, maksimum 60 saniye (artırıldı)
 
-      logger.info(`MongoDB bağlantısı ${retryDelay}ms sonra yeniden denenecek (Deneme: ${connectionState.connectAttempts}/${connectionState.maxConnectAttempts})`);
+      logger.info(
+        `MongoDB bağlantısı ${retryDelay}ms sonra yeniden denenecek (Deneme: ${connectionState.connectAttempts}/${connectionState.maxConnectAttempts})`
+      );
 
       // Önceki zamanlayıcıyı temizle
       if (connectionState.reconnectTimeout) {
@@ -170,12 +195,14 @@ export async function connectToDatabase(forceConnect = false): Promise<mongoose.
 
       // Yeniden bağlanma zamanlayıcısını ayarla
       connectionState.reconnectTimeout = setTimeout(() => {
-        connectToDatabase().catch(err => {
+        connectToDatabase().catch((err) => {
           logger.error('MongoDB yeniden bağlantı hatası', { error: err.message });
         });
       }, retryDelay);
     } else {
-      logger.error(`MongoDB bağlantısı ${connectionState.maxConnectAttempts} deneme sonrasında başarısız oldu`);
+      logger.error(
+        `MongoDB bağlantısı ${connectionState.maxConnectAttempts} deneme sonrasında başarısız oldu`
+      );
     }
 
     throw error;
@@ -207,7 +234,7 @@ export async function disconnectFromDatabase(): Promise<void> {
   } catch (error) {
     logger.error('MongoDB bağlantısını kapatma hatası', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     throw error;
   }
@@ -249,7 +276,7 @@ export async function retryDatabaseConnection(): Promise<boolean> {
   } catch (error) {
     logger.error('Veritabanı bağlantısı yeniden denenirken hata oluştu', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     return false;
   }
@@ -279,15 +306,19 @@ export async function checkDatabaseHealth(): Promise<{
         status,
         responseTime: 0,
         collections: 0,
-        error: 'Veritabanı bağlantısı kurulu değil'
+        error: 'Veritabanı bağlantısı kurulu değil',
       };
     }
 
     // Ping komutu ile bağlantıyı test et
-    await mongoose.connection.db.admin().ping();
+    if (mongoose.connection.db) {
+      await mongoose.connection.db.admin().ping();
+    }
 
     // Koleksiyon sayısını al
-    const collections = await mongoose.connection.db.listCollections().toArray();
+    const collections = mongoose.connection.db
+      ? await mongoose.connection.db.listCollections().toArray()
+      : [];
 
     const responseTime = Date.now() - startTime;
 
@@ -295,7 +326,7 @@ export async function checkDatabaseHealth(): Promise<{
       isConnected: true,
       status,
       responseTime,
-      collections: collections.length
+      collections: collections.length,
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
@@ -305,7 +336,7 @@ export async function checkDatabaseHealth(): Promise<{
       status: getDatabaseConnectionState(),
       responseTime,
       collections: 0,
-      error: (error as Error).message
+      error: (error as Error).message,
     };
   }
 }
@@ -344,5 +375,5 @@ export default {
   isDatabaseReady,
   retryDatabaseConnection,
   checkDatabaseHealth,
-  mongoDbEvents
+  mongoDbEvents,
 };

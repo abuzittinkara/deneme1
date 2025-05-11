@@ -5,7 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { asyncHandler, sendSuccess, sendError } from '../utils/controllerUtils';
 import { fileProcessor, FileProcessingOptions } from '../utils/fileProcessor';
-import { File } from '../models/File';
+import File from '../models/File';
 import { logger } from '../utils/logger';
 import { ValidationError, NotFoundError, ForbiddenError } from '../utils/errors';
 import mongoose from 'mongoose';
@@ -97,54 +97,54 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response, next:
   if (!req.file) {
     throw new ValidationError('Dosya bulunamadı');
   }
-  
+
   const userId = (req as any).user._id;
-  
+
   // İşleme seçeneklerini al
   const options: FileProcessingOptions = {};
-  
+
   // Yeniden boyutlandırma
-  if (req.query.resize === 'true') {
+  if (req.query['resize'] === 'true') {
     options.resize = {};
-    
-    if (req.query.width) {
-      options.resize.width = parseInt(req.query.width as string);
+
+    if (req.query['width']) {
+      options.resize.width = parseInt(req.query['width'] as string);
     }
-    
-    if (req.query.height) {
-      options.resize.height = parseInt(req.query.height as string);
+
+    if (req.query['height']) {
+      options.resize.height = parseInt(req.query['height'] as string);
     }
-    
-    if (req.query.fit) {
-      options.resize.fit = req.query.fit as any;
+
+    if (req.query['fit']) {
+      options.resize.fit = req.query['fit'] as any;
     }
   }
-  
+
   // Sıkıştırma
-  if (req.query.compress === 'true') {
+  if (req.query['compress'] === 'true') {
     options.compress = true;
-    
-    if (req.query.quality) {
-      options.quality = parseInt(req.query.quality as string);
+
+    if (req.query['quality']) {
+      options.quality = parseInt(req.query['quality'] as string);
     }
   }
-  
+
   // Format
-  if (req.query.format) {
-    options.format = req.query.format as any;
+  if (req.query['format']) {
+    options.format = req.query['format'] as any;
   }
-  
+
   // Küçük resim
-  if (req.query.generateThumbnail === 'true') {
+  if (req.query['generateThumbnail'] === 'true') {
     options.generateThumbnail = true;
   }
-  
+
   // Dosyayı işle
   const processedFile = await fileProcessor.processFile(req.file, options);
-  
+
   // Dosyayı veritabanına kaydet
   const file = await fileProcessor.saveFileToDatabase(processedFile, userId);
-  
+
   return sendSuccess(res, file, 201);
 });
 
@@ -232,81 +232,83 @@ export const uploadFile = asyncHandler(async (req: Request, res: Response, next:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const uploadMultipleFiles = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  // Dosya kontrolü
-  if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-    throw new ValidationError('Dosya bulunamadı');
-  }
-  
-  const userId = (req as any).user._id;
-  
-  // İşleme seçeneklerini al
-  const options: FileProcessingOptions = {};
-  
-  // Yeniden boyutlandırma
-  if (req.query.resize === 'true') {
-    options.resize = {};
-    
-    if (req.query.width) {
-      options.resize.width = parseInt(req.query.width as string);
+export const uploadMultipleFiles = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Dosya kontrolü
+    if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+      throw new ValidationError('Dosya bulunamadı');
     }
-    
-    if (req.query.height) {
-      options.resize.height = parseInt(req.query.height as string);
+
+    const userId = (req as any).user._id;
+
+    // İşleme seçeneklerini al
+    const options: FileProcessingOptions = {};
+
+    // Yeniden boyutlandırma
+    if (req.query['resize'] === 'true') {
+      options.resize = {};
+
+      if (req.query['width']) {
+        options.resize.width = parseInt(req.query['width'] as string);
+      }
+
+      if (req.query['height']) {
+        options.resize.height = parseInt(req.query['height'] as string);
+      }
+
+      if (req.query['fit']) {
+        options.resize.fit = req.query['fit'] as any;
+      }
     }
-    
-    if (req.query.fit) {
-      options.resize.fit = req.query.fit as any;
+
+    // Sıkıştırma
+    if (req.query['compress'] === 'true') {
+      options.compress = true;
+
+      if (req.query['quality']) {
+        options.quality = parseInt(req.query['quality'] as string);
+      }
     }
-  }
-  
-  // Sıkıştırma
-  if (req.query.compress === 'true') {
-    options.compress = true;
-    
-    if (req.query.quality) {
-      options.quality = parseInt(req.query.quality as string);
+
+    // Format
+    if (req.query['format']) {
+      options.format = req.query['format'] as any;
     }
-  }
-  
-  // Format
-  if (req.query.format) {
-    options.format = req.query.format as any;
-  }
-  
-  // Küçük resim
-  if (req.query.generateThumbnail === 'true') {
-    options.generateThumbnail = true;
-  }
-  
-  // Dosyaları işle
-  const files = [];
-  
-  for (const file of req.files) {
-    try {
-      // Dosyayı işle
-      const processedFile = await fileProcessor.processFile(file, options);
-      
-      // Dosyayı veritabanına kaydet
-      const savedFile = await fileProcessor.saveFileToDatabase(processedFile, userId);
-      
-      files.push(savedFile);
-    } catch (error) {
-      logger.error('Dosya işlenirken hata oluştu', { 
-        error: (error as Error).message,
-        file: file.originalname
-      });
-      
-      // Hata durumunda diğer dosyaları işlemeye devam et
+
+    // Küçük resim
+    if (req.query['generateThumbnail'] === 'true') {
+      options.generateThumbnail = true;
     }
+
+    // Dosyaları işle
+    const files = [];
+
+    for (const file of req.files) {
+      try {
+        // Dosyayı işle
+        const processedFile = await fileProcessor.processFile(file, options);
+
+        // Dosyayı veritabanına kaydet
+        const savedFile = await fileProcessor.saveFileToDatabase(processedFile, userId);
+
+        files.push(savedFile);
+      } catch (error) {
+        logger.error('Dosya işlenirken hata oluştu', {
+          error: (error as Error).message,
+          file: file.originalname,
+        });
+
+        // Hata durumunda diğer dosyaları işlemeye devam et
+      }
+    }
+
+    if (files.length === 0) {
+      throw new ValidationError('Hiçbir dosya yüklenemedi');
+    }
+
+    return sendSuccess(res, files, 201);
   }
-  
-  if (files.length === 0) {
-    throw new ValidationError('Hiçbir dosya yüklenemedi');
-  }
-  
-  return sendSuccess(res, files, 201);
-});
+);
 
 /**
  * @swagger
@@ -350,20 +352,20 @@ export const uploadMultipleFiles = asyncHandler(async (req: Request, res: Respon
  *               $ref: '#/components/schemas/Error'
  */
 export const getFile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const fileId = req.params.id;
-  
+  const fileId = req.params['id'];
+
   // ID'yi doğrula
-  if (!mongoose.Types.ObjectId.isValid(fileId)) {
+  if (!fileId || !mongoose.Types.ObjectId.isValid(fileId)) {
     throw new ValidationError('Geçersiz dosya ID');
   }
-  
+
   // Dosyayı bul
   const file = await File.findById(fileId);
-  
+
   if (!file) {
     throw new NotFoundError('Dosya bulunamadı');
   }
-  
+
   return sendSuccess(res, file);
 });
 
@@ -435,35 +437,50 @@ export const getFile = asyncHandler(async (req: Request, res: Response, next: Ne
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const getUserFiles = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  
-  // Sorgu parametrelerini al
-  const limit = parseInt(req.query.limit as string || '20');
-  const skip = parseInt(req.query.skip as string || '0');
-  const fileType = req.query.fileType as string;
-  const sortBy = req.query.sortBy as string || 'createdAt';
-  const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
-  
-  // Sorgu oluştur
-  const query: any = { uploadedBy: userId };
-  
-  // Dosya türüne göre filtrele
-  if (fileType) {
-    query.fileType = fileType;
+export const getUserFiles = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+
+    // Sorgu parametrelerini al
+    const limit = parseInt((req.query['limit'] as string) || '20');
+    const skip = parseInt((req.query['skip'] as string) || '0');
+    const fileType = req.query['fileType'] as string;
+    const sortBy = (req.query['sortBy'] as string) || 'createdAt';
+    const sortOrder = req.query['sortOrder'] === 'asc' ? 1 : -1;
+
+    // Sorgu oluştur
+    const query: any = { uploadedBy: userId };
+
+    // Dosya türüne göre filtrele
+    if (fileType) {
+      query.fileType = fileType;
+    }
+
+    // Toplam sayıyı al
+    const total = await File.countDocuments(query);
+
+    // Dosyaları getir
+    // Dosyaları getir ve bellek içinde işle
+    const filesQuery = await File.find(query).exec();
+
+    // Bellek içinde sıralama ve sayfalama yap
+    const sortedFiles = Array.from(filesQuery).sort((a: any, b: any) => {
+      const aValue = a.get(sortBy) || '';
+      const bValue = b.get(sortBy) || '';
+
+      if (sortOrder === 1) {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    // Sayfalama uygula
+    const files = sortedFiles.slice(skip, skip + limit);
+
+    return sendSuccess(res, { files, total });
   }
-  
-  // Toplam sayıyı al
-  const total = await File.countDocuments(query);
-  
-  // Dosyaları getir
-  const files = await File.find(query)
-    .sort({ [sortBy]: sortOrder })
-    .skip(skip)
-    .limit(limit);
-  
-  return sendSuccess(res, { files, total });
-});
+);
 
 /**
  * @swagger
@@ -517,21 +534,21 @@ export const getUserFiles = asyncHandler(async (req: Request, res: Response, nex
  *               $ref: '#/components/schemas/Error'
  */
 export const deleteFile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const fileId = req.params.id;
+  const fileId = req.params['id'];
   const userId = (req as any).user._id;
-  
+
   // ID'yi doğrula
-  if (!mongoose.Types.ObjectId.isValid(fileId)) {
+  if (!fileId || !mongoose.Types.ObjectId.isValid(fileId)) {
     throw new ValidationError('Geçersiz dosya ID');
   }
-  
+
   // Dosyayı sil
-  const success = await fileProcessor.deleteFile(fileId, userId);
-  
+  const success = await fileProcessor.deleteFile(fileId || '', userId);
+
   if (!success) {
     throw new NotFoundError('Dosya bulunamadı veya silme yetkisi yok');
   }
-  
+
   return sendSuccess(res, { message: 'Dosya başarıyla silindi' });
 });
 
@@ -571,29 +588,49 @@ export const deleteFile = asyncHandler(async (req: Request, res: Response, next:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const downloadFile = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const fileId = req.params.id;
-  
-  // ID'yi doğrula
-  if (!mongoose.Types.ObjectId.isValid(fileId)) {
-    throw new ValidationError('Geçersiz dosya ID');
+export const downloadFile = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const fileId = req.params['id'];
+
+    // ID'yi doğrula
+    if (!fileId || !mongoose.Types.ObjectId.isValid(fileId)) {
+      throw new ValidationError('Geçersiz dosya ID');
+    }
+
+    // Dosyayı bul
+    const file = await File.findById(fileId);
+
+    if (!file) {
+      throw new NotFoundError('Dosya bulunamadı');
+    }
+
+    // Dosya yolunu güvenli bir şekilde kontrol et
+    const resolvedFilePath = path.resolve(file.filePath);
+    const uploadsBasePath = path.resolve(path.join(__dirname, '..', '..', 'uploads'));
+
+    // Yol geçişi kontrolü
+    if (!resolvedFilePath.startsWith(uploadsBasePath)) {
+      logger.warn('Güvenli olmayan dosya indirme girişimi', {
+        fileId,
+        filePath: file.filePath,
+        resolvedPath: resolvedFilePath,
+        ip: req.ip,
+      });
+      throw new ValidationError('Geçersiz dosya yolu');
+    }
+
+    // Dosyanın varlığını kontrol et
+    if (!fs.existsSync(resolvedFilePath)) {
+      throw new NotFoundError('Dosya bulunamadı');
+    }
+
+    // Dosya adını güvenli hale getir
+    const safeFileName = file.originalName.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    // Dosyayı indir
+    res.download(resolvedFilePath, safeFileName);
   }
-  
-  // Dosyayı bul
-  const file = await File.findById(fileId);
-  
-  if (!file) {
-    throw new NotFoundError('Dosya bulunamadı');
-  }
-  
-  // Dosya yolunu kontrol et
-  if (!fs.existsSync(file.filePath)) {
-    throw new NotFoundError('Dosya bulunamadı');
-  }
-  
-  // Dosyayı indir
-  res.download(file.filePath, file.originalName);
-});
+);
 
 export default {
   uploadFile,
@@ -601,5 +638,5 @@ export default {
   getFile,
   getUserFiles,
   deleteFile,
-  downloadFile
+  downloadFile,
 };

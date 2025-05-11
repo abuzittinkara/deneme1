@@ -40,20 +40,20 @@ export const getGroups = asyncHandler(async (req: Request, res: Response, next: 
 
   // Kullanıcının üye olduğu grupları bul
   const groups = await Group.find({
-    'members.user': user._id
+    'members.user': user._id,
   })
-  .select('name description avatar inviteCode createdAt')
-  .populate('owner', 'username name surname profilePicture')
-  .lean();
+    .select('name description avatar inviteCode createdAt')
+    .populate('owner', 'username name surname profilePicture')
+    .lean();
 
   logger.info('Kullanıcının grupları getirildi', {
     userId: user._id,
-    groupCount: groups.length
+    groupCount: groups.length,
   });
 
   return res.json({
     success: true,
-    data: groups
+    data: groups,
   });
 });
 
@@ -123,9 +123,9 @@ export const createGroup = asyncHandler(async (req: Request, res: Response, next
       {
         user: user._id,
         role: 'owner',
-        joinedAt: new Date()
-      }
-    ]
+        joinedAt: new Date(),
+      },
+    ],
   });
 
   await group.save();
@@ -136,7 +136,7 @@ export const createGroup = asyncHandler(async (req: Request, res: Response, next
     description: 'Genel sohbet kanalı',
     type: 'text',
     group: group._id,
-    createdBy: user._id
+    createdBy: user._id,
   });
 
   await generalChannel.save();
@@ -147,7 +147,7 @@ export const createGroup = asyncHandler(async (req: Request, res: Response, next
     description: 'Sesli sohbet kanalı',
     type: 'voice',
     group: group._id,
-    createdBy: user._id
+    createdBy: user._id,
   });
 
   await voiceChannel.save();
@@ -155,7 +155,7 @@ export const createGroup = asyncHandler(async (req: Request, res: Response, next
   logger.info('Yeni grup oluşturuldu', {
     userId: user._id,
     groupId: group._id,
-    groupName: name
+    groupName: name,
   });
 
   return res.status(201).json({
@@ -166,8 +166,8 @@ export const createGroup = asyncHandler(async (req: Request, res: Response, next
       description: group.get('description'),
       inviteCode: group.get('inviteCode'),
       owner: user._id,
-      createdAt: group.get('createdAt')
-    }
+      createdAt: group.get('createdAt'),
+    },
   });
 });
 
@@ -234,19 +234,21 @@ export const joinGroup = asyncHandler(async (req: Request, res: Response, next: 
 
   // Kullanıcı zaten grupta mı kontrol et
   const members = group.get('members') || [];
-  const isMember = members.some((member: any) =>
-    member.user && member.user.toString() === user._id.toString()
-  );
+  const userId = user._id ? user._id.toString() : '';
+  const isMember = members.some((member: any) => member.user && member.user.toString() === userId);
   if (isMember) {
     throw new ValidationError('Zaten bu grubun üyesisiniz');
   }
 
   // Kullanıcıyı gruba ekle
-  const updatedMembers = [...members, {
-    user: user._id,
-    role: 'member',
-    joinedAt: new Date()
-  }];
+  const updatedMembers = [
+    ...members,
+    {
+      user: user._id,
+      role: 'member',
+      joinedAt: new Date(),
+    },
+  ];
   group.set('members', updatedMembers);
 
   await group.save();
@@ -254,7 +256,7 @@ export const joinGroup = asyncHandler(async (req: Request, res: Response, next: 
   logger.info('Kullanıcı gruba katıldı', {
     userId: user._id,
     groupId: group._id,
-    groupName: group.get('name')
+    groupName: group.get('name'),
   });
 
   return res.json({
@@ -264,8 +266,8 @@ export const joinGroup = asyncHandler(async (req: Request, res: Response, next: 
       name: group.get('name'),
       description: group.get('description'),
       owner: group.get('owner'),
-      createdAt: group.get('createdAt')
-    }
+      createdAt: group.get('createdAt'),
+    },
   });
 });
 
@@ -310,51 +312,54 @@ export const joinGroup = asyncHandler(async (req: Request, res: Response, next: 
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const getGroupById = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const { groupId } = req.params;
-  const user = (req as any).user as UserDocument;
+export const getGroupById = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { groupId } = req.params;
+    const user = (req as any).user as UserDocument;
 
-  // Grubu bul
-  const group = await Group.findById(groupId)
-    .populate('owner', 'username name surname profilePicture')
-    .populate('members.user', 'username name surname profilePicture status')
-    .lean();
+    // Grubu bul
+    const group = await Group.findById(groupId)
+      .populate('owner', 'username name surname profilePicture')
+      .populate('members.user', 'username name surname profilePicture status')
+      .lean();
 
-  if (!group) {
-    throw new NotFoundError('Grup bulunamadı');
+    if (!group) {
+      throw new NotFoundError('Grup bulunamadı');
+    }
+
+    // Kullanıcı grup üyesi mi kontrol et
+    const members = group.get('members') || [];
+    const userId = user._id ? user._id.toString() : '';
+    const isMember = members.some(
+      (member: any) => member.user && member.user.toString && member.user.toString() === userId
+    );
+    if (!isMember) {
+      throw new ForbiddenError('Bu grubun üyesi değilsiniz');
+    }
+
+    // Gruba ait kanalları getir
+    const channels = await Channel.find({ group: groupId })
+      .select('name description type createdAt')
+      .sort({ type: 1, name: 1 })
+      .lean();
+
+    // Grup bilgilerine kanalları ekle
+    const groupWithChannels = {
+      ...group,
+      channels,
+    };
+
+    logger.info('Grup detayları getirildi', {
+      userId: user._id,
+      groupId,
+    });
+
+    return res.json({
+      success: true,
+      data: groupWithChannels,
+    });
   }
-
-  // Kullanıcı grup üyesi mi kontrol et
-  const members = group.get('members') || [];
-  const isMember = members.some((member: any) =>
-    member.user && member.user.toString && member.user.toString() === user._id.toString()
-  );
-  if (!isMember) {
-    throw new ForbiddenError('Bu grubun üyesi değilsiniz');
-  }
-
-  // Gruba ait kanalları getir
-  const channels = await Channel.find({ group: groupId })
-    .select('name description type createdAt')
-    .sort({ type: 1, name: 1 })
-    .lean();
-
-  // Grup bilgilerine kanalları ekle
-  const groupWithChannels = {
-    ...group,
-    channels
-  };
-
-  logger.info('Grup detayları getirildi', {
-    userId: user._id,
-    groupId
-  });
-
-  return res.json({
-    success: true,
-    data: groupWithChannels
-  });
-});
+);
 
 /**
  * @swagger
@@ -425,9 +430,8 @@ export const updateGroup = asyncHandler(async (req: Request, res: Response, next
 
   // Yetki kontrolü
   const members = group.get('members') || [];
-  const member = members.find((member: any) =>
-    member.user && member.user.toString() === user._id.toString()
-  );
+  const userId = user._id ? user._id.toString() : '';
+  const member = members.find((member: any) => member.user && member.user.toString() === userId);
   if (!member || !['owner', 'admin'].includes(member.role)) {
     throw new ForbiddenError('Bu işlem için yetkiniz yok');
   }
@@ -441,7 +445,7 @@ export const updateGroup = asyncHandler(async (req: Request, res: Response, next
   logger.info('Grup güncellendi', {
     userId: user._id,
     groupId,
-    updates: { name, description }
+    updates: { name, description },
   });
 
   return res.json({
@@ -451,8 +455,8 @@ export const updateGroup = asyncHandler(async (req: Request, res: Response, next
       name: group.get('name'),
       description: group.get('description'),
       owner: group.get('owner'),
-      updatedAt: new Date()
-    }
+      updatedAt: new Date(),
+    },
   });
 });
 
@@ -513,9 +517,8 @@ export const deleteGroup = asyncHandler(async (req: Request, res: Response, next
 
   // Yetki kontrolü
   const members = group.get('members') || [];
-  const member = members.find((member: any) =>
-    member.user && member.user.toString() === user._id.toString()
-  );
+  const userId = user._id ? user._id.toString() : '';
+  const member = members.find((member: any) => member.user && member.user.toString() === userId);
   if (!member || member.role !== 'owner') {
     throw new ForbiddenError('Bu işlem için yetkiniz yok');
   }
@@ -529,15 +532,15 @@ export const deleteGroup = asyncHandler(async (req: Request, res: Response, next
   logger.info('Grup silindi', {
     userId: user._id,
     groupId,
-    groupName: group.get('name')
+    groupName: group.get('name'),
   });
 
   return res.json({
     success: true,
     data: {
       message: 'Grup başarıyla silindi',
-      id: groupId
-    }
+      id: groupId,
+    },
   });
 });
 
@@ -598,8 +601,9 @@ export const leaveGroup = asyncHandler(async (req: Request, res: Response, next:
 
   // Kullanıcı grup üyesi mi kontrol et
   const members = group.get('members') || [];
-  const memberIndex = members.findIndex((member: any) =>
-    member.user && member.user.toString() === user._id.toString()
+  const userId = user._id ? user._id.toString() : '';
+  const memberIndex = members.findIndex(
+    (member: any) => member.user && member.user.toString() === userId
   );
   if (memberIndex === -1) {
     throw new ValidationError('Bu grubun üyesi değilsiniz');
@@ -607,9 +611,11 @@ export const leaveGroup = asyncHandler(async (req: Request, res: Response, next:
 
   // Grup sahibi mi kontrol et
   const owner = group.get('owner');
-  const isOwner = owner && owner.toString() === user._id.toString();
+  const isOwner = owner && owner.toString() === userId;
   if (isOwner) {
-    throw new ValidationError('Grup sahibi gruptan ayrılamaz. Önce grup sahipliğini devredin veya grubu silin.');
+    throw new ValidationError(
+      'Grup sahibi gruptan ayrılamaz. Önce grup sahipliğini devredin veya grubu silin.'
+    );
   }
 
   // Kullanıcıyı gruptan çıkar
@@ -621,15 +627,15 @@ export const leaveGroup = asyncHandler(async (req: Request, res: Response, next:
   logger.info('Kullanıcı gruptan ayrıldı', {
     userId: user._id,
     groupId,
-    groupName: group.get('name')
+    groupName: group.get('name'),
   });
 
   return res.json({
     success: true,
     data: {
       message: 'Gruptan başarıyla ayrıldınız',
-      groupId
-    }
+      groupId,
+    },
   });
 });
 
@@ -640,5 +646,5 @@ export default {
   getGroupById,
   updateGroup,
   deleteGroup,
-  leaveGroup
+  leaveGroup,
 };

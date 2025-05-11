@@ -35,16 +35,16 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedInvitations.length,
-        data: formattedInvitations
+        data: formattedInvitations,
       });
     } catch (error) {
       logger.error('Davetiyeleri getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Davetiyeler getirilirken bir hata oluştu'
+        message: 'Davetiyeler getirilirken bir hata oluştu',
       });
     }
   })
@@ -71,16 +71,16 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedInvitations.length,
-        data: formattedInvitations
+        data: formattedInvitations,
       });
     } catch (error) {
       logger.error('Alınan davetiyeleri getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Davetiyeler getirilirken bir hata oluştu'
+        message: 'Davetiyeler getirilirken bir hata oluştu',
       });
     }
   })
@@ -95,16 +95,9 @@ router.post(
   '/',
   requireAuth,
   [
-    body('type')
-      .isIn(Object.values(InvitationType))
-      .withMessage('Geçersiz davetiye türü'),
-    body('targetId')
-      .isMongoId()
-      .withMessage('Geçersiz hedef ID'),
-    body('recipientId')
-      .optional()
-      .isMongoId()
-      .withMessage('Geçersiz alıcı ID'),
+    body('type').isIn(Object.values(InvitationType)).withMessage('Geçersiz davetiye türü'),
+    body('targetId').isMongoId().withMessage('Geçersiz hedef ID'),
+    body('recipientId').optional().isMongoId().withMessage('Geçersiz alıcı ID'),
     body('maxUses')
       .optional()
       .isInt({ min: 1, max: 100 })
@@ -112,7 +105,7 @@ router.post(
     body('expiresIn')
       .optional()
       .isInt({ min: 60, max: 2592000 }) // 1 dakika - 30 gün
-      .withMessage('Geçerlilik süresi 1 dakika ile 30 gün arasında olmalıdır')
+      .withMessage('Geçerlilik süresi 1 dakika ile 30 gün arasında olmalıdır'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -127,18 +120,18 @@ router.post(
         creatorId,
         recipientId,
         maxUses,
-        expiresIn
+        expiresIn,
       });
 
       return res.status(201).json({
         success: true,
-        data: invitationManager.formatInvitation(invitation)
+        data: invitationManager.formatInvitation(invitation),
       });
     } catch (error) {
       logger.error('Davetiye oluşturma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        body: req.body
+        body: req.body,
       });
 
       // Hata mesajını belirle
@@ -158,7 +151,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -171,16 +164,11 @@ router.post(
  */
 router.get(
   '/:code',
-  [
-    param('code')
-      .isString()
-      .isLength({ min: 6, max: 10 })
-      .withMessage('Geçersiz davetiye kodu')
-  ],
+  [param('code').isString().isLength({ min: 6, max: 10 }).withMessage('Geçersiz davetiye kodu')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { code } = req.params;
+      const code = req.params['code'] || '';
 
       // Davetiyeyi getir
       const invitation = await invitationManager.getInvitationByCode(code);
@@ -188,7 +176,7 @@ router.get(
       if (!invitation) {
         return res.status(404).json({
           success: false,
-          message: 'Davetiye bulunamadı'
+          message: 'Davetiye bulunamadı',
         });
       }
 
@@ -199,17 +187,17 @@ router.get(
         success: true,
         data: {
           ...invitationManager.formatInvitation(invitation),
-          isValid
-        }
+          isValid,
+        },
       });
     } catch (error) {
       logger.error('Davetiye bilgilerini getirme hatası', {
         error: (error as Error).message,
-        code: req.params.code
+        code: req.params['code'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Davetiye bilgileri getirilirken bir hata oluştu'
+        message: 'Davetiye bilgileri getirilirken bir hata oluştu',
       });
     }
   })
@@ -223,34 +211,29 @@ router.get(
 router.post(
   '/:code/accept',
   requireAuth,
-  [
-    param('code')
-      .isString()
-      .isLength({ min: 6, max: 10 })
-      .withMessage('Geçersiz davetiye kodu')
-  ],
+  [param('code').isString().isLength({ min: 6, max: 10 }).withMessage('Geçersiz davetiye kodu')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { code } = req.params;
+      const code = req.params['code'] || '';
       const userId = req.user!.id;
 
       // Davetiyeyi kabul et
       const result = await invitationManager.acceptInvitation({
         code,
-        userId
+        userId,
       });
 
       return res.status(200).json({
         success: true,
         message: 'Davetiye kabul edildi',
-        data: invitationManager.formatInvitation(result.invitation)
+        data: invitationManager.formatInvitation(result.invitation),
       });
     } catch (error) {
       logger.error('Davetiye kabul etme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        code: req.params.code
+        code: req.params['code'],
       });
 
       // Hata mesajını belirle
@@ -270,7 +253,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -284,15 +267,11 @@ router.post(
 router.delete(
   '/:id',
   requireAuth,
-  [
-    param('id')
-      .isMongoId()
-      .withMessage('Geçersiz davetiye ID')
-  ],
+  [param('id').isMongoId().withMessage('Geçersiz davetiye ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { id } = req.params;
+      const id = req.params['id'] || '';
       const userId = req.user!.id;
 
       // Davetiyeyi iptal et
@@ -300,13 +279,13 @@ router.delete(
 
       return res.status(200).json({
         success: true,
-        message: 'Davetiye iptal edildi'
+        message: 'Davetiye iptal edildi',
       });
     } catch (error) {
       logger.error('Davetiye iptal etme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        invitationId: req.params.id
+        invitationId: req.params['id'],
       });
 
       // Hata mesajını belirle
@@ -323,7 +302,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })

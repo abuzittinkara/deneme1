@@ -72,7 +72,7 @@ export function createAuthRouteHandler(
         res.status(401).json({
           success: false,
           message: 'Kimlik doğrulama gerekli',
-          code: 'UNAUTHORIZED'
+          code: 'UNAUTHORIZED',
         });
         return;
       }
@@ -100,5 +100,5 @@ export default {
   createAuthMiddleware,
   createRouteHandler,
   createAuthRouteHandler,
-  asyncHandler
+  asyncHandler,
 };

@@ -9,7 +9,7 @@ import sentryHandler from '../middleware/sentryHandler';
 // HTTP hata sınıfları
 export class HttpError extends Error {
   statusCode: number;
-  
+
   constructor(message: string, statusCode: number) {
     super(message);
     this.statusCode = statusCode;
@@ -44,7 +44,7 @@ export class NotFoundError extends HttpError {
 
 export class ValidationError extends BadRequestError {
   errors?: Record<string, string>;
-  
+
   constructor(message = 'Validation Error', errors?: Record<string, string>) {
     super(message);
     this.errors = errors;
@@ -74,7 +74,7 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
   // Hata türünü belirle
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Bir hata oluştu';
-  
+
   // Hata detaylarını logla
   if (statusCode >= 500) {
     logger.error('Sunucu hatası', {
@@ -82,36 +82,36 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
       stack: err.stack,
       path: req.path,
       method: req.method,
-      statusCode
+      statusCode,
     });
   } else {
     logger.warn('İstemci hatası', {
       error: err.message,
       path: req.path,
       method: req.method,
-      statusCode
+      statusCode,
     });
   }
-  
+
   // Hata yanıtını oluştur
   const errorResponse: any = {
     success: false,
     error: {
       message,
-      statusCode
-    }
+      statusCode,
+    },
   };
-  
+
   // Validasyon hatası ise hata detaylarını ekle
   if (err instanceof ValidationError && err.errors) {
     errorResponse.error.details = err.errors;
   }
-  
+
   // Geliştirme modunda stack trace ekle
   if (process.env.NODE_ENV === 'development') {
     errorResponse.error.stack = err.stack;
   }
-  
+
   // Yanıtı gönder
   res.status(statusCode).json(errorResponse);
 };
@@ -123,12 +123,12 @@ export const setupUncaughtExceptionHandlers = () => {
     logger.error('Yakalanmamış istisna', {
       error: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
     });
-    
+
     // Sentry'ye bildir
     sentryHandler.sentryReportError(error, { context: 'Uncaught Exception' });
-    
+
     // Kritik hata ise uygulamayı sonlandır
     if (isCriticalError(error)) {
       logger.error('Kritik hata nedeniyle uygulama sonlandırılıyor');
@@ -136,20 +136,20 @@ export const setupUncaughtExceptionHandlers = () => {
       process.exit(1);
     }
   });
-  
+
   // Yakalanmamış promise redleri
   process.on('unhandledRejection', (reason) => {
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    
+
     logger.error('Yakalanmamış Promise reddi', {
       error: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
     });
-    
+
     // Sentry'ye bildir
     sentryHandler.sentryReportError(error, { context: 'Unhandled Rejection' });
-    
+
     // Kritik hata ise uygulamayı sonlandır
     if (isCriticalError(error)) {
       logger.error('Kritik hata nedeniyle uygulama sonlandırılıyor');
@@ -157,7 +157,7 @@ export const setupUncaughtExceptionHandlers = () => {
       process.exit(1);
     }
   });
-  
+
   // SIGTERM sinyali
   process.on('SIGTERM', () => {
     logger.info('SIGTERM sinyali alındı. Graceful shutdown başlatılıyor...');
@@ -169,7 +169,7 @@ export const setupUncaughtExceptionHandlers = () => {
 function isCriticalError(error: Error): boolean {
   const errorMessage = error.message || '';
   const errorStack = error.stack || '';
-  
+
   // Kritik hata mesajlarını kontrol et
   const criticalErrors = [
     'EACCES', // Yetki hatası
@@ -186,14 +186,14 @@ function isCriticalError(error: Error): boolean {
     'is not defined', // Tanımlanmamış değişken
     'Maximum call stack size exceeded', // Stack overflow
   ];
-  
+
   // Kritik hata mesajlarını kontrol et
   for (const criticalError of criticalErrors) {
     if (errorMessage.includes(criticalError) || errorStack.includes(criticalError)) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -208,5 +208,5 @@ export default {
   NotFoundError,
   ValidationError,
   ConflictError,
-  InternalServerError
+  InternalServerError,
 };

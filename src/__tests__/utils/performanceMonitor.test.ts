@@ -7,22 +7,19 @@ import {
   measureSync,
   getRecentMeasurements,
   getAverageDuration,
-  generatePerformanceReport
+  generatePerformanceReport,
 } from '../../utils/performanceMonitor';
 
 describe('Performance Monitor', () => {
   describe('measureSync', () => {
     it('should measure synchronous function execution time', () => {
-      const result = measureSync(
-        'test-sync',
-        () => {
-          let sum = 0;
-          for (let i = 0; i < 1000; i++) {
-            sum += i;
-          }
-          return sum;
+      const result = measureSync('test-sync', () => {
+        let sum = 0;
+        for (let i = 0; i < 1000; i++) {
+          sum += i;
         }
-      );
+        return sum;
+      });
 
       expect(result).toBe(499500);
     });
@@ -31,28 +28,22 @@ describe('Performance Monitor', () => {
       const testError = new Error('Test error');
 
       expect(() => {
-        measureSync(
-          'test-sync-error',
-          () => {
-            throw testError;
-          }
-        );
+        measureSync('test-sync-error', () => {
+          throw testError;
+        });
       }).toThrow(testError);
     });
   });
 
   describe('measure', () => {
     it('should measure asynchronous function execution time', async () => {
-      const result = await measure(
-        'test-async',
-        async () => {
-          return new Promise<number>((resolve) => {
-            setTimeout(() => {
-              resolve(42);
-            }, 10);
-          });
-        }
-      );
+      const result = await measure('test-async', async () => {
+        return new Promise<number>((resolve) => {
+          setTimeout(() => {
+            resolve(42);
+          }, 10);
+        });
+      });
 
       expect(result).toBe(42);
     });
@@ -61,16 +52,13 @@ describe('Performance Monitor', () => {
       const testError = new Error('Test async error');
 
       await expect(
-        measure(
-          'test-async-error',
-          async () => {
-            return new Promise<number>((_, reject) => {
-              setTimeout(() => {
-                reject(testError);
-              }, 10);
-            });
-          }
-        )
+        measure('test-async-error', async () => {
+          return new Promise<number>((_, reject) => {
+            setTimeout(() => {
+              reject(testError);
+            }, 10);
+          });
+        })
       ).rejects.toThrow(testError);
     });
   });

@@ -47,8 +47,8 @@ const webhookSchema = new mongoose.Schema({
   lastResponse: {
     status: { type: Number },
     message: { type: String },
-    timestamp: { type: Date }
-  }
+    timestamp: { type: Date },
+  },
 });
 
 // Webhook modeli
@@ -136,7 +136,7 @@ export async function createWebhook(options: CreateWebhookOptions): Promise<Webh
       events: options.events,
       group: group?._id,
       channel: channel?._id,
-      createdBy: options.userId
+      createdBy: options.userId,
     });
 
     await webhook.save();
@@ -144,14 +144,14 @@ export async function createWebhook(options: CreateWebhookOptions): Promise<Webh
     logger.info('Webhook oluşturuldu', {
       webhookId: webhook._id,
       name: webhook.name,
-      events: webhook.events
+      events: webhook.events,
     });
 
     return webhook;
   } catch (error) {
     logger.error('Webhook oluşturma hatası', {
       error: (error as Error).message,
-      options
+      options,
     });
     throw error;
   }
@@ -195,7 +195,7 @@ export async function updateWebhook(
     logger.info('Webhook güncellendi', {
       webhookId,
       name: webhook.name,
-      isActive: webhook.isActive
+      isActive: webhook.isActive,
     });
 
     return webhook;
@@ -203,7 +203,7 @@ export async function updateWebhook(
     logger.error('Webhook güncelleme hatası', {
       error: (error as Error).message,
       webhookId,
-      options
+      options,
     });
     throw error;
   }
@@ -228,7 +228,7 @@ export async function deleteWebhook(webhookId: string): Promise<{ success: boole
   } catch (error) {
     logger.error('Webhook silme hatası', {
       error: (error as Error).message,
-      webhookId
+      webhookId,
     });
     throw error;
   }
@@ -239,12 +239,14 @@ export async function deleteWebhook(webhookId: string): Promise<{ success: boole
  * @param filters - Filtreler
  * @returns Webhook listesi
  */
-export async function getWebhooks(filters: {
-  userId?: string;
-  groupId?: string;
-  channelId?: string;
-  isActive?: boolean;
-} = {}): Promise<WebhookDocument[]> {
+export async function getWebhooks(
+  filters: {
+    userId?: string;
+    groupId?: string;
+    channelId?: string;
+    isActive?: boolean;
+  } = {}
+): Promise<WebhookDocument[]> {
   try {
     const query: any = {};
 
@@ -270,29 +272,25 @@ export async function getWebhooks(filters: {
       query.isActive = filters.isActive;
     }
 
-    const webhooks = await WebhookHelper.find(
-      query,
-      null,
-      {
-        populate: [
-          { path: 'createdBy', select: 'username' },
-          { path: 'group', select: 'groupId name' },
-          { path: 'channel', select: 'channelId name' }
-        ],
-        sort: { createdAt: -1 }
-      }
-    );
+    const webhooks = await WebhookHelper.find(query, null, {
+      populate: [
+        { path: 'createdBy', select: 'username' },
+        { path: 'group', select: 'groupId name' },
+        { path: 'channel', select: 'channelId name' },
+      ],
+      sort: { createdAt: -1 },
+    });
 
     logger.info('Webhook\'lar getirildi', {
       count: webhooks.length,
-      filters
+      filters,
     });
 
     return webhooks;
   } catch (error) {
     logger.error('Webhook\'ları getirme hatası', {
       error: (error as Error).message,
-      filters
+      filters,
     });
     throw error;
   }
@@ -310,7 +308,7 @@ export async function triggerWebhooks(
     // Webhook'ları bul
     const query: any = {
       events: options.event,
-      isActive: true
+      isActive: true,
     };
 
     if (options.groupId) {
@@ -336,7 +334,11 @@ export async function triggerWebhooks(
       try {
         // İmza oluştur
         const timestamp = Date.now().toString();
-        const signature = createSignature(webhook.secret, JSON.stringify(options.payload), timestamp);
+        const signature = createSignature(
+          webhook.secret,
+          JSON.stringify(options.payload),
+          timestamp
+        );
 
         // İsteği gönder
         const response = await axios.post(webhook.url, options.payload, {
@@ -344,9 +346,9 @@ export async function triggerWebhooks(
             'Content-Type': 'application/json',
             'X-Fisqos-Event': options.event,
             'X-Fisqos-Signature': signature,
-            'X-Fisqos-Timestamp': timestamp
+            'X-Fisqos-Timestamp': timestamp,
           },
-          timeout: 5000 // 5 saniye timeout
+          timeout: 5000, // 5 saniye timeout
         });
 
         // Webhook'u güncelle
@@ -354,7 +356,7 @@ export async function triggerWebhooks(
         webhook.lastResponse = {
           status: response.status,
           message: response.statusText,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
 
         await webhook.save();
@@ -363,7 +365,7 @@ export async function triggerWebhooks(
         logger.info('Webhook tetiklendi', {
           webhookId: webhook._id,
           event: options.event,
-          status: response.status
+          status: response.status,
         });
       } catch (error) {
         // Hata durumunda webhook'u güncelle
@@ -371,7 +373,7 @@ export async function triggerWebhooks(
         webhook.lastResponse = {
           status: (error as any).response?.status || 500,
           message: (error as Error).message,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
 
         await webhook.save();
@@ -379,7 +381,7 @@ export async function triggerWebhooks(
         logger.warn('Webhook tetikleme hatası', {
           webhookId: webhook._id,
           event: options.event,
-          error: (error as Error).message
+          error: (error as Error).message,
         });
       }
     }
@@ -388,7 +390,7 @@ export async function triggerWebhooks(
   } catch (error) {
     logger.error('Webhook tetikleme hatası', {
       error: (error as Error).message,
-      event: options.event
+      event: options.event,
     });
     throw error;
   }
@@ -431,5 +433,5 @@ export default {
   deleteWebhook,
   getWebhooks,
   triggerWebhooks,
-  createSignature
+  createSignature,
 };

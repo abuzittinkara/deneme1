@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   } catch (error) {
     logger.error('Uygulama başlatma hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
     process.exit(1);
   }

@@ -37,7 +37,10 @@ export interface ServerToClientEvents {
 
   // Grup olayları
   groupsList: (groups: Array<{ id: string; name: string; owner: string }>) => void;
-  groupUsers: (data: { online: Array<{ username: string }>; offline: Array<{ username: string }> }) => void;
+  groupUsers: (data: {
+    online: Array<{ username: string }>;
+    offline: Array<{ username: string }>;
+  }) => void;
 
   // Kanal olayları
   roomsList: (rooms: Array<{ id: string; name: string; type: string }>) => void;
@@ -72,15 +75,29 @@ export interface ClientToServerEvents {
   // Kanal olayları
   joinRoom: (groupId: string, roomId: string, callback: (error?: any, data?: any) => void) => void;
   leaveRoom: (callback: (error?: any) => void) => void;
-  createRoom: (groupId: string, roomName: string, roomType: string, callback: (error?: any, data?: any) => void) => void;
+  createRoom: (
+    groupId: string,
+    roomName: string,
+    roomType: string,
+    callback: (error?: any, data?: any) => void
+  ) => void;
 
   // Mesaj olayları
-  sendMessage: (data: { channelId: string; message: string }, callback: (error?: any, data?: any) => void) => void;
+  sendMessage: (
+    data: { channelId: string; message: string },
+    callback: (error?: any, data?: any) => void
+  ) => void;
   deleteMessage: (data: { messageId: string }, callback: (error?: any, data?: any) => void) => void;
-  editMessage: (data: { messageId: string; content: string }, callback: (error?: any, data?: any) => void) => void;
+  editMessage: (
+    data: { messageId: string; content: string },
+    callback: (error?: any, data?: any) => void
+  ) => void;
 
   // DM olayları
-  sendDM: (data: { to: string; message: string }, callback: (error?: any, data?: any) => void) => void;
+  sendDM: (
+    data: { to: string; message: string },
+    callback: (error?: any, data?: any) => void
+  ) => void;
 
   // Arkadaşlık olayları
   sendFriendRequest: (username: string, callback: (error?: any, data?: any) => void) => void;

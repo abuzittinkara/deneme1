@@ -41,7 +41,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
     id: '123456789',
     username: 'test-user',
     role: 'user',
-    sub: '123456789'
+    sub: '123456789',
   } as TokenPayload;
   next();
 });
@@ -52,7 +52,9 @@ app.use(sentryHandler.sentryUserContext);
 // Veritabanına bağlan
 async function connectToDatabase() {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb+srv://atlas-sample-dataset-load-680408694495e57614ee6672:<IMKcxZTRUm0CfpDS>@fisk.0fi7bee.mongodb.net/?retryWrites=true&w=majority&appName=fisk';
+    const mongoUri =
+      process.env.MONGO_URI ||
+      'mongodb+srv://atlas-sample-dataset-load-680408694495e57614ee6672:<IMKcxZTRUm0CfpDS>@fisk.0fi7bee.mongodb.net/?retryWrites=true&w=majority&appName=fisk';
     await mongoose.connect(mongoUri);
     logger.info('Veritabanına bağlandı');
   } catch (error) {
@@ -71,17 +73,14 @@ app.get('/', (_req: Request, res: Response) => {
 app.get('/performance/sync', (_req: Request, res: Response) => {
   logger.info('Senkron performans testi');
 
-  const result = performance.measurePerformance(
-    () => {
-      // CPU yoğun bir işlem simülasyonu
-      let sum = 0;
-      for (let i = 0; i < 1000000; i++) {
-        sum += i;
-      }
-      return sum;
-    },
-    'CPU yoğun işlem'
-  );
+  const result = performance.measurePerformance(() => {
+    // CPU yoğun bir işlem simülasyonu
+    let sum = 0;
+    for (let i = 0; i < 1000000; i++) {
+      sum += i;
+    }
+    return sum;
+  }, 'CPU yoğun işlem');
 
   res.json({ result });
 });
@@ -90,17 +89,14 @@ app.get('/performance/sync', (_req: Request, res: Response) => {
 app.get('/performance/async', async (_req: Request, res: Response) => {
   logger.info('Asenkron performans testi');
 
-  const result = await performance.measurePerformanceAsync(
-    async () => {
-      // Asenkron işlem simülasyonu
-      return new Promise<number>((resolve) => {
-        setTimeout(() => {
-          resolve(42);
-        }, 500);
-      });
-    },
-    'Asenkron işlem'
-  );
+  const result = await performance.measurePerformanceAsync(async () => {
+    // Asenkron işlem simülasyonu
+    return new Promise<number>((resolve) => {
+      setTimeout(() => {
+        resolve(42);
+      }, 500);
+    });
+  }, 'Asenkron işlem');
 
   res.json({ result });
 });
@@ -110,13 +106,10 @@ app.get('/performance/database', async (_req: Request, res: Response) => {
   logger.info('Veritabanı performans testi');
 
   try {
-    const users = await performance.measureDatabaseQuery(
-      'Tüm kullanıcıları getir',
-      async () => {
-        // Veritabanı sorgusu simülasyonu
-        return User.find().limit(10);
-      }
-    );
+    const users = await performance.measureDatabaseQuery('Tüm kullanıcıları getir', async () => {
+      // Veritabanı sorgusu simülasyonu
+      return User.find().limit(10);
+    });
 
     res.json({ count: users.length });
   } catch (error) {
@@ -129,17 +122,14 @@ app.get('/performance/database', async (_req: Request, res: Response) => {
 app.get('/performance/redis', async (_req: Request, res: Response) => {
   logger.info('Redis performans testi');
 
-  const result = await performance.measureRedisOperation(
-    'Veri getir',
-    async () => {
-      // Redis işlemi simülasyonu
-      return new Promise<string>((resolve) => {
-        setTimeout(() => {
-          resolve('redis-data');
-        }, 100);
-      });
-    }
-  );
+  const result = await performance.measureRedisOperation('Veri getir', async () => {
+    // Redis işlemi simülasyonu
+    return new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve('redis-data');
+      }, 100);
+    });
+  });
 
   res.json({ result });
 });
@@ -148,17 +138,14 @@ app.get('/performance/redis', async (_req: Request, res: Response) => {
 app.get('/performance/api', async (_req: Request, res: Response) => {
   logger.info('API çağrısı performans testi');
 
-  const result = await performance.measureApiCall(
-    'Harici API',
-    async () => {
-      // API çağrısı simülasyonu
-      return new Promise<object>((resolve) => {
-        setTimeout(() => {
-          resolve({ data: 'api-response' });
-        }, 300);
-      });
-    }
-  );
+  const result = await performance.measureApiCall('Harici API', async () => {
+    // API çağrısı simülasyonu
+    return new Promise<object>((resolve) => {
+      setTimeout(() => {
+        resolve({ data: 'api-response' });
+      }, 300);
+    });
+  });
 
   res.json(result);
 });
@@ -167,17 +154,14 @@ app.get('/performance/api', async (_req: Request, res: Response) => {
 app.get('/performance/slow', async (_req: Request, res: Response) => {
   logger.info('Yavaş işlem testi');
 
-  const result = await performance.measurePerformanceAsync(
-    async () => {
-      // Yavaş işlem simülasyonu
-      return new Promise<string>((resolve) => {
-        setTimeout(() => {
-          resolve('slow-operation-completed');
-        }, 2000);
-      });
-    },
-    'Yavaş işlem'
-  );
+  const result = await performance.measurePerformanceAsync(async () => {
+    // Yavaş işlem simülasyonu
+    return new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve('slow-operation-completed');
+      }, 2000);
+    });
+  }, 'Yavaş işlem');
 
   res.json({ result });
 });

@@ -15,16 +15,12 @@ import { validationResult } from 'express-validator';
  * @param res - Express response nesnesi
  * @param next - Express next fonksiyonu
  */
-export const validateRequestHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const validateRequestHandler = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     res.status(400).json({
       success: false,
-      errors: errors.array()
+      errors: errors.array(),
     });
     return;
   }
@@ -44,17 +40,13 @@ export function validateBody<T>(schema: z.ZodType<T>) {
       const result = schema.safeParse(req.body);
 
       if (!result.success) {
-        const errors = result.error.errors.map(err => ({
+        const errors = result.error.errors.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
-          code: 'VALIDATION_ERROR'
+          code: 'VALIDATION_ERROR',
         }));
 
-        res.status(400).json(createErrorResponse(
-          'Doğrulama hatası',
-          'VALIDATION_ERROR',
-          errors
-        ));
+        res.status(400).json(createErrorResponse('Doğrulama hatası', 'VALIDATION_ERROR', errors));
         return;
       }
 
@@ -78,17 +70,13 @@ export function validateParams<T>(schema: z.ZodType<T>) {
       const result = schema.safeParse(req.params);
 
       if (!result.success) {
-        const errors = result.error.errors.map(err => ({
+        const errors = result.error.errors.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
-          code: 'VALIDATION_ERROR'
+          code: 'VALIDATION_ERROR',
         }));
 
-        res.status(400).json(createErrorResponse(
-          'Doğrulama hatası',
-          'VALIDATION_ERROR',
-          errors
-        ));
+        res.status(400).json(createErrorResponse('Doğrulama hatası', 'VALIDATION_ERROR', errors));
         return;
       }
 
@@ -112,17 +100,13 @@ export function validateQuery<T>(schema: z.ZodType<T>) {
       const result = schema.safeParse(req.query);
 
       if (!result.success) {
-        const errors = result.error.errors.map(err => ({
+        const errors = result.error.errors.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
-          code: 'VALIDATION_ERROR'
+          code: 'VALIDATION_ERROR',
         }));
 
-        res.status(400).json(createErrorResponse(
-          'Doğrulama hatası',
-          'VALIDATION_ERROR',
-          errors
-        ));
+        res.status(400).json(createErrorResponse('Doğrulama hatası', 'VALIDATION_ERROR', errors));
         return;
       }
 
@@ -141,10 +125,13 @@ export function validateQuery<T>(schema: z.ZodType<T>) {
 export const validateRequestZod = {
   body: validateBody,
   params: validateParams,
-  query: validateQuery
+  query: validateQuery,
 };
 
 // Tip güvenli middleware'ler oluştur
-export const validateBodyMiddleware = <T>(schema: z.ZodType<T>) => createMiddlewareHelper(validateBody(schema));
-export const validateParamsMiddleware = <T>(schema: z.ZodType<T>) => createMiddlewareHelper(validateParams(schema));
-export const validateQueryMiddleware = <T>(schema: z.ZodType<T>) => createMiddlewareHelper(validateQuery(schema));
+export const validateBodyMiddleware = <T>(schema: z.ZodType<T>) =>
+  createMiddlewareHelper(validateBody(schema));
+export const validateParamsMiddleware = <T>(schema: z.ZodType<T>) =>
+  createMiddlewareHelper(validateParams(schema));
+export const validateQueryMiddleware = <T>(schema: z.ZodType<T>) =>
+  createMiddlewareHelper(validateQuery(schema));

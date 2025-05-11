@@ -22,10 +22,10 @@ export interface IDmMessage {
 }
 
 // Direkt mesaj dokümanı arayüzü
-export interface DmMessageDocument extends TypedDocument<IDmMessage> {}
+export type DmMessageDocument = TypedDocument<IDmMessage>;
 
 // Direkt mesaj modeli arayüzü
-export interface DmMessageModel extends FullModelType<IDmMessage> {}
+export type DmMessageModel = FullModelType<IDmMessage>;
 
 // Direkt mesaj şeması
 const DMMessageSchema = new Schema<DmMessageDocument, DmMessageModel>(
@@ -47,14 +47,14 @@ const DMMessageSchema = new Schema<DmMessageDocument, DmMessageModel>(
     reactions: {
       type: Map,
       of: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-      default: new Map()
+      default: new Map(),
     },
     // Reference to the message this message is quoting
-    quotedMessage: { type: Schema.Types.ObjectId, ref: 'DMMessage' }
+    quotedMessage: { type: Schema.Types.ObjectId, ref: 'DMMessage' },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -83,7 +83,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as DmMessageModel;
 } else {
   // Gerçek model
-  DmMessage = (mongoose.models.DMMessage as DmMessageModel) ||
+  DmMessage =
+    (mongoose.models['DMMessage'] as DmMessageModel) ||
     mongoose.model<DmMessageDocument, DmMessageModel>('DMMessage', DMMessageSchema);
 }
 

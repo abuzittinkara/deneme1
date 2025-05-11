@@ -3,18 +3,20 @@
  * Kategori yönetimi işlemleri
  */
 import mongoose from 'mongoose';
-import { Category, CategoryDocument } from '../models/Category';
+import Category from '../models/Category';
+import { CategoryDocument } from '../models/Category';
 import { Channel, ChannelDocument } from '../models/Channel';
 import { Group, GroupDocument } from '../models/Group';
 import { createModelHelper } from '../utils/mongoose-helpers';
 import { logger } from '../utils/logger';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { toObjectId } from '../utils/mongoose-helpers';
+import { safeDbOperation, createSafeModelHelper } from '../utils/db-error-handler';
 
-// Model yardımcıları
-const GroupHelper = createModelHelper<GroupDocument, typeof Group>(Group);
-const CategoryHelper = createModelHelper<CategoryDocument, typeof Category>(Category);
-const ChannelHelper = createModelHelper<ChannelDocument, typeof Channel>(Channel);
+// Model yardımcıları - güvenli veritabanı işlemleri için
+const GroupHelper = createSafeModelHelper(Group);
+const CategoryHelper = createSafeModelHelper(Category);
+const ChannelHelper = createSafeModelHelper(Channel);
 
 // Kategori bilgisi arayüzü
 export interface CategoryInfo {
@@ -50,39 +52,34 @@ export async function createCategory(
   name: string,
   position?: number
 ): Promise<CategoryInfo> {
-  try {
-    const group = await GroupHelper.findOne({ groupId });
-    if (!group) {
-      throw new NotFoundError('Grup bulunamadı.');
-    }
+  return safeDbOperation(
+    async () => {
+      const group = await GroupHelper.findOne({ groupId });
+      if (!group) {
+        throw new NotFoundError('Grup bulunamadı.');
+      }
 
-    const category = new Category({
-      name,
-      group: group._id,
-      position: position || 0
-    });
+      const category = await CategoryHelper.create({
+        name,
+        group: group._id,
+        position: position || 0,
+      });
 
-    await category.save();
+      logger.info('Kategori oluşturuldu', {
+        categoryId: category._id,
+        groupId,
+        name,
+      });
 
-    logger.info('Kategori oluşturuldu', {
-      categoryId: category._id,
-      groupId,
-      name
-    });
-
-    return {
-      id: toObjectId(category._id as string),
-      name: category.name,
-      position: category.position
-    };
-  } catch (error) {
-    logger.error('Kategori oluşturma hatası', {
-      error: (error as Error).message,
-      groupId,
-      name
-    });
-    throw error;
-  }
+      return {
+        id: toObjectId(category._id as string),
+        name: category.name,
+        position: category.position,
+      };
+    },
+    'createCategory',
+    { id: null, name: '', position: 0 } // Fallback değeri
+  );
 }
 
 /**
@@ -98,35 +95,41 @@ export async function updateCategory(
     position?: number;
   }
 ): Promise<CategoryInfo> {
-  try {
-    const category = await CategoryHelper.findById(categoryId);
-    if (!category) {
-      throw new NotFoundError('Kategori bulunamadı.');
-    }
+  return safeDbOperation(
+    async () => {
+      const category = await CategoryHelper.findById(categoryId);
+      if (!category) {
+        throw new NotFoundError('Kategori bulunamadı.');
+      }
 
-    if (updates.name) category.name = updates.name;
-    if (updates.position !== undefined) category.position = updates.position;
+      // Güncellenecek alanları belirle
+      const updateData: any = {};
+      if (updates.name) updateData.name = updates.name;
+      if (updates.position !== undefined) updateData.position = updates.position;
 
-    await category.save();
+      // Güncelleme işlemini yap
+      await CategoryHelper.updateOne({ _id: categoryId }, { $set: updateData });
 
-    logger.info('Kategori güncellendi', {
-      categoryId,
-      updates
-    });
+      // Güncellenmiş kategoriyi getir
+      const updatedCategory = await CategoryHelper.findById(categoryId);
+      if (!updatedCategory) {
+        throw new NotFoundError('Kategori bulunamadı.');
+      }
 
-    return {
-      id: toObjectId(category._id as string),
-      name: category.name,
-      position: category.position
-    };
-  } catch (error) {
-    logger.error('Kategori güncelleme hatası', {
-      error: (error as Error).message,
-      categoryId,
-      updates
-    });
-    throw error;
-  }
+      logger.info('Kategori güncellendi', {
+        categoryId,
+        updates,
+      });
+
+      return {
+        id: toObjectId(updatedCategory._id as string),
+        name: updatedCategory.name,
+        position: updatedCategory.position,
+      };
+    },
+    'updateCategory',
+    null // Hata durumunda null döndür
+  );
 }
 
 /**
@@ -135,30 +138,26 @@ export async function updateCategory(
  * @returns İşlem sonucu
  */
 export async function deleteCategory(categoryId: string): Promise<OperationResult> {
-  try {
-    const category = await CategoryHelper.findById(categoryId);
-    if (!category) {
-      throw new NotFoundError('Kategori bulunamadı.');
-    }
+  return safeDbOperation(
+    async () => {
+      const category = await CategoryHelper.findById(categoryId);
+      if (!category) {
+        throw new NotFoundError('Kategori bulunamadı.');
+      }
 
-    // Kategorideki kanalları güncelle
-    await ChannelHelper.updateMany(
-      { category: categoryId },
-      { $unset: { category: 1 } }
-    );
+      // Kategorideki kanalları güncelle
+      await ChannelHelper.updateMany({ category: categoryId }, { $unset: { category: 1 } });
 
-    await CategoryHelper.getModel().deleteOne({ _id: categoryId });
+      // Kategoriyi sil
+      await CategoryHelper.deleteOne({ _id: categoryId });
 
-    logger.info('Kategori silindi', { categoryId });
+      logger.info('Kategori silindi', { categoryId });
 
-    return { success: true, message: 'Kategori başarıyla silindi.' };
-  } catch (error) {
-    logger.error('Kategori silme hatası', {
-      error: (error as Error).message,
-      categoryId
-    });
-    throw error;
-  }
+      return { success: true, message: 'Kategori başarıyla silindi.' };
+    },
+    'deleteCategory',
+    { success: false, message: 'Kategori silme işlemi başarısız oldu.' } // Fallback değeri
+  );
 }
 
 /**
@@ -171,45 +170,45 @@ export async function moveChannelToCategory(
   channelId: string,
   categoryId: string | null
 ): Promise<OperationResult> {
-  try {
-    const channel = await ChannelHelper.findOne({ channelId });
-    if (!channel) {
-      throw new NotFoundError('Kanal bulunamadı.');
-    }
-
-    if (categoryId) {
-      const category = await CategoryHelper.findById(categoryId);
-      if (!category) {
-        throw new NotFoundError('Kategori bulunamadı.');
+  return safeDbOperation(
+    async () => {
+      const channel = await ChannelHelper.findOne({ channelId });
+      if (!channel) {
+        throw new NotFoundError('Kanal bulunamadı.');
       }
 
-      // Kategori ve kanal aynı gruba ait mi kontrol et
-      if (category.group.toString() !== channel.group.toString()) {
-        throw new ValidationError('Kanal ve kategori aynı gruba ait değil.');
+      // Kategori kontrolü
+      if (categoryId) {
+        const category = await CategoryHelper.findById(categoryId);
+        if (!category) {
+          throw new NotFoundError('Kategori bulunamadı.');
+        }
+
+        // Kategori ve kanal aynı gruba ait mi kontrol et
+        if (category.group.toString() !== channel.group.toString()) {
+          throw new ValidationError('Kanal ve kategori aynı gruba ait değil.');
+        }
+
+        // Kanalı güncelle
+        await ChannelHelper.updateOne(
+          { channelId },
+          { $set: { category: new mongoose.Types.ObjectId(categoryId) } }
+        );
+      } else {
+        // Kategoriden çıkar
+        await ChannelHelper.updateOne({ channelId }, { $unset: { category: 1 } });
       }
 
-      channel.category = new mongoose.Types.ObjectId(categoryId);
-    } else {
-      // Kategoriden çıkar
-      channel.category = undefined;
-    }
+      logger.info('Kanal kategoriye taşındı', {
+        channelId,
+        categoryId: categoryId || 'none',
+      });
 
-    await channel.save();
-
-    logger.info('Kanal kategoriye taşındı', {
-      channelId,
-      categoryId: categoryId || 'none'
-    });
-
-    return { success: true, message: 'Kanal başarıyla taşındı.' };
-  } catch (error) {
-    logger.error('Kanal taşıma hatası', {
-      error: (error as Error).message,
-      channelId,
-      categoryId
-    });
-    throw error;
-  }
+      return { success: true, message: 'Kanal başarıyla taşındı.' };
+    },
+    'moveChannelToCategory',
+    { success: false, message: 'Kanal taşıma işlemi başarısız oldu.' } // Fallback değeri
+  );
 }
 
 /**
@@ -218,35 +217,33 @@ export async function moveChannelToCategory(
  * @returns Kategoriler listesi
  */
 export async function getCategoriesForGroup(groupId: string): Promise<CategoryInfo[]> {
-  try {
-    const group = await GroupHelper.findOne({ groupId });
-    if (!group) {
-      throw new NotFoundError('Grup bulunamadı.');
-    }
+  return safeDbOperation(
+    async () => {
+      const group = await GroupHelper.findOne({ groupId });
+      if (!group) {
+        throw new NotFoundError('Grup bulunamadı.');
+      }
 
-    const categories = await CategoryHelper.find(
-      { group: group._id },
-      null,
-      { sort: { position: 1 } }
-    );
+      const categories = await CategoryHelper.find(
+        { group: group._id },
+        {},
+        { sort: { position: 1 } }
+      );
 
-    logger.info('Grup kategorileri getirildi', {
-      groupId,
-      count: categories.length
-    });
+      logger.info('Grup kategorileri getirildi', {
+        groupId,
+        count: categories.length,
+      });
 
-    return categories.map(cat => ({
-      id: toObjectId(cat._id as string),
-      name: cat.name,
-      position: cat.position
-    }));
-  } catch (error) {
-    logger.error('Grup kategorileri getirme hatası', {
-      error: (error as Error).message,
-      groupId
-    });
-    throw error;
-  }
+      return categories.map((cat) => ({
+        id: toObjectId(cat._id as string),
+        name: cat.name,
+        position: cat.position,
+      }));
+    },
+    'getCategoriesForGroup',
+    [] // Hata durumunda boş dizi döndür
+  );
 }
 
 /**
@@ -255,40 +252,38 @@ export async function getCategoriesForGroup(groupId: string): Promise<CategoryIn
  * @returns Kanallar listesi
  */
 export async function getChannelsInCategory(categoryId: string): Promise<ChannelInfo[]> {
-  try {
-    const category = await CategoryHelper.findById(categoryId);
-    if (!category) {
-      throw new NotFoundError('Kategori bulunamadı.');
-    }
+  return safeDbOperation(
+    async () => {
+      const category = await CategoryHelper.findById(categoryId);
+      if (!category) {
+        throw new NotFoundError('Kategori bulunamadı.');
+      }
 
-    const channels = await ChannelHelper.find(
-      {
-        category: categoryId,
-        isArchived: false
-      },
-      null,
-      { sort: { position: 1 } }
-    );
+      const channels = await ChannelHelper.find(
+        {
+          category: categoryId,
+          isArchived: false,
+        },
+        {},
+        { sort: { position: 1 } }
+      );
 
-    logger.info('Kategorideki kanallar getirildi', {
-      categoryId,
-      count: channels.length
-    });
+      logger.info('Kategorideki kanallar getirildi', {
+        categoryId,
+        count: channels.length,
+      });
 
-    return channels.map(channel => ({
-      id: channel.channelId,
-      name: channel.name,
-      type: channel.type,
-      position: channel.position,
-      description: channel.description
-    }));
-  } catch (error) {
-    logger.error('Kategorideki kanalları getirme hatası', {
-      error: (error as Error).message,
-      categoryId
-    });
-    throw error;
-  }
+      return channels.map((channel) => ({
+        id: channel.channelId,
+        name: channel.name,
+        type: channel.type,
+        position: channel.position,
+        description: channel.description,
+      }));
+    },
+    'getChannelsInCategory',
+    [] // Hata durumunda boş dizi döndür
+  );
 }
 
 export default {
@@ -297,5 +292,5 @@ export default {
   deleteCategory,
   moveChannelToCategory,
   getCategoriesForGroup,
-  getChannelsInCategory
+  getChannelsInCategory,
 };

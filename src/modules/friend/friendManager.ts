@@ -30,18 +30,16 @@ export async function getFriends(
     const friendships = await Friendship.find({
       $or: [
         { user1: userId, status: FriendshipStatus.ACCEPTED },
-        { user2: userId, status: FriendshipStatus.ACCEPTED }
-      ]
+        { user2: userId, status: FriendshipStatus.ACCEPTED },
+      ],
     })
       .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit);
 
     // Arkadaş ID'lerini topla
-    const friendIds = friendships.map(friendship => {
-      return friendship.user1.toString() === userId
-        ? friendship.user2
-        : friendship.user1;
+    const friendIds = friendships.map((friendship) => {
+      return friendship.user1.toString() === userId ? friendship.user2 : friendship.user1;
     });
 
     // Durum filtresini oluştur
@@ -55,15 +53,15 @@ export async function getFriends(
     // Arkadaş bilgilerini getir
     const friends = await User.find({
       _id: { $in: friendIds },
-      ...statusFilter
+      ...statusFilter,
     })
       .select('username displayName email avatar status lastSeen')
       .lean();
 
     // Arkadaşlık bilgilerini ekle
-    const friendsWithDetails = friends.map(friend => {
+    const friendsWithDetails = friends.map((friend) => {
       const friendship = friendships.find(
-        f =>
+        (f) =>
           f.user1.toString() === friend._id.toString() ||
           f.user2.toString() === friend._id.toString()
       );
@@ -71,14 +69,14 @@ export async function getFriends(
       return {
         ...friend,
         friendshipId: friendship?._id,
-        friendSince: friendship?.createdAt
+        friendSince: friendship?.createdAt,
       };
     });
 
     logger.debug('Arkadaşlar getirildi', {
       userId,
       count: friendsWithDetails.length,
-      status
+      status,
     });
 
     return friendsWithDetails;
@@ -86,7 +84,7 @@ export async function getFriends(
     logger.error('Arkadaşları getirme hatası', {
       error: (error as Error).message,
       userId,
-      status
+      status,
     });
     throw error;
   }
@@ -117,8 +115,8 @@ export async function getFriendRequests(
       filter = {
         $or: [
           { sender: userId, status: 'pending' },
-          { receiver: userId, status: 'pending' }
-        ]
+          { receiver: userId, status: 'pending' },
+        ],
       };
     }
 
@@ -134,7 +132,7 @@ export async function getFriendRequests(
     logger.debug('Arkadaşlık istekleri getirildi', {
       userId,
       count: requests.length,
-      type
+      type,
     });
 
     return requests;
@@ -142,7 +140,7 @@ export async function getFriendRequests(
     logger.error('Arkadaşlık isteklerini getirme hatası', {
       error: (error as Error).message,
       userId,
-      type
+      type,
     });
     throw error;
   }
@@ -154,10 +152,7 @@ export async function getFriendRequests(
  * @param receiverId - Alıcı kullanıcı ID'si
  * @returns Oluşturulan arkadaşlık isteği
  */
-export async function sendFriendRequest(
-  senderId: string,
-  receiverId: string
-): Promise<any> {
+export async function sendFriendRequest(senderId: string, receiverId: string): Promise<any> {
   try {
     // Kendine istek göndermeyi engelle
     if (senderId === receiverId) {
@@ -174,9 +169,9 @@ export async function sendFriendRequest(
     const existingFriendship = await Friendship.findOne({
       $or: [
         { user1: senderId, user2: receiverId },
-        { user1: receiverId, user2: senderId }
+        { user1: receiverId, user2: senderId },
       ],
-      status: FriendshipStatus.ACCEPTED
+      status: FriendshipStatus.ACCEPTED,
     });
 
     if (existingFriendship) {
@@ -187,8 +182,8 @@ export async function sendFriendRequest(
     const existingRequest = await FriendRequest.findOne({
       $or: [
         { sender: senderId, receiver: receiverId, status: 'pending' },
-        { sender: receiverId, receiver: senderId, status: 'pending' }
-      ]
+        { sender: receiverId, receiver: senderId, status: 'pending' },
+      ],
     });
 
     if (existingRequest) {
@@ -203,7 +198,7 @@ export async function sendFriendRequest(
     const friendRequest = new FriendRequest({
       sender: senderId,
       receiver: receiverId,
-      status: 'pending'
+      status: 'pending',
     });
 
     await friendRequest.save();
@@ -214,7 +209,7 @@ export async function sendFriendRequest(
     logger.info('Arkadaşlık isteği gönderildi', {
       senderId,
       receiverId,
-      requestId: friendRequest._id
+      requestId: friendRequest._id,
     });
 
     return friendRequest;
@@ -222,7 +217,7 @@ export async function sendFriendRequest(
     logger.error('Arkadaşlık isteği gönderme hatası', {
       error: (error as Error).message,
       senderId,
-      receiverId
+      receiverId,
     });
     throw error;
   }
@@ -234,16 +229,13 @@ export async function sendFriendRequest(
  * @param receiverId - Alıcı kullanıcı ID'si
  * @returns Oluşturulan arkadaşlık
  */
-export async function acceptFriendRequest(
-  senderId: string,
-  receiverId: string
-): Promise<any> {
+export async function acceptFriendRequest(senderId: string, receiverId: string): Promise<any> {
   try {
     // İsteği bul
     const request = await FriendRequest.findOne({
       sender: senderId,
       receiver: receiverId,
-      status: 'pending'
+      status: 'pending',
     });
 
     if (!request) {
@@ -258,7 +250,7 @@ export async function acceptFriendRequest(
     const friendship = new Friendship({
       user1: senderId,
       user2: receiverId,
-      status: FriendshipStatus.ACCEPTED
+      status: FriendshipStatus.ACCEPTED,
     });
 
     await friendship.save();
@@ -270,7 +262,7 @@ export async function acceptFriendRequest(
       senderId,
       receiverId,
       requestId: request._id,
-      friendshipId: friendship._id
+      friendshipId: friendship._id,
     });
 
     return friendship;
@@ -278,7 +270,7 @@ export async function acceptFriendRequest(
     logger.error('Arkadaşlık isteği kabul etme hatası', {
       error: (error as Error).message,
       senderId,
-      receiverId
+      receiverId,
     });
     throw error;
   }
@@ -290,16 +282,13 @@ export async function acceptFriendRequest(
  * @param receiverId - Alıcı kullanıcı ID'si
  * @returns İşlem sonucu
  */
-export async function rejectFriendRequest(
-  senderId: string,
-  receiverId: string
-): Promise<boolean> {
+export async function rejectFriendRequest(senderId: string, receiverId: string): Promise<boolean> {
   try {
     // İsteği bul
     const request = await FriendRequest.findOne({
       sender: senderId,
       receiver: receiverId,
-      status: 'pending'
+      status: 'pending',
     });
 
     if (!request) {
@@ -313,7 +302,7 @@ export async function rejectFriendRequest(
     logger.info('Arkadaşlık isteği reddedildi', {
       senderId,
       receiverId,
-      requestId: request._id
+      requestId: request._id,
     });
 
     return true;
@@ -321,7 +310,7 @@ export async function rejectFriendRequest(
     logger.error('Arkadaşlık isteği reddetme hatası', {
       error: (error as Error).message,
       senderId,
-      receiverId
+      receiverId,
     });
     throw error;
   }
@@ -333,16 +322,13 @@ export async function rejectFriendRequest(
  * @param receiverId - Alıcı kullanıcı ID'si
  * @returns İşlem sonucu
  */
-export async function cancelFriendRequest(
-  senderId: string,
-  receiverId: string
-): Promise<boolean> {
+export async function cancelFriendRequest(senderId: string, receiverId: string): Promise<boolean> {
   try {
     // İsteği bul
     const request = await FriendRequest.findOne({
       sender: senderId,
       receiver: receiverId,
-      status: 'pending'
+      status: 'pending',
     });
 
     if (!request) {
@@ -355,7 +341,7 @@ export async function cancelFriendRequest(
     logger.info('Arkadaşlık isteği iptal edildi', {
       senderId,
       receiverId,
-      requestId: request._id
+      requestId: request._id,
     });
 
     return true;
@@ -363,7 +349,7 @@ export async function cancelFriendRequest(
     logger.error('Arkadaşlık isteği iptal etme hatası', {
       error: (error as Error).message,
       senderId,
-      receiverId
+      receiverId,
     });
     throw error;
   }
@@ -375,18 +361,15 @@ export async function cancelFriendRequest(
  * @param friendId - Arkadaş ID'si
  * @returns İşlem sonucu
  */
-export async function removeFriend(
-  userId: string,
-  friendId: string
-): Promise<boolean> {
+export async function removeFriend(userId: string, friendId: string): Promise<boolean> {
   try {
     // Arkadaşlığı bul
     const friendship = await Friendship.findOne({
       $or: [
         { user1: userId, user2: friendId },
-        { user1: friendId, user2: userId }
+        { user1: friendId, user2: userId },
       ],
-      status: FriendshipStatus.ACCEPTED
+      status: FriendshipStatus.ACCEPTED,
     });
 
     if (!friendship) {
@@ -399,7 +382,7 @@ export async function removeFriend(
     logger.info('Arkadaşlıktan çıkarıldı', {
       userId,
       friendId,
-      friendshipId: friendship._id
+      friendshipId: friendship._id,
     });
 
     return true;
@@ -407,7 +390,7 @@ export async function removeFriend(
     logger.error('Arkadaşlıktan çıkarma hatası', {
       error: (error as Error).message,
       userId,
-      friendId
+      friendId,
     });
     throw error;
   }
@@ -419,17 +402,14 @@ export async function removeFriend(
  * @param otherUserId - Diğer kullanıcı ID'si
  * @returns Arkadaşlık durumu
  */
-export async function checkFriendshipStatus(
-  userId: string,
-  otherUserId: string
-): Promise<string> {
+export async function checkFriendshipStatus(userId: string, otherUserId: string): Promise<string> {
   try {
     // Arkadaşlığı kontrol et
     const friendship = await Friendship.findOne({
       $or: [
         { user1: userId, user2: otherUserId },
-        { user1: otherUserId, user2: userId }
-      ]
+        { user1: otherUserId, user2: userId },
+      ],
     });
 
     if (friendship) {
@@ -440,9 +420,9 @@ export async function checkFriendshipStatus(
     const request = await FriendRequest.findOne({
       $or: [
         { sender: userId, receiver: otherUserId },
-        { sender: otherUserId, receiver: userId }
+        { sender: otherUserId, receiver: userId },
       ],
-      status: 'pending'
+      status: 'pending',
     });
 
     if (request) {
@@ -458,7 +438,7 @@ export async function checkFriendshipStatus(
     logger.error('Arkadaşlık durumu kontrol hatası', {
       error: (error as Error).message,
       userId,
-      otherUserId
+      otherUserId,
     });
     throw error;
   }
@@ -483,7 +463,7 @@ export async function getFriendRequestById(requestId: string): Promise<any> {
   } catch (error) {
     logger.error('Arkadaşlık isteği getirme hatası', {
       error: (error as Error).message,
-      requestId
+      requestId,
     });
     throw error;
   }
@@ -498,5 +478,5 @@ export default {
   rejectFriendRequest,
   cancelFriendRequest,
   removeFriend,
-  checkFriendshipStatus
+  checkFriendshipStatus,
 };

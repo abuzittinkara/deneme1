@@ -7,7 +7,11 @@ import { Request, Response, NextFunction, RequestHandler } from 'express';
 /**
  * Express middleware için tip yardımcısı
  */
-export type ExpressMiddleware = (req: Request, res: Response, next: NextFunction) => void | Promise<void> | Response;
+export type ExpressMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void | Promise<void> | Response;
 
 /**
  * Express route handler için tip yardımcısı
@@ -17,7 +21,12 @@ export type ExpressRouteHandler = (req: Request, res: Response) => void | Promis
 /**
  * Express error handler için tip yardımcısı
  */
-export type ExpressErrorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => void | Promise<void> | Response;
+export type ExpressErrorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void | Promise<void> | Response;
 
 /**
  * Express middleware oluşturucu

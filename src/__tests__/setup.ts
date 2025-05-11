@@ -17,16 +17,16 @@ jest.mock('mongoose', () => {
       readyState: 1, // 1 = connected
       close: jest.fn().mockResolvedValue(true),
       on: jest.fn(),
-      once: jest.fn()
-    }
+      once: jest.fn(),
+    },
   };
 });
 
 // Ortam değişkenlerini ayarla
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = 'test-jwt-secret';
-process.env.MONGODB_URI = 'mongodb://localhost:27017/test-db';
-process.env.REDIS_ENABLED = 'false'; // Redis'i test ortamında devre dışı bırak
+process.env['NODE_ENV'] = 'test';
+process.env['JWT_SECRET'] = 'test-jwt-secret';
+process.env['MONGODB_URI'] = 'mongodb://localhost:27017/test-db';
+process.env['REDIS_ENABLED'] = 'false'; // Redis'i test ortamında devre dışı bırak
 
 // Global mock'lar
 global.console = {
@@ -36,7 +36,7 @@ global.console = {
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 };
 
 // Global setup
@@ -57,7 +57,7 @@ afterAll(async () => {
   jest.clearAllMocks();
 
   // Açık kalan bağlantıları kapat
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   // Zamanlanmış görevleri temizle
   const timers = setTimeout(() => {}, 0) as unknown as number;
@@ -87,7 +87,7 @@ afterAll(async () => {
   }
 
   // Tüm işlemlerin tamamlanması için bekle
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   console.log('Test teardown tamamlandı.');
 });

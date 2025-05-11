@@ -13,7 +13,8 @@ export function validateEmail(email: string): boolean {
   if (!email) return false;
 
   // RFC 5322 standardına uygun e-posta regex'i
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  const emailRegex =
+    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
   return emailRegex.test(email);
 }
 
@@ -85,9 +86,38 @@ export function sanitizeInput(input: string): string {
   // HTML içeriğini temizle
   return sanitizeHtml(input, {
     allowedTags: [
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
-      'nl', 'li', 'b', 'i', 'strong', 'em', 'strike', 'code', 'hr', 'br', 'div',
-      'table', 'thead', 'caption', 'tbody', 'tr', 'th', 'td', 'pre', 'img', 'span'
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'blockquote',
+      'p',
+      'a',
+      'ul',
+      'ol',
+      'nl',
+      'li',
+      'b',
+      'i',
+      'strong',
+      'em',
+      'strike',
+      'code',
+      'hr',
+      'br',
+      'div',
+      'table',
+      'thead',
+      'caption',
+      'tbody',
+      'tr',
+      'th',
+      'td',
+      'pre',
+      'img',
+      'span',
     ],
     allowedAttributes: {
       a: ['href', 'name', 'target'],
@@ -96,11 +126,11 @@ export function sanitizeInput(input: string): string {
       span: ['class', 'id'],
       p: ['class'],
       table: ['class'],
-      th: ['scope']
+      th: ['scope'],
     },
     // JavaScript URL'lerini engelle
     allowedSchemes: ['http', 'https', 'ftp', 'mailto'],
     // Tehlikeli CSS özelliklerini engelle
-    allowedStyles: {}
+    allowedStyles: {},
   });
 }

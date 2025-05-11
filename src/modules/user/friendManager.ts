@@ -34,23 +34,21 @@ export interface OperationResult {
  */
 export async function getUserFriends(username: string): Promise<FriendInfo[]> {
   try {
-    const user = await UserHelper.findOne(
-      { username },
-      null,
-      { populate: { path: 'friends', select: 'username name surname email profilePicture' } }
-    );
+    const user = await UserHelper.findOne({ username }, null, {
+      populate: { path: 'friends', select: 'username name surname email profilePicture' },
+    });
     if (!user) {
       throw new NotFoundError('Kullanıcı bulunamadı.');
     }
 
     logger.info('Arkadaş listesi getirildi', { username, count: user.friends.length });
 
-    return user.friends.map(friend => ({
+    return user.friends.map((friend) => ({
       username: (friend as any).username,
       name: (friend as any).name,
       surname: (friend as any).surname,
       email: (friend as any).email,
-      profilePicture: (friend as any).profilePicture?.toString()
+      profilePicture: (friend as any).profilePicture?.toString(),
     }));
   } catch (error) {
     if (error instanceof NotFoundError) {
@@ -68,7 +66,10 @@ export async function getUserFriends(username: string): Promise<FriendInfo[]> {
  * @param friendUsername - Eklenecek arkadaşın kullanıcı adı
  * @returns İşlem sonucu
  */
-export async function addFriend(username: string, friendUsername: string): Promise<OperationResult> {
+export async function addFriend(
+  username: string,
+  friendUsername: string
+): Promise<OperationResult> {
   try {
     // Kendini arkadaş olarak ekleme kontrolü
     if (username === friendUsername) {
@@ -84,16 +85,18 @@ export async function addFriend(username: string, friendUsername: string): Promi
     }
 
     // Zaten arkadaş mı kontrolü
-    if (user.friends.some(friendId => objectIdEquals(friendId, friend._id))) {
+    if (user.friends.some((friendId) => objectIdEquals(friendId, friend._id))) {
       return { success: true, message: 'Kullanıcı zaten arkadaşınız.' };
     }
 
     // Engelleme kontrolü
     if (
-      user.blocked.some(blockedId => objectIdEquals(blockedId, friend._id)) ||
-      friend.blocked.some(blockedId => objectIdEquals(blockedId, user._id))
+      user.blocked.some((blockedId) => objectIdEquals(blockedId, friend._id)) ||
+      friend.blocked.some((blockedId) => objectIdEquals(blockedId, user._id))
     ) {
-      throw new ValidationError('Engellenen veya sizi engellemiş bir kullanıcıyı arkadaş olarak ekleyemezsiniz.');
+      throw new ValidationError(
+        'Engellenen veya sizi engellemiş bir kullanıcıyı arkadaş olarak ekleyemezsiniz.'
+      );
     }
 
     // Arkadaş ekle (karşılıklı)
@@ -111,7 +114,11 @@ export async function addFriend(username: string, friendUsername: string): Promi
       throw error;
     }
 
-    logger.error('Arkadaş ekleme hatası', { error: (error as Error).message, username, friendUsername });
+    logger.error('Arkadaş ekleme hatası', {
+      error: (error as Error).message,
+      username,
+      friendUsername,
+    });
     throw new Error('Arkadaş eklenirken bir hata oluştu.');
   }
 }
@@ -122,7 +129,10 @@ export async function addFriend(username: string, friendUsername: string): Promi
  * @param friendUsername - Çıkarılacak arkadaşın kullanıcı adı
  * @returns İşlem sonucu
  */
-export async function removeFriend(username: string, friendUsername: string): Promise<OperationResult> {
+export async function removeFriend(
+  username: string,
+  friendUsername: string
+): Promise<OperationResult> {
   try {
     // Kullanıcıları bul
     const user = await UserHelper.findOne({ username });
@@ -133,13 +143,13 @@ export async function removeFriend(username: string, friendUsername: string): Pr
     }
 
     // Arkadaş mı kontrolü
-    if (!user.friends.some(friendId => objectIdEquals(friendId, friend._id))) {
+    if (!user.friends.some((friendId) => objectIdEquals(friendId, friend._id))) {
       return { success: true, message: 'Kullanıcı arkadaşınız değil.' };
     }
 
     // Arkadaşlıktan çıkar (karşılıklı)
-    user.friends = user.friends.filter(friendId => !objectIdEquals(friendId, friend._id));
-    friend.friends = friend.friends.filter(friendId => !objectIdEquals(friendId, user._id));
+    user.friends = user.friends.filter((friendId) => !objectIdEquals(friendId, friend._id));
+    friend.friends = friend.friends.filter((friendId) => !objectIdEquals(friendId, user._id));
 
     await user.save();
     await friend.save();
@@ -152,7 +162,11 @@ export async function removeFriend(username: string, friendUsername: string): Pr
       throw error;
     }
 
-    logger.error('Arkadaşlıktan çıkarma hatası', { error: (error as Error).message, username, friendUsername });
+    logger.error('Arkadaşlıktan çıkarma hatası', {
+      error: (error as Error).message,
+      username,
+      friendUsername,
+    });
     throw new Error('Arkadaşlıktan çıkarılırken bir hata oluştu.');
   }
 }
@@ -160,5 +174,5 @@ export async function removeFriend(username: string, friendUsername: string): Pr
 export default {
   getUserFriends,
   addFriend,
-  removeFriend
+  removeFriend,
 };

@@ -28,7 +28,7 @@ export const generateAccessToken = (user: UserDocument): string => {
   const payload: JwtPayload = {
     id: user._id.toString(),
     username: user.username,
-    role: user.role
+    role: user.role,
   };
 
   try {
@@ -39,15 +39,11 @@ export const generateAccessToken = (user: UserDocument): string => {
     const expiresIn = env.JWT_EXPIRES_IN as string | number;
 
     // TypeScript ile uyumlu hale getir
-    return jwt.sign(
-      payload,
-      secret,
-      { expiresIn: expiresIn } as jwt.SignOptions
-    );
+    return jwt.sign(payload, secret, { expiresIn: expiresIn } as jwt.SignOptions);
   } catch (error) {
     logger.error('Access token oluşturma hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      userId: user._id
+      userId: user._id ? user._id.toString() : 'unknown',
     });
     throw new Error('Token oluşturulamadı');
   }
@@ -61,7 +57,7 @@ export const generateAccessToken = (user: UserDocument): string => {
  */
 export const generateRefreshToken = (user: UserDocument): string => {
   const payload: JwtPayload = {
-    id: user._id.toString()
+    id: user._id.toString(),
   };
 
   try {
@@ -72,15 +68,11 @@ export const generateRefreshToken = (user: UserDocument): string => {
     const expiresIn = env.JWT_REFRESH_EXPIRES_IN as string | number;
 
     // TypeScript ile uyumlu hale getir
-    return jwt.sign(
-      payload,
-      secret,
-      { expiresIn: expiresIn } as jwt.SignOptions
-    );
+    return jwt.sign(payload, secret, { expiresIn: expiresIn } as jwt.SignOptions);
   } catch (error) {
     logger.error('Refresh token oluşturma hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      userId: user._id
+      userId: user._id ? user._id.toString() : 'unknown',
     });
     throw new Error('Refresh token oluşturulamadı');
   }
@@ -100,7 +92,7 @@ export const verifyAccessToken = (token: string): JwtPayload | null => {
     return jwt.verify(token, secret) as JwtPayload;
   } catch (error) {
     logger.debug('Access token doğrulama hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
     return null;
   }
@@ -120,7 +112,7 @@ export const verifyRefreshToken = (token: string): JwtPayload | null => {
     return jwt.verify(token, secret) as JwtPayload;
   } catch (error) {
     logger.debug('Refresh token doğrulama hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
     return null;
   }
@@ -141,7 +133,7 @@ export const getTokenExpiration = (token: string): number | null => {
     return decoded.exp - now;
   } catch (error) {
     logger.debug('Token sona erme süresi hesaplama hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
     return null;
   }
@@ -152,5 +144,5 @@ export default {
   generateRefreshToken,
   verifyAccessToken,
   verifyRefreshToken,
-  getTokenExpiration
+  getTokenExpiration,
 };

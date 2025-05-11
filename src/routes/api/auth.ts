@@ -75,24 +75,15 @@ router.post(
       .matches(/^[a-zA-Z0-9_]+$/)
       .withMessage('Kullanıcı adı sadece harf, rakam ve alt çizgi içerebilir')
       .trim(),
-    body('email')
-      .isEmail()
-      .withMessage('Geçerli bir e-posta adresi giriniz')
-      .normalizeEmail(),
+    body('email').isEmail().withMessage('Geçerli bir e-posta adresi giriniz').normalizeEmail(),
     body('password')
       .isString()
       .isLength({ min: 8 })
       .withMessage('Şifre en az 8 karakter olmalıdır')
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,}$/)
       .withMessage('Şifre en az bir büyük harf, bir küçük harf ve bir rakam içermelidir'),
-    body('name')
-      .optional()
-      .isString()
-      .trim(),
-    body('surname')
-      .optional()
-      .isString()
-      .trim()
+    body('name').optional().isString().trim(),
+    body('surname').optional().isString().trim(),
   ],
   validateRequest,
   createRouteHandler(async (req, res) => {
@@ -104,21 +95,25 @@ router.post(
         email,
         password,
         name,
-        surname
+        surname,
       });
 
       // E-posta doğrulama bağlantısı gönder
       await emailVerification.sendVerificationEmail(result.userId, email);
 
-      return res.status(201).json(createSuccessResponse(
-        { userId: result.userId, username: result.username },
-        'Kullanıcı başarıyla kaydedildi. Lütfen e-postanızı doğrulayın.'
-      ));
+      return res
+        .status(201)
+        .json(
+          createSuccessResponse(
+            { userId: result.userId, username: result.username },
+            'Kullanıcı başarıyla kaydedildi. Lütfen e-postanızı doğrulayın.'
+          )
+        );
     } catch (error) {
       logger.error('Kullanıcı kaydı hatası', {
         error: (error as Error).message,
         username: req.body.username,
-        email: req.body.email
+        email: req.body.email,
       });
 
       // Hata mesajını belirle
@@ -179,17 +174,9 @@ router.post(
 router.post(
   '/login',
   [
-    body('usernameOrEmail')
-      .isString()
-      .withMessage('Kullanıcı adı veya e-posta gereklidir')
-      .trim(),
-    body('password')
-      .isString()
-      .withMessage('Şifre gereklidir'),
-    body('rememberMe')
-      .optional()
-      .isBoolean()
-      .withMessage('Geçersiz değer')
+    body('usernameOrEmail').isString().withMessage('Kullanıcı adı veya e-posta gereklidir').trim(),
+    body('password').isString().withMessage('Şifre gereklidir'),
+    body('rememberMe').optional().isBoolean().withMessage('Geçersiz değer'),
   ],
   validateRequest,
   createRouteHandler(async (req, res) => {
@@ -202,28 +189,33 @@ router.post(
       const sessionData = {
         userId: result.userId,
         deviceInfo: req.headers['user-agent'] || 'Unknown',
-        ipAddress: req.ip || 'Unknown'
+        ipAddress: req.ip || 'Unknown',
       };
 
       // Oturum oluştur
       const session = await authManager.createSession(sessionData);
 
-      return res.status(200).json(createSuccessResponse({
-        userId: result.userId,
-        username: result.username,
-        name: result.name,
-        surname: result.surname,
-        email: result.email,
-        profilePicture: result.profilePicture,
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresIn: result.expiresIn,
-        sessionId: session.id
-      }, 'Giriş başarılı'));
+      return res.status(200).json(
+        createSuccessResponse(
+          {
+            userId: result.userId,
+            username: result.username,
+            name: result.name,
+            surname: result.surname,
+            email: result.email,
+            profilePicture: result.profilePicture,
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            expiresIn: result.expiresIn,
+            sessionId: session.id,
+          },
+          'Giriş başarılı'
+        )
+      );
     } catch (error) {
       logger.error('Kullanıcı girişi hatası', {
         error: (error as Error).message,
-        usernameOrEmail: req.body.usernameOrEmail
+        usernameOrEmail: req.body.usernameOrEmail,
       });
 
       // Hata mesajını belirle
@@ -290,10 +282,12 @@ router.post(
     } catch (error) {
       logger.error('Kullanıcı çıkışı hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
 
-      return res.status(500).json(createErrorResponse('Çıkış sırasında bir hata oluştu', 'LOGOUT_ERROR'));
+      return res
+        .status(500)
+        .json(createErrorResponse('Çıkış sırasında bir hata oluştu', 'LOGOUT_ERROR'));
     }
   })
 );
@@ -328,11 +322,7 @@ router.post(
  */
 router.post(
   '/refresh-token',
-  [
-    body('refreshToken')
-      .isString()
-      .withMessage('Refresh token gereklidir')
-  ],
+  [body('refreshToken').isString().withMessage('Refresh token gereklidir')],
   validateRequest,
   createRouteHandler(async (req, res) => {
     try {
@@ -340,14 +330,16 @@ router.post(
 
       const result = await authManager.refreshToken(refreshToken);
 
-      return res.status(200).json(createSuccessResponse({
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresIn: result.expiresIn
-      }));
+      return res.status(200).json(
+        createSuccessResponse({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          expiresIn: result.expiresIn,
+        })
+      );
     } catch (error) {
       logger.error('Token yenileme hatası', {
-        error: (error as Error).message
+        error: (error as Error).message,
       });
 
       // Hata mesajını belirle
@@ -411,9 +403,7 @@ router.post(
   '/change-password',
   requireAuth,
   [
-    body('currentPassword')
-      .isString()
-      .withMessage('Mevcut şifre gereklidir'),
+    body('currentPassword').isString().withMessage('Mevcut şifre gereklidir'),
     body('newPassword')
       .isString()
       .isLength({ min: 8 })
@@ -428,7 +418,7 @@ router.post(
           throw new Error('Şifreler eşleşmiyor');
         }
         return true;
-      })
+      }),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -442,7 +432,7 @@ router.post(
     } catch (error) {
       logger.error('Şifre değiştirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
 
       // Hata mesajını belirle
@@ -494,12 +484,7 @@ router.post(
  */
 router.post(
   '/forgot-password',
-  [
-    body('email')
-      .isEmail()
-      .withMessage('Geçerli bir e-posta adresi giriniz')
-      .normalizeEmail()
-  ],
+  [body('email').isEmail().withMessage('Geçerli bir e-posta adresi giriniz').normalizeEmail()],
   validateRequest,
   createRouteHandler(async (req, res) => {
     try {
@@ -508,21 +493,29 @@ router.post(
       await passwordManager.sendPasswordResetEmail(email);
 
       // Güvenlik nedeniyle her zaman başarılı yanıt döndür
-      return res.status(200).json(createSuccessResponse(
-        null,
-        'Eğer bu e-posta adresi kayıtlıysa, şifre sıfırlama talimatları gönderilecektir'
-      ));
+      return res
+        .status(200)
+        .json(
+          createSuccessResponse(
+            null,
+            'Eğer bu e-posta adresi kayıtlıysa, şifre sıfırlama talimatları gönderilecektir'
+          )
+        );
     } catch (error) {
       logger.error('Şifre sıfırlama isteği hatası', {
         error: (error as Error).message,
-        email: req.body.email
+        email: req.body.email,
       });
 
       // Güvenlik nedeniyle her zaman başarılı yanıt döndür
-      return res.status(200).json(createSuccessResponse(
-        null,
-        'Eğer bu e-posta adresi kayıtlıysa, şifre sıfırlama talimatları gönderilecektir'
-      ));
+      return res
+        .status(200)
+        .json(
+          createSuccessResponse(
+            null,
+            'Eğer bu e-posta adresi kayıtlıysa, şifre sıfırlama talimatları gönderilecektir'
+          )
+        );
     }
   })
 );
@@ -566,9 +559,7 @@ router.post(
 router.post(
   '/reset-password',
   [
-    body('token')
-      .isString()
-      .withMessage('Geçersiz token'),
+    body('token').isString().withMessage('Geçersiz token'),
     body('newPassword')
       .isString()
       .isLength({ min: 8 })
@@ -583,7 +574,7 @@ router.post(
           throw new Error('Şifreler eşleşmiyor');
         }
         return true;
-      })
+      }),
   ],
   validateRequest,
   createRouteHandler(async (req, res) => {
@@ -592,14 +583,15 @@ router.post(
 
       const result = await passwordManager.resetPassword(token, newPassword);
 
-      return res.status(200).json(createSuccessResponse(
-        null,
-        'Şifreniz başarıyla sıfırlandı. Şimdi giriş yapabilirsiniz.'
-      ));
+      return res
+        .status(200)
+        .json(
+          createSuccessResponse(null, 'Şifreniz başarıyla sıfırlandı. Şimdi giriş yapabilirsiniz.')
+        );
     } catch (error) {
       logger.error('Şifre sıfırlama hatası', {
         error: (error as Error).message,
-        token: req.body.token
+        token: req.body.token,
       });
 
       // Hata mesajını belirle
@@ -650,11 +642,7 @@ router.post(
  */
 router.post(
   '/verify-email',
-  [
-    body('token')
-      .isString()
-      .withMessage('Geçersiz token')
-  ],
+  [body('token').isString().withMessage('Geçersiz token')],
   validateRequest,
   createRouteHandler(async (req, res) => {
     try {
@@ -662,14 +650,13 @@ router.post(
 
       const result = await emailVerification.verifyEmail(token);
 
-      return res.status(200).json(createSuccessResponse(
-        null,
-        'E-posta adresiniz başarıyla doğrulandı'
-      ));
+      return res
+        .status(200)
+        .json(createSuccessResponse(null, 'E-posta adresiniz başarıyla doğrulandı'));
     } catch (error) {
       logger.error('E-posta doğrulama hatası', {
         error: (error as Error).message,
-        token: req.body.token
+        token: req.body.token,
       });
 
       // Hata mesajını belirle
@@ -721,12 +708,7 @@ router.post(
  */
 router.post(
   '/resend-verification',
-  [
-    body('email')
-      .isEmail()
-      .withMessage('Geçerli bir e-posta adresi giriniz')
-      .normalizeEmail()
-  ],
+  [body('email').isEmail().withMessage('Geçerli bir e-posta adresi giriniz').normalizeEmail()],
   validateRequest,
   createRouteHandler(async (req, res) => {
     try {
@@ -735,21 +717,29 @@ router.post(
       await emailVerification.resendVerificationEmail(email);
 
       // Güvenlik nedeniyle her zaman başarılı yanıt döndür
-      return res.status(200).json(createSuccessResponse(
-        null,
-        'Eğer bu e-posta adresi kayıtlıysa ve doğrulanmamışsa, yeni bir doğrulama bağlantısı gönderilecektir'
-      ));
+      return res
+        .status(200)
+        .json(
+          createSuccessResponse(
+            null,
+            'Eğer bu e-posta adresi kayıtlıysa ve doğrulanmamışsa, yeni bir doğrulama bağlantısı gönderilecektir'
+          )
+        );
     } catch (error) {
       logger.error('Doğrulama e-postası yeniden gönderme hatası', {
         error: (error as Error).message,
-        email: req.body.email
+        email: req.body.email,
       });
 
       // Güvenlik nedeniyle her zaman başarılı yanıt döndür
-      return res.status(200).json(createSuccessResponse(
-        null,
-        'Eğer bu e-posta adresi kayıtlıysa ve doğrulanmamışsa, yeni bir doğrulama bağlantısı gönderilecektir'
-      ));
+      return res
+        .status(200)
+        .json(
+          createSuccessResponse(
+            null,
+            'Eğer bu e-posta adresi kayıtlıysa ve doğrulanmamışsa, yeni bir doğrulama bağlantısı gönderilecektir'
+          )
+        );
     }
   })
 );
@@ -783,10 +773,12 @@ router.get(
     } catch (error) {
       logger.error('Oturum listesi getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
 
-      return res.status(500).json(createErrorResponse('Oturumlar getirilirken bir hata oluştu', 'SESSIONS_ERROR'));
+      return res
+        .status(500)
+        .json(createErrorResponse('Oturumlar getirilirken bir hata oluştu', 'SESSIONS_ERROR'));
     }
   })
 );
@@ -819,11 +811,7 @@ router.get(
 router.delete(
   '/sessions/:sessionId',
   requireAuth,
-  [
-    param('sessionId')
-      .isString()
-      .withMessage('Geçersiz oturum ID')
-  ],
+  [param('sessionId').isString().withMessage('Geçersiz oturum ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
@@ -837,7 +825,7 @@ router.delete(
       logger.error('Oturum sonlandırma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        sessionId: req.params.sessionId
+        sessionId: req.params.sessionId,
       });
 
       // Hata mesajını belirle
@@ -898,14 +886,20 @@ router.delete(
 
       await authManager.endAllSessionsExcept(userId, currentSessionId);
 
-      return res.status(200).json(createSuccessResponse(null, 'Tüm diğer oturumlar başarıyla sonlandırıldı'));
+      return res
+        .status(200)
+        .json(createSuccessResponse(null, 'Tüm diğer oturumlar başarıyla sonlandırıldı'));
     } catch (error) {
       logger.error('Tüm oturumları sonlandırma hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
 
-      return res.status(500).json(createErrorResponse('Oturumlar sonlandırılırken bir hata oluştu', 'SESSIONS_END_ERROR'));
+      return res
+        .status(500)
+        .json(
+          createErrorResponse('Oturumlar sonlandırılırken bir hata oluştu', 'SESSIONS_END_ERROR')
+        );
     }
   })
 );

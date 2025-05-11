@@ -9,7 +9,7 @@ import { User } from '../models/User';
 import { Group } from '../models/Group';
 import { Channel } from '../models/Channel';
 import { Message } from '../models/Message';
-import { DirectMessage } from '../models/DirectMessage';
+import DirectMessage from '../models/DirectMessage';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../types/express';
 import { getDocField, getDocId, getDocRefId } from '../utils/document-helpers';
@@ -75,7 +75,7 @@ export async function hasResourceAccess(
       resourceType,
       resourceId,
       action,
-      userId: getDocId((req as AuthRequest).user)
+      userId: getDocId((req as AuthRequest).user),
     });
 
     return false;
@@ -181,6 +181,9 @@ async function hasChannelAccess(
   const groupId = getDocRefId<any>(channel, 'group');
 
   // Kullanıcının gruba erişim yetkisi var mı?
+  if (!groupId) {
+    return false;
+  }
   const hasAccess = await hasGroupAccess(userId, groupId, 'view');
 
   if (!hasAccess) {
@@ -238,6 +241,9 @@ async function hasMessageAccess(
   const channelId = getDocRefId<any>(message, 'channel');
 
   // Kullanıcının kanala erişim yetkisi var mı?
+  if (!channelId) {
+    return false;
+  }
   const hasAccess = await hasChannelAccess(userId, channelId, 'view');
 
   if (!hasAccess) {
@@ -323,7 +329,7 @@ async function hasDirectMessageAccess(
 export function validateResourceAccess(
   resourceType: 'user' | 'group' | 'channel' | 'message' | 'directMessage',
   action: 'view' | 'edit' | 'delete' = 'view',
-  getResourceId: (req: Request) => string = (req) => req.params.id
+  getResourceId: (req: Request) => string = (req) => req.params['id'] || ''
 ) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -349,7 +355,7 @@ export function validateResourceAccess(
         action,
         path: req.path,
         method: req.method,
-        userId: getDocId((req as AuthRequest).user)
+        userId: getDocId((req as AuthRequest).user),
       });
 
       next(error);
@@ -409,5 +415,5 @@ export default {
   validateGroupAccess,
   validateChannelAccess,
   validateMessageAccess,
-  validateDirectMessageAccess
+  validateDirectMessageAccess,
 };

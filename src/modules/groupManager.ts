@@ -63,68 +63,47 @@ export interface GroupUsersResult {
  */
 export async function loadGroupsFromDB(groups: Groups): Promise<void> {
   try {
-    // Geliştirme modunda mock veri kullan
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Geliştirme modunda mock grup verileri kullanılıyor");
-      logger.info("Geliştirme modunda mock grup verileri kullanılıyor");
-
-      // Mock grup verileri
-      const mockGroups = [
-        { groupId: 'g-dev-1', owner: 'dev-user-1', name: 'Geliştirme Grubu 1' },
-        { groupId: 'g-dev-2', owner: 'dev-user-2', name: 'Geliştirme Grubu 2' },
-        { groupId: 'g-dev-3', owner: 'dev-user-3', name: 'Geliştirme Grubu 3' }
-      ];
-
-      mockGroups.forEach(mockGroup => {
-        groups[mockGroup.groupId] = {
-          owner: mockGroup.owner,
-          name: mockGroup.name,
-          users: [],
-          rooms: {}
-        };
-      });
-
-      logger.info("Mock gruplar yüklendi", { groupCount: Object.keys(groups).length });
-      return;
-    }
-
-    // Üretim modunda gerçek veritabanından yükle
+    // Veritabanından grupları getir
     const groupDocs = await GroupHelper.find({});
-    groupDocs.forEach(groupDoc => {
-      groups[groupDoc.groupId] = {
-        owner: groupDoc.owner.toString(),
+
+    // Grupları bellek içi groups nesnesine ekle
+    for (const groupDoc of groupDocs) {
+      const groupId = groupDoc.groupId;
+      const ownerDoc = await UserHelper.findById(groupDoc.owner);
+
+      if (!ownerDoc) {
+        logger.warn('Grup sahibi bulunamadı', { groupId, ownerId: groupDoc.owner });
+        continue;
+      }
+
+      groups[groupId] = {
+        owner: ownerDoc.username,
         name: groupDoc.name,
         users: [],
-        rooms: {}
+        rooms: {},
       };
-    });
-    logger.info("loadGroupsFromDB tamamlandı", { groupCount: Object.keys(groups).length });
-  } catch (error) {
-    logger.error("loadGroupsFromDB hatası", { error: (error as Error).message });
 
-    // Geliştirme modunda hata durumunda mock veri kullan
-    if (process.env.NODE_ENV === 'development') {
-      logger.warn("Hata nedeniyle mock grup verileri kullanılıyor");
+      // Kanalları getir
+      const channels = await ChannelHelper.find({ group: groupDoc._id });
 
-      // Mock grup verileri
-      const mockGroups = [
-        { groupId: 'g-dev-1', owner: 'dev-user-1', name: 'Geliştirme Grubu 1' },
-        { groupId: 'g-dev-2', owner: 'dev-user-2', name: 'Geliştirme Grubu 2' },
-        { groupId: 'g-dev-3', owner: 'dev-user-3', name: 'Geliştirme Grubu 3' }
-      ];
-
-      mockGroups.forEach(mockGroup => {
-        groups[mockGroup.groupId] = {
-          owner: mockGroup.owner,
-          name: mockGroup.name,
+      // Kanalları bellek içi groups nesnesine ekle
+      for (const channel of channels) {
+        groups[groupId].rooms[channel.channelId] = {
+          name: channel.name,
+          type: channel.type,
           users: [],
-          rooms: {}
         };
-      });
-
-      logger.info("Mock gruplar yüklendi", { groupCount: Object.keys(groups).length });
-      return;
+      }
     }
+
+    logger.info('Gruplar veritabanından yüklendi', { groupCount: Object.keys(groups).length });
+  } catch (error) {
+    logger.error('Grupları veritabanından yükleme hatası', {
+      error: (error as Error).message,
+    });
+
+    // Hata durumunda boş gruplar nesnesi oluştur
+    logger.warn('Hata nedeniyle boş gruplar nesnesi oluşturuluyor');
 
     throw error;
   }
@@ -145,23 +124,24 @@ export async function sendGroupsListToUser(
   if (!userData || !userData.username) return;
 
   try {
-    const userDoc = await UserHelper.findOne(
-      { username: userData.username },
-      null,
-      { populate: 'groups' }
-    );
+    const userDoc = await UserHelper.findOne({ username: userData.username }, null, {
+      populate: 'groups',
+    });
     if (!userDoc) return;
 
-    const groupList: GroupListItem[] = userDoc.groups.map(g => ({
+    const groupList: GroupListItem[] = userDoc.groups.map((g) => ({
       id: (g as any).groupId,
       name: (g as any).name,
-      owner: (g as any).owner
+      owner: (g as any).owner,
     }));
 
     io.to(socketId).emit('groupsList', groupList);
-    logger.debug("Kullanıcıya grup listesi gönderildi", { username: userData.username, groupCount: groupList.length });
+    logger.debug('Kullanıcıya grup listesi gönderildi', {
+      username: userData.username,
+      groupCount: groupList.length,
+    });
   } catch (error) {
-    logger.error("sendGroupsListToUser hatası", { error: (error as Error).message, socketId });
+    logger.error('sendGroupsListToUser hatası', { error: (error as Error).message, socketId });
   }
 }
 
@@ -179,17 +159,17 @@ export async function createGroup(
 ): Promise<{ groupId: string; name: string }> {
   try {
     if (!groupName) {
-      throw new ValidationError("Grup adı boş olamaz");
+      throw new ValidationError('Grup adı boş olamaz');
     }
 
     const trimmed = groupName.trim();
     if (!trimmed) {
-      throw new ValidationError("Grup adı boş olamaz");
+      throw new ValidationError('Grup adı boş olamaz');
     }
 
     const userDoc = await UserHelper.findOne({ username });
     if (!userDoc) {
-      throw new NotFoundError("Kullanıcı bulunamadı");
+      throw new NotFoundError('Kullanıcı bulunamadı');
     }
 
     const groupId = uuidv4();
@@ -197,7 +177,7 @@ export async function createGroup(
       groupId,
       name: trimmed,
       owner: userDoc._id,
-      users: [userDoc._id]
+      users: [userDoc._id],
     });
 
     await newGroup.save();
@@ -208,14 +188,14 @@ export async function createGroup(
       owner: username,
       name: trimmed,
       users: [{ id: null, username }],
-      rooms: {}
+      rooms: {},
     };
 
-    logger.info("Yeni grup oluşturuldu", { groupId, name: trimmed, owner: username });
+    logger.info('Yeni grup oluşturuldu', { groupId, name: trimmed, owner: username });
 
     return { groupId, name: trimmed };
   } catch (error) {
-    logger.error("createGroup hatası", { error: (error as Error).message, groupName, username });
+    logger.error('createGroup hatası', { error: (error as Error).message, groupName, username });
     throw error;
   }
 }
@@ -233,21 +213,21 @@ export async function addUserToGroup(
 ): Promise<void> {
   try {
     if (!groups[groupId]) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     const userDoc = await UserHelper.findOne({ username });
     if (!userDoc) {
-      throw new NotFoundError("Kullanıcı bulunamadı");
+      throw new NotFoundError('Kullanıcı bulunamadı');
     }
 
     const groupDoc = await GroupHelper.findOne({ groupId });
     if (!groupDoc) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     // Kullanıcı zaten grupta mı kontrol et
-    if (groupDoc.users.some(userId => objectIdEquals(userId, userDoc._id as string))) {
+    if (groupDoc.users.some((userId) => objectIdEquals(userId, userDoc._id as string))) {
       return; // Kullanıcı zaten grupta, işlem yapma
     }
 
@@ -256,14 +236,14 @@ export async function addUserToGroup(
     await groupDoc.save();
 
     // Kullanıcının gruplarına bu grubu ekle
-    if (!userDoc.groups.some(gId => objectIdEquals(gId, groupDoc._id as string))) {
+    if (!userDoc.groups.some((gId) => objectIdEquals(gId, groupDoc._id as string))) {
       userDoc.groups.push(toObjectId(groupDoc._id as string));
       await userDoc.save();
     }
 
-    logger.info("Kullanıcı gruba eklendi", { groupId, username });
+    logger.info('Kullanıcı gruba eklendi', { groupId, username });
   } catch (error) {
-    logger.error("addUserToGroup hatası", { error: (error as Error).message, groupId, username });
+    logger.error('addUserToGroup hatası', { error: (error as Error).message, groupId, username });
     throw error;
   }
 }
@@ -281,26 +261,23 @@ export async function deleteGroup(
 ): Promise<void> {
   try {
     if (!groups[groupId]) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     // Grup sahibi kontrolü
     if (groups[groupId].owner !== username) {
-      throw new ForbiddenError("Bu grubu silme yetkiniz yok");
+      throw new ForbiddenError('Bu grubu silme yetkiniz yok');
     }
 
     // Grubu veritabanından sil
     const groupDoc = await GroupHelper.findOne({ groupId });
     if (!groupDoc) {
-      throw new NotFoundError("Grup veritabanında bulunamadı");
+      throw new NotFoundError('Grup veritabanında bulunamadı');
     }
 
     // Grup üyelerinin listesinden grubu kaldır
     for (const userId of groupDoc.users) {
-      await UserHelper.getModel().updateOne(
-        { _id: userId },
-        { $pull: { groups: groupDoc._id } }
-      );
+      await UserHelper.getModel().updateOne({ _id: userId }, { $pull: { groups: groupDoc._id } });
     }
 
     // Gruba ait kanalları sil
@@ -312,9 +289,9 @@ export async function deleteGroup(
     // Bellek içi gruptan sil
     delete groups[groupId];
 
-    logger.info("Grup silindi", { groupId, username });
+    logger.info('Grup silindi', { groupId, username });
   } catch (error) {
-    logger.error("deleteGroup hatası", { error: (error as Error).message, groupId, username });
+    logger.error('deleteGroup hatası', { error: (error as Error).message, groupId, username });
     throw error;
   }
 }
@@ -335,23 +312,23 @@ export async function renameGroup(
 ): Promise<{ groupId: string; name: string }> {
   try {
     if (!groups[groupId]) {
-      throw new NotFoundError("Grup bulunamadı");
+      throw new NotFoundError('Grup bulunamadı');
     }
 
     // Grup sahibi kontrolü
     if (groups[groupId].owner !== username) {
-      throw new ForbiddenError("Bu grubu yeniden adlandırma yetkiniz yok");
+      throw new ForbiddenError('Bu grubu yeniden adlandırma yetkiniz yok');
     }
 
     const trimmedName = newName.trim();
     if (!trimmedName) {
-      throw new ValidationError("Grup adı boş olamaz");
+      throw new ValidationError('Grup adı boş olamaz');
     }
 
     // Grubu veritabanında güncelle
     const groupDoc = await GroupHelper.findOne({ groupId });
     if (!groupDoc) {
-      throw new NotFoundError("Grup veritabanında bulunamadı");
+      throw new NotFoundError('Grup veritabanında bulunamadı');
     }
 
     groupDoc.name = trimmedName;
@@ -360,11 +337,20 @@ export async function renameGroup(
     // Bellek içi grubu güncelle
     groups[groupId].name = trimmedName;
 
-    logger.info("Grup adı değiştirildi", { groupId, oldName: groups[groupId].name, newName: trimmedName });
+    logger.info('Grup adı değiştirildi', {
+      groupId,
+      oldName: groups[groupId].name,
+      newName: trimmedName,
+    });
 
     return { groupId, name: trimmedName };
   } catch (error) {
-    logger.error("renameGroup hatası", { error: (error as Error).message, groupId, newName, username });
+    logger.error('renameGroup hatası', {
+      error: (error as Error).message,
+      groupId,
+      newName,
+      username,
+    });
     throw error;
   }
 }
@@ -380,17 +366,13 @@ export async function getOnlineOfflineDataForGroup(
   onlineUsernames: Set<string>
 ): Promise<GroupUsersResult> {
   try {
-    const groupDoc = await GroupHelper.findOne(
-      { groupId },
-      null,
-      { populate: 'users' }
-    );
+    const groupDoc = await GroupHelper.findOne({ groupId }, null, { populate: 'users' });
     if (!groupDoc) return { online: [], offline: [] };
 
     const online: { username: string }[] = [];
     const offline: { username: string }[] = [];
 
-    groupDoc.users.forEach(u => {
+    groupDoc.users.forEach((u) => {
       const username = (u as any).username;
       if (onlineUsernames.has(username)) {
         online.push({ username });
@@ -401,7 +383,10 @@ export async function getOnlineOfflineDataForGroup(
 
     return { online, offline };
   } catch (error) {
-    logger.error("getOnlineOfflineDataForGroup hatası", { error: (error as Error).message, groupId });
+    logger.error('getOnlineOfflineDataForGroup hatası', {
+      error: (error as Error).message,
+      groupId,
+    });
     return { online: [], offline: [] };
   }
 }
@@ -420,13 +405,13 @@ export async function broadcastGroupUsers(
   try {
     const { online, offline } = await getOnlineOfflineDataForGroup(groupId, onlineUsernames);
     io.to(groupId).emit('groupUsers', { online, offline });
-    logger.debug("Grup kullanıcıları yayınlandı", {
+    logger.debug('Grup kullanıcıları yayınlandı', {
       groupId,
       onlineCount: online.length,
-      offlineCount: offline.length
+      offlineCount: offline.length,
     });
   } catch (error) {
-    logger.error("broadcastGroupUsers hatası", { error: (error as Error).message, groupId });
+    logger.error('broadcastGroupUsers hatası', { error: (error as Error).message, groupId });
   }
 }
 
@@ -438,5 +423,5 @@ export default {
   deleteGroup,
   renameGroup,
   getOnlineOfflineDataForGroup,
-  broadcastGroupUsers
+  broadcastGroupUsers,
 };

@@ -35,19 +35,16 @@ export interface DecodedToken {
  */
 export const generateAccessToken = (user: UserDocument): string => {
   try {
-    return jwt.sign(
-      { 
-        id: user._id.toString(),
-        username: user.username,
-        role: user.role
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const payload = {
+      id: user._id.toString(),
+      username: user.username,
+      role: user.role,
+    };
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
   } catch (error) {
-    logger.error('Access token oluşturma hatası:', {
+    logger.error('Access token oluşturma hatası', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      // Hassas bilgileri loglamaktan kaçın
     });
     throw new Error('Token oluşturma hatası');
   }
@@ -60,18 +57,17 @@ export const generateAccessToken = (user: UserDocument): string => {
  */
 export const generateRefreshToken = (user: UserDocument): string => {
   try {
-    return jwt.sign(
-      { 
-        id: user._id.toString(),
-        username: user.username
-      },
-      JWT_REFRESH_SECRET,
-      { expiresIn: JWT_REFRESH_EXPIRES_IN }
-    );
+    const payload = {
+      id: user._id.toString(),
+      username: user.username,
+    };
+    return jwt.sign(payload, JWT_REFRESH_SECRET, {
+      expiresIn: JWT_REFRESH_EXPIRES_IN,
+    } as jwt.SignOptions);
   } catch (error) {
-    logger.error('Refresh token oluşturma hatası:', {
+    logger.error('Refresh token oluşturma hatası', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      // Hassas bilgileri loglamaktan kaçın
     });
     throw new Error('Refresh token oluşturma hatası');
   }
@@ -86,9 +82,9 @@ export const verifyToken = (token: string): DecodedToken | null => {
   try {
     return jwt.verify(token, JWT_SECRET) as DecodedToken;
   } catch (error) {
-    logger.error('Token doğrulama hatası:', {
+    logger.error('Token doğrulama hatası', {
       error: (error as Error).message,
-      token: token.substring(0, 10) + '...'
+      // Token bilgilerini loglamaktan kaçın
     });
     return null;
   }
@@ -103,9 +99,9 @@ export const verifyRefreshToken = (token: string): DecodedToken | null => {
   try {
     return jwt.verify(token, JWT_REFRESH_SECRET) as DecodedToken;
   } catch (error) {
-    logger.error('Refresh token doğrulama hatası:', {
+    logger.error('Refresh token doğrulama hatası', {
       error: (error as Error).message,
-      token: token.substring(0, 10) + '...'
+      // Token bilgilerini loglamaktan kaçın
     });
     return null;
   }
@@ -115,5 +111,5 @@ export default {
   generateAccessToken,
   generateRefreshToken,
   verifyToken,
-  verifyRefreshToken
+  verifyRefreshToken,
 };

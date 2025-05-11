@@ -26,7 +26,7 @@ const jwtOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: (env.JWT_EXPIRES_IN || '1h') as any,
   issuer: 'sesli-sohbet-api',
-  audience: 'sesli-sohbet-client'
+  audience: 'sesli-sohbet-client',
 };
 
 // Refresh token seçenekleri
@@ -34,11 +34,27 @@ const refreshTokenOptions: jwt.SignOptions = {
   algorithm: 'HS256',
   expiresIn: (env.REFRESH_TOKEN_EXPIRES_IN || '7d') as any,
   issuer: 'sesli-sohbet-api',
-  audience: 'sesli-sohbet-client'
+  audience: 'sesli-sohbet-client',
 };
 
 // JWT secret
-const JWT_SECRET = env.JWT_SECRET || 'sesli-sohbet-jwt-secret-key-2025-04-24';
+const JWT_SECRET =
+  env.JWT_SECRET ||
+  (() => {
+    // Üretim ortamında JWT_SECRET zorunlu olmalı
+    if (env.NODE_ENV === 'production') {
+      logger.error(
+        'JWT_SECRET ortam değişkeni tanımlanmamış! Üretim ortamında bu değer zorunludur.'
+      );
+      throw new Error('JWT_SECRET ortam değişkeni tanımlanmamış');
+    }
+
+    // Geliştirme ortamında rastgele bir secret oluştur
+    logger.warn(
+      'JWT_SECRET ortam değişkeni tanımlanmamış. Geliştirme ortamı için rastgele bir secret oluşturuluyor.'
+    );
+    return crypto.randomBytes(64).toString('hex');
+  })();
 
 // Token payload tipi
 export interface TokenPayload {
@@ -71,21 +87,29 @@ interface RefreshTokenData {
  * @param user - Kullanıcı nesnesi
  * @returns Token bilgileri
  */
-export async function generateTokens(user: UserDocument | mongoose.Document): Promise<TokenResponse> {
+export async function generateTokens(
+  user: UserDocument | mongoose.Document
+): Promise<TokenResponse> {
   try {
     // Kullanıcı bilgilerini hazırla
-    const userId = user._id.toString();
-    const username = user instanceof mongoose.Document ?
-      (user.get('username') as string) :
-      ((user as unknown as UserDocument).username);
-    const role = user instanceof mongoose.Document ?
-      (user.get('role') as string || 'user') :
-      ((user as unknown as UserDocument).role || 'user');
+    const userId = user._id ? user._id.toString() : '';
+    if (!userId) {
+      throw new Error('Geçersiz kullanıcı ID');
+    }
+
+    const username =
+      user instanceof mongoose.Document
+        ? (user.get('username') as string)
+        : (user as unknown as UserDocument).username;
+    const role =
+      user instanceof mongoose.Document
+        ? (user.get('role') as string) || 'user'
+        : (user as unknown as UserDocument).role || 'user';
 
     const payload: TokenPayload = {
       sub: userId,
       username,
-      role
+      role,
     };
 
     // Access token oluştur
@@ -95,23 +119,23 @@ export async function generateTokens(user: UserDocument | mongoose.Document): Pr
     const jti = crypto.randomBytes(32).toString('hex');
 
     // Refresh token oluştur
-    const refreshToken = jwt.sign(
-      { ...payload, jti },
-      JWT_SECRET,
-      refreshTokenOptions
-    );
+    const refreshToken = jwt.sign({ ...payload, jti }, JWT_SECRET, refreshTokenOptions);
 
     // Refresh token'ı Redis'e kaydet
     const refreshTokenTTL = 7 * 24 * 60 * 60; // 7 gün (saniye cinsinden)
-    await setCache(`refresh_token:${jti}`, {
-      userId,
-      username,
-      jti
-    } as RefreshTokenData, refreshTokenTTL);
+    await setCache(
+      `refresh_token:${jti}`,
+      {
+        userId,
+        username,
+        jti,
+      } as RefreshTokenData,
+      refreshTokenTTL
+    );
 
     // Kullanıcının aktif refresh token'larını takip et
-    const userRefreshTokensKey = `user_refresh_tokens:${user._id}`;
-    const userRefreshTokens: string[] = await getCache(userRefreshTokensKey) || [];
+    const userRefreshTokensKey = `user_refresh_tokens:${userId}`;
+    const userRefreshTokens: string[] = (await getCache(userRefreshTokensKey)) || [];
     userRefreshTokens.push(jti);
 
     // En fazla 5 aktif refresh token olsun
@@ -127,9 +151,10 @@ export async function generateTokens(user: UserDocument | mongoose.Document): Pr
     return {
       accessToken,
       refreshToken,
-      expiresIn: typeof jwtOptions.expiresIn === 'string'
-        ? parseInt(jwtOptions.expiresIn) || 3600
-        : jwtOptions.expiresIn || 3600 // 1 saat (saniye cinsinden)
+      expiresIn:
+        typeof jwtOptions.expiresIn === 'string'
+          ? parseInt(jwtOptions.expiresIn) || 3600
+          : jwtOptions.expiresIn || 3600, // 1 saat (saniye cinsinden)
     };
   } catch (error) {
     logger.error('Token oluşturma hatası', { error: (error as Error).message });
@@ -147,7 +172,7 @@ export function verifyToken(token: string): TokenPayload | null {
     return jwt.verify(token, JWT_SECRET, {
       algorithms: [jwtOptions.algorithm as jwt.Algorithm],
       issuer: jwtOptions.issuer,
-      audience: jwtOptions.audience
+      audience: jwtOptions.audience,
     }) as TokenPayload;
   } catch (error) {
     logger.error('Token doğrulama hatası', { error: (error as Error).message });
@@ -166,7 +191,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
     const decoded = jwt.verify(refreshToken, JWT_SECRET, {
       algorithms: [refreshTokenOptions.algorithm as jwt.Algorithm],
       issuer: refreshTokenOptions.issuer,
-      audience: refreshTokenOptions.audience
+      audience: refreshTokenOptions.audience,
     }) as TokenPayload;
 
     if (!decoded.jti) {
@@ -204,8 +229,8 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
 
     // Kullanıcının aktif refresh token'larını güncelle
     const userRefreshTokensKey = `user_refresh_tokens:${user._id}`;
-    let userRefreshTokens: string[] = await getCache(userRefreshTokensKey) || [];
-    userRefreshTokens = userRefreshTokens.filter(jti => jti !== decoded.jti);
+    let userRefreshTokens: string[] = (await getCache(userRefreshTokensKey)) || [];
+    userRefreshTokens = userRefreshTokens.filter((jti) => jti !== decoded.jti);
     await setCache(userRefreshTokensKey, userRefreshTokens);
 
     // Yeni token oluştur
@@ -225,11 +250,13 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
  * @param userId - Kullanıcı ID'si
  * @returns İşlem başarılı mı
  */
-export async function invalidateAllUserTokens(userId: string | mongoose.Types.ObjectId): Promise<boolean> {
+export async function invalidateAllUserTokens(
+  userId: string | mongoose.Types.ObjectId
+): Promise<boolean> {
   try {
     // Kullanıcının aktif refresh token'larını al
     const userRefreshTokensKey = `user_refresh_tokens:${userId}`;
-    const userRefreshTokens: string[] = await getCache(userRefreshTokensKey) || [];
+    const userRefreshTokens: string[] = (await getCache(userRefreshTokensKey)) || [];
 
     // Tüm refresh token'ları sil
     for (const jti of userRefreshTokens) {
@@ -257,7 +284,7 @@ export async function invalidateRefreshToken(refreshToken: string): Promise<bool
     const decoded = jwt.verify(refreshToken, JWT_SECRET, {
       algorithms: [refreshTokenOptions.algorithm as jwt.Algorithm],
       issuer: refreshTokenOptions.issuer,
-      audience: refreshTokenOptions.audience
+      audience: refreshTokenOptions.audience,
     }) as TokenPayload;
 
     if (!decoded.jti || !decoded.sub) {
@@ -269,8 +296,8 @@ export async function invalidateRefreshToken(refreshToken: string): Promise<bool
 
     // Kullanıcının aktif refresh token'larını güncelle
     const userRefreshTokensKey = `user_refresh_tokens:${decoded.sub}`;
-    let userRefreshTokens: string[] = await getCache(userRefreshTokensKey) || [];
-    userRefreshTokens = userRefreshTokens.filter(jti => jti !== decoded.jti);
+    let userRefreshTokens: string[] = (await getCache(userRefreshTokensKey)) || [];
+    userRefreshTokens = userRefreshTokens.filter((jti) => jti !== decoded.jti);
     await setCache(userRefreshTokensKey, userRefreshTokens);
 
     return true;
@@ -285,5 +312,5 @@ export default {
   verifyToken,
   refreshAccessToken,
   invalidateAllUserTokens,
-  invalidateRefreshToken
+  invalidateRefreshToken,
 };

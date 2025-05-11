@@ -48,18 +48,18 @@ export async function getUserProfile(userId: string): Promise<any> {
       isActive: user.isActive,
       createdAt: user.createdAt,
       lastSeen: user.lastSeen,
-      onlineStatus: user.onlineStatus
+      onlineStatus: user.onlineStatus,
     };
 
     logger.debug('Kullanıcı profili getirildi', {
-      userId
+      userId,
     });
 
     return profile;
   } catch (error) {
     logger.error('Kullanıcı profili getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -91,18 +91,18 @@ export async function getUserProfileByUsername(username: string): Promise<any> {
       isActive: user.isActive,
       createdAt: user.createdAt,
       lastSeen: user.lastSeen,
-      onlineStatus: user.onlineStatus
+      onlineStatus: user.onlineStatus,
     };
 
     logger.debug('Kullanıcı profili getirildi', {
-      username
+      username,
     });
 
     return profile;
   } catch (error) {
     logger.error('Kullanıcı profili getirme hatası', {
       error: (error as Error).message,
-      username
+      username,
     });
     throw error;
   }
@@ -114,7 +114,10 @@ export async function getUserProfileByUsername(username: string): Promise<any> {
  * @param updates - Güncellenecek alanlar
  * @returns Güncellenmiş kullanıcı profili
  */
-export async function updateUserProfile(userId: string, updates: UpdateProfileParams): Promise<any> {
+export async function updateUserProfile(
+  userId: string,
+  updates: UpdateProfileParams
+): Promise<any> {
   try {
     const user = await UserHelper.findById(userId);
     if (!user) {
@@ -151,7 +154,7 @@ export async function updateUserProfile(userId: string, updates: UpdateProfilePa
     logger.error('Kullanıcı profili güncelleme hatası', {
       error: (error as Error).message,
       userId,
-      updates
+      updates,
     });
     throw error;
   }
@@ -163,18 +166,25 @@ export async function updateUserProfile(userId: string, updates: UpdateProfilePa
  * @param options - Arama seçenekleri
  * @returns Arama sonuçları
  */
-export async function searchUsers(query: string, options: { limit?: number; skip?: number } = {}): Promise<{ users: any[], total: number }> {
+export async function searchUsers(
+  query: string,
+  options: { limit?: number; skip?: number } = {}
+): Promise<{ users: any[]; total: number }> {
   try {
     const { limit = 20, skip = 0 } = options;
 
-    // Arama sorgusu oluştur
+    // Arama metnini temizle ve güvenli hale getir
+    const sanitizedText = query.trim();
+    const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Güvenli regex ile arama sorgusunu oluştur
     const searchQuery = {
       $or: [
-        { username: { $regex: query, $options: 'i' } },
-        { name: { $regex: query, $options: 'i' } },
-        { surname: { $regex: query, $options: 'i' } }
+        { username: { $regex: new RegExp(escapedText, 'i') } },
+        { name: { $regex: new RegExp(escapedText, 'i') } },
+        { surname: { $regex: new RegExp(escapedText, 'i') } },
       ],
-      isActive: true
+      isActive: true,
     };
 
     // Toplam sonuç sayısını al
@@ -188,7 +198,7 @@ export async function searchUsers(query: string, options: { limit?: number; skip
       .sort({ username: 1 });
 
     // Sonuçları formatla
-    const formattedUsers = users.map(user => ({
+    const formattedUsers = users.map((user) => ({
       id: user._id.toString(),
       username: user.get('username'),
       name: user.get('name'),
@@ -197,23 +207,23 @@ export async function searchUsers(query: string, options: { limit?: number; skip
       bio: user.get('bio'),
       status: user.get('status'),
       customStatus: user.get('customStatus'),
-      onlineStatus: user.get('onlineStatus')
+      onlineStatus: user.get('onlineStatus'),
     }));
 
     logger.debug('Kullanıcı arama sonuçları', {
       query,
       total,
-      resultCount: formattedUsers.length
+      resultCount: formattedUsers.length,
     });
 
     return {
       users: formattedUsers,
-      total
+      total,
     };
   } catch (error) {
     logger.error('Kullanıcı arama hatası', {
       error: (error as Error).message,
-      query
+      query,
     });
     throw error;
   }
@@ -225,7 +235,10 @@ export async function searchUsers(query: string, options: { limit?: number; skip
  * @param avatarUrl - Profil resmi URL'si
  * @returns Güncellenmiş profil resmi URL'si
  */
-export async function updateProfilePicture(userId: string, avatarUrl: string): Promise<{ avatarUrl: string }> {
+export async function updateProfilePicture(
+  userId: string,
+  avatarUrl: string
+): Promise<{ avatarUrl: string }> {
   try {
     const user = await UserHelper.findById(userId);
     if (!user) {
@@ -238,14 +251,14 @@ export async function updateProfilePicture(userId: string, avatarUrl: string): P
 
     logger.info('Profil resmi güncellendi', {
       userId,
-      avatarUrl
+      avatarUrl,
     });
 
     return { avatarUrl };
   } catch (error) {
     logger.error('Profil resmi güncelleme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -268,14 +281,14 @@ export async function removeProfilePicture(userId: string): Promise<boolean> {
     await user.save();
 
     logger.info('Profil resmi kaldırıldı', {
-      userId
+      userId,
     });
 
     return true;
   } catch (error) {
     logger.error('Profil resmi kaldırma hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -287,5 +300,5 @@ export default {
   updateUserProfile,
   searchUsers,
   updateProfilePicture,
-  removeProfilePicture
+  removeProfilePicture,
 };

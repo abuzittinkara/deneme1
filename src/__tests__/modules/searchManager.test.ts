@@ -21,14 +21,14 @@ describe('Search Manager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  
+
   describe('search', () => {
     it('should throw error for short query', async () => {
       await expect(searchManager.search('a')).rejects.toThrow(
         'Arama sorgusu en az 2 karakter olmalıdır.'
       );
     });
-    
+
     it('should search users successfully', async () => {
       // Mock User.find
       const mockUsers = [
@@ -38,7 +38,7 @@ describe('Search Manager', () => {
           name: 'Test',
           surname: 'User',
           profilePicture: 'picture1',
-          status: 'online'
+          status: 'online',
         },
         {
           _id: 'user2',
@@ -46,28 +46,28 @@ describe('Search Manager', () => {
           name: 'Another',
           surname: 'User',
           profilePicture: 'picture2',
-          status: 'away'
-        }
+          status: 'away',
+        },
       ];
-      
+
       (User.find as jest.Mock).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockUsers)
+        limit: jest.fn().mockResolvedValue(mockUsers),
       });
-      
+
       const result = await searchManager.search('test', { searchType: 'users' });
-      
+
       expect(User.find).toHaveBeenCalledWith({
         $or: [
           { username: expect.any(RegExp) },
           { name: expect.any(RegExp) },
           { surname: expect.any(RegExp) },
-          { email: expect.any(RegExp) }
+          { email: expect.any(RegExp) },
         ],
-        isActive: true
+        isActive: true,
       });
-      
+
       expect(result).toEqual({
         users: [
           {
@@ -76,7 +76,7 @@ describe('Search Manager', () => {
             name: 'Test',
             surname: 'User',
             profilePicture: 'picture1',
-            status: 'online'
+            status: 'online',
           },
           {
             id: 'user2',
@@ -84,13 +84,13 @@ describe('Search Manager', () => {
             name: 'Another',
             surname: 'User',
             profilePicture: 'picture2',
-            status: 'away'
-          }
+            status: 'away',
+          },
         ],
-        totalCount: 2
+        totalCount: 2,
       });
     });
-    
+
     it('should search messages successfully', async () => {
       // Mock Message.find
       const mockMessages = [
@@ -100,7 +100,7 @@ describe('Search Manager', () => {
           timestamp: new Date('2023-01-01'),
           user: {
             _id: 'user1',
-            username: 'testuser'
+            username: 'testuser',
           },
           channel: {
             _id: 'channel1',
@@ -109,25 +109,25 @@ describe('Search Manager', () => {
             group: {
               _id: 'group1',
               groupId: 'group1',
-              name: 'Test Group'
-            }
-          }
-        }
+              name: 'Test Group',
+            },
+          },
+        },
       ];
-      
+
       (Message.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockMessages)
+        limit: jest.fn().mockResolvedValue(mockMessages),
       });
-      
+
       const result = await searchManager.search('test', { searchType: 'messages' });
-      
+
       expect(Message.find).toHaveBeenCalledWith({
-        content: expect.any(RegExp)
+        content: expect.any(RegExp),
       });
-      
+
       expect(result).toEqual({
         messages: [
           {
@@ -136,23 +136,23 @@ describe('Search Manager', () => {
             timestamp: expect.any(Date),
             user: {
               id: 'user1',
-              username: 'testuser'
+              username: 'testuser',
             },
             channel: {
               id: 'channel1',
-              name: 'general'
+              name: 'general',
             },
             group: {
               id: 'group1',
-              name: 'Test Group'
+              name: 'Test Group',
             },
-            highlightedContent: expect.any(String)
-          }
+            highlightedContent: expect.any(String),
+          },
         ],
-        totalCount: 1
+        totalCount: 1,
       });
     });
-    
+
     it('should search DM messages successfully', async () => {
       // Mock DmMessage.find
       const mockDmMessages = [
@@ -162,28 +162,28 @@ describe('Search Manager', () => {
           timestamp: new Date('2023-01-01'),
           sender: {
             _id: 'user1',
-            username: 'testuser'
+            username: 'testuser',
           },
           receiver: {
             _id: 'user2',
-            username: 'anotheruser'
-          }
-        }
+            username: 'anotheruser',
+          },
+        },
       ];
-      
+
       (DmMessage.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockDmMessages)
+        limit: jest.fn().mockResolvedValue(mockDmMessages),
       });
-      
+
       const result = await searchManager.search('test', { searchType: 'dmMessages' });
-      
+
       expect(DmMessage.find).toHaveBeenCalledWith({
-        content: expect.any(RegExp)
+        content: expect.any(RegExp),
       });
-      
+
       expect(result).toEqual({
         dmMessages: [
           {
@@ -192,19 +192,19 @@ describe('Search Manager', () => {
             timestamp: expect.any(Date),
             sender: {
               id: 'user1',
-              username: 'testuser'
+              username: 'testuser',
             },
             receiver: {
               id: 'user2',
-              username: 'anotheruser'
+              username: 'anotheruser',
             },
-            highlightedContent: expect.any(String)
-          }
+            highlightedContent: expect.any(String),
+          },
         ],
-        totalCount: 1
+        totalCount: 1,
       });
     });
-    
+
     it('should search channels successfully', async () => {
       // Mock Channel.find
       const mockChannels = [
@@ -217,28 +217,25 @@ describe('Search Manager', () => {
           group: {
             _id: 'group1',
             groupId: 'group1',
-            name: 'Test Group'
-          }
-        }
+            name: 'Test Group',
+          },
+        },
       ];
-      
+
       (Channel.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockChannels)
+        limit: jest.fn().mockResolvedValue(mockChannels),
       });
-      
+
       const result = await searchManager.search('test', { searchType: 'channels' });
-      
+
       expect(Channel.find).toHaveBeenCalledWith({
-        $or: [
-          { name: expect.any(RegExp) },
-          { description: expect.any(RegExp) }
-        ],
-        isArchived: false
+        $or: [{ name: expect.any(RegExp) }, { description: expect.any(RegExp) }],
+        isArchived: false,
       });
-      
+
       expect(result).toEqual({
         channels: [
           {
@@ -248,14 +245,14 @@ describe('Search Manager', () => {
             type: 'text',
             group: {
               id: 'group1',
-              name: 'Test Group'
-            }
-          }
+              name: 'Test Group',
+            },
+          },
         ],
-        totalCount: 1
+        totalCount: 1,
       });
     });
-    
+
     it('should search groups successfully', async () => {
       // Mock Group.find
       const mockGroups = [
@@ -266,33 +263,30 @@ describe('Search Manager', () => {
           description: 'Test group description',
           owner: {
             _id: 'user1',
-            username: 'testuser'
-          }
-        }
+            username: 'testuser',
+          },
+        },
       ];
-      
+
       (Group.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockGroups)
+        limit: jest.fn().mockResolvedValue(mockGroups),
       });
-      
+
       // Mock mongoose.model
       (mongoose.model as jest.Mock).mockReturnValue({
-        countDocuments: jest.fn().mockResolvedValue(10)
+        countDocuments: jest.fn().mockResolvedValue(10),
       });
-      
+
       const result = await searchManager.search('test', { searchType: 'groups' });
-      
+
       expect(Group.find).toHaveBeenCalledWith({
-        $or: [
-          { name: expect.any(RegExp) },
-          { description: expect.any(RegExp) }
-        ],
-        isPublic: true
+        $or: [{ name: expect.any(RegExp) }, { description: expect.any(RegExp) }],
+        isPublic: true,
       });
-      
+
       expect(result).toEqual({
         groups: [
           {
@@ -302,14 +296,14 @@ describe('Search Manager', () => {
             memberCount: 10,
             owner: {
               id: 'user1',
-              username: 'testuser'
-            }
-          }
+              username: 'testuser',
+            },
+          },
         ],
-        totalCount: 1
+        totalCount: 1,
       });
     });
-    
+
     it('should search all types successfully', async () => {
       // Mock User.find
       const mockUsers = [
@@ -319,16 +313,16 @@ describe('Search Manager', () => {
           name: 'Test',
           surname: 'User',
           profilePicture: 'picture1',
-          status: 'online'
-        }
+          status: 'online',
+        },
       ];
-      
+
       (User.find as jest.Mock).mockReturnValue({
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockUsers)
+        limit: jest.fn().mockResolvedValue(mockUsers),
       });
-      
+
       // Mock Message.find
       const mockMessages = [
         {
@@ -337,7 +331,7 @@ describe('Search Manager', () => {
           timestamp: new Date('2023-01-01'),
           user: {
             _id: 'user1',
-            username: 'testuser'
+            username: 'testuser',
           },
           channel: {
             _id: 'channel1',
@@ -346,19 +340,19 @@ describe('Search Manager', () => {
             group: {
               _id: 'group1',
               groupId: 'group1',
-              name: 'Test Group'
-            }
-          }
-        }
+              name: 'Test Group',
+            },
+          },
+        },
       ];
-      
+
       (Message.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockMessages)
+        limit: jest.fn().mockResolvedValue(mockMessages),
       });
-      
+
       // Mock DmMessage.find
       const mockDmMessages = [
         {
@@ -367,22 +361,22 @@ describe('Search Manager', () => {
           timestamp: new Date('2023-01-01'),
           sender: {
             _id: 'user1',
-            username: 'testuser'
+            username: 'testuser',
           },
           receiver: {
             _id: 'user2',
-            username: 'anotheruser'
-          }
-        }
+            username: 'anotheruser',
+          },
+        },
       ];
-      
+
       (DmMessage.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockDmMessages)
+        limit: jest.fn().mockResolvedValue(mockDmMessages),
       });
-      
+
       // Mock Channel.find
       const mockChannels = [
         {
@@ -394,18 +388,18 @@ describe('Search Manager', () => {
           group: {
             _id: 'group1',
             groupId: 'group1',
-            name: 'Test Group'
-          }
-        }
+            name: 'Test Group',
+          },
+        },
       ];
-      
+
       (Channel.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockChannels)
+        limit: jest.fn().mockResolvedValue(mockChannels),
       });
-      
+
       // Mock Group.find
       const mockGroups = [
         {
@@ -415,25 +409,25 @@ describe('Search Manager', () => {
           description: 'Test group description',
           owner: {
             _id: 'user1',
-            username: 'testuser'
-          }
-        }
+            username: 'testuser',
+          },
+        },
       ];
-      
+
       (Group.find as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockResolvedValue(mockGroups)
+        limit: jest.fn().mockResolvedValue(mockGroups),
       });
-      
+
       // Mock mongoose.model
       (mongoose.model as jest.Mock).mockReturnValue({
-        countDocuments: jest.fn().mockResolvedValue(10)
+        countDocuments: jest.fn().mockResolvedValue(10),
       });
-      
+
       const result = await searchManager.search('test', { searchType: 'all' });
-      
+
       expect(result.totalCount).toBe(4); // 1 user + 1 message + 1 dmMessage + 1 channel + 1 group = 5
       expect(result.users).toHaveLength(1);
       expect(result.messages).toHaveLength(1);

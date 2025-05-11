@@ -13,7 +13,7 @@ export enum RedisConnectionState {
   DISCONNECTED = 'disconnected',
   RECONNECTING = 'reconnecting',
   ERROR = 'error',
-  READY = 'ready'
+  READY = 'ready',
 }
 
 // Redis bağlantı yöneticisi için interface
@@ -25,7 +25,7 @@ export interface RedisConnectionManager {
 }
 
 class RedisManager extends EventEmitter implements RedisConnectionManager {
-  private client: Redis;
+  private client!: Redis;
   private mockClient: any;
   private state: RedisConnectionState = RedisConnectionState.CONNECTING;
   private healthCheckInterval: NodeJS.Timeout | null = null;
@@ -38,11 +38,11 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
 
     // Redis bağlantı seçenekleri
     const redisOptions = {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD || undefined,
-      db: parseInt(process.env.REDIS_DB || '0'),
-      keyPrefix: 'fisqos:',
+      host: process.env['REDIS_HOST'] || 'localhost',
+      port: parseInt(process.env['REDIS_PORT'] || '6379'),
+      password: process.env['REDIS_PASSWORD'] || undefined,
+      db: parseInt(process.env['REDIS_DB'] || '0'),
+      keyPrefix: process.env['REDIS_KEY_PREFIX'] || `${process.env['APP_NAME'] || 'app'}:`,
 
       // Yeniden bağlanma stratejisi
       retryStrategy: (times: number) => {
@@ -50,14 +50,18 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
 
         if (times > this.maxReconnectAttempts) {
           // Maksimum yeniden bağlanma denemesi aşıldı, sahte istemciye geç
-          logger.warn(`Redis maksimum yeniden bağlanma denemesi aşıldı (${times}/${this.maxReconnectAttempts})`);
+          logger.warn(
+            `Redis maksimum yeniden bağlanma denemesi aşıldı (${times}/${this.maxReconnectAttempts})`
+          );
           this.switchToMockClient();
           return null; // Yeniden bağlanmayı durdur
         }
 
         // Üstel geri çekilme stratejisi (exponential backoff)
         const delay = Math.min(Math.pow(2, times) * 100, 5000); // Maksimum 5 saniye bekle
-        logger.info(`Redis bağlantısı yeniden deneniyor... (${times}/${this.maxReconnectAttempts}. deneme, ${delay}ms sonra)`);
+        logger.info(
+          `Redis bağlantısı yeniden deneniyor... (${times}/${this.maxReconnectAttempts}. deneme, ${delay}ms sonra)`
+        );
         return delay;
       },
 
@@ -91,14 +95,18 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
       enableOfflineQueue: true,
 
       // TLS desteği (opsiyonel)
-      tls: process.env.REDIS_TLS === 'true' ? {} : undefined
+      tls: process.env['REDIS_TLS'] === 'true' ? {} : undefined,
     };
 
     // Sahte istemci oluştur
     this.mockClient = this.createMockRedisClient();
 
     // Geliştirme modunda veya Redis devre dışı bırakıldığında doğrudan sahte istemciyi kullan
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.REDIS_ENABLED === 'false') {
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'test' ||
+      process.env['REDIS_ENABLED'] === 'false'
+    ) {
       logger.info('Geliştirme/test modunda Redis devre dışı bırakıldı, sahte istemci kullanılıyor');
       this.switchToMockClient();
     } else {
@@ -132,8 +140,9 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
    * Redis bağlantısının sağlıklı olup olmadığını kontrol eder
    */
   public isHealthy(): boolean {
-    return this.state === RedisConnectionState.CONNECTED ||
-           this.state === RedisConnectionState.READY;
+    return (
+      this.state === RedisConnectionState.CONNECTED || this.state === RedisConnectionState.READY
+    );
   }
 
   /**
@@ -221,7 +230,11 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
    * Sahte Redis istemcisine geç
    */
   private switchToMockClient(): void {
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.REDIS_ENABLED === 'false') {
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV === 'test' ||
+      process.env['REDIS_ENABLED'] === 'false'
+    ) {
       logger.info('Geliştirme/test modunda sahte Redis istemcisi kullanılıyor');
     } else {
       logger.warn('Redis bağlantısı kurulamadı, sahte istemci kullanılıyor');
@@ -236,10 +249,17 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
    */
   private createMockRedisClient() {
     // Bellek içi önbellek
-    const memoryCache: Record<string, { value: string, expiry: number | null }> = {};
+    const memoryCache: Record<string, { value: string; expiry: number | null }> = {};
     const hashCache: Record<string, Record<string, string>> = {};
     const listCache: Record<string, string[]> = {};
     const setCache: Record<string, Set<string>> = {};
+
+    // Tüm setCache anahtarları için boş Set oluştur
+    const ensureSetExists = (key: string): void => {
+      if (!setCache[key]) {
+        setCache[key] = new Set<string>();
+      }
+    };
 
     // Yardımcı fonksiyonlar
     const isExpired = (key: string): boolean => {
@@ -251,9 +271,9 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
 
     const cleanExpired = (): void => {
       const now = Date.now();
-      Object.keys(memoryCache).forEach(key => {
+      Object.keys(memoryCache).forEach((key) => {
         const item = memoryCache[key];
-        if (item.expiry !== null && now > item.expiry) {
+        if (item && item.expiry !== null && now > item.expiry) {
           delete memoryCache[key];
         }
       });
@@ -271,7 +291,7 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
         let expiry: number | null = null;
 
         if (exMode === 'EX' && exValue) {
-          expiry = Date.now() + (exValue * 1000);
+          expiry = Date.now() + exValue * 1000;
         }
 
         memoryCache[key] = { value, expiry };
@@ -287,7 +307,7 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
 
       del: async (...keys: string[]): Promise<number> => {
         let count = 0;
-        keys.forEach(key => {
+        keys.forEach((key) => {
           if (memoryCache[key]) {
             delete memoryCache[key];
             count++;
@@ -299,7 +319,7 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
       expire: async (key: string, seconds: number): Promise<number> => {
         if (!memoryCache[key]) return 0;
 
-        memoryCache[key].expiry = Date.now() + (seconds * 1000);
+        memoryCache[key].expiry = Date.now() + seconds * 1000;
         return 1;
       },
 
@@ -312,7 +332,7 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
       },
 
       exists: async (key: string): Promise<number> => {
-        return (memoryCache[key] && !isExpired(key)) ? 1 : 0;
+        return memoryCache[key] && !isExpired(key) ? 1 : 0;
       },
 
       // Sayaç işlemleri
@@ -340,12 +360,30 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
         return isNew ? 1 : 0;
       },
 
+      // Hash alanlarını toplu olarak ayarla
+      hmset: async (key: string, ...fieldValues: string[]): Promise<string> => {
+        if (!hashCache[key]) {
+          hashCache[key] = {};
+        }
+
+        // Çift sayıda argüman olmalı (field1, value1, field2, value2, ...)
+        for (let i = 0; i < fieldValues.length; i += 2) {
+          const field = fieldValues[i];
+          const value = fieldValues[i + 1];
+          if (field && value !== undefined) {
+            hashCache[key][field] = value;
+          }
+        }
+
+        return 'OK';
+      },
+
       hget: async (key: string, field: string): Promise<string | null> => {
-        if (!hashCache[key] || hashCache[key][field] === undefined) {
+        if (!hashCache[key]) {
           return null;
         }
 
-        return hashCache[key][field];
+        return hashCache[key][field] !== undefined ? hashCache[key][field] : null;
       },
 
       hgetall: async (key: string): Promise<Record<string, string>> => {
@@ -356,8 +394,9 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
         if (!hashCache[key]) return 0;
 
         let count = 0;
-        fields.forEach(field => {
-          if (hashCache[key][field] !== undefined) {
+        fields.forEach((field) => {
+          const fieldExists = hashCache[key] && hashCache[key][field] !== undefined;
+          if (fieldExists && hashCache[key]) {
             delete hashCache[key][field];
             count++;
           }
@@ -396,14 +435,18 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
 
       // Set işlemleri
       sadd: async (key: string, ...members: string[]): Promise<number> => {
-        if (!setCache[key]) {
-          setCache[key] = new Set();
+        ensureSetExists(key);
+
+        // Artık setCache[key] kesinlikle var
+        const set = setCache[key];
+        if (!set) {
+          return 0; // Bu satıra asla ulaşılmamalı, ama TypeScript için gerekli
         }
 
         let count = 0;
-        members.forEach(member => {
-          if (!setCache[key].has(member)) {
-            setCache[key].add(member);
+        members.forEach((member) => {
+          if (!set.has(member)) {
+            set.add(member);
             count++;
           }
         });
@@ -412,18 +455,26 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
       },
 
       smembers: async (key: string): Promise<string[]> => {
-        if (!setCache[key]) return [];
-
-        return Array.from(setCache[key]);
+        ensureSetExists(key);
+        const set = setCache[key];
+        if (!set) {
+          return []; // Bu satıra asla ulaşılmamalı, ama TypeScript için gerekli
+        }
+        return Array.from(set);
       },
 
       srem: async (key: string, ...members: string[]): Promise<number> => {
-        if (!setCache[key]) return 0;
+        ensureSetExists(key);
+
+        const set = setCache[key];
+        if (!set) {
+          return 0; // Bu satıra asla ulaşılmamalı, ama TypeScript için gerekli
+        }
 
         let count = 0;
-        members.forEach(member => {
-          if (setCache[key].has(member)) {
-            setCache[key].delete(member);
+        members.forEach((member) => {
+          if (set.has(member)) {
+            set.delete(member);
             count++;
           }
         });
@@ -446,15 +497,15 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
         // * karakterini .* ile değiştir
         const regexPattern = new RegExp('^' + escapeRegExp(pattern).replace(/\\\*/g, '.*') + '$');
 
-        return Object.keys(memoryCache).filter(key => regexPattern.test(key));
+        return Object.keys(memoryCache).filter((key) => regexPattern.test(key));
       },
 
       // Tüm verileri temizleme
       flushall: async () => {
-        Object.keys(memoryCache).forEach(key => delete memoryCache[key]);
-        Object.keys(hashCache).forEach(key => delete hashCache[key]);
-        Object.keys(listCache).forEach(key => delete listCache[key]);
-        Object.keys(setCache).forEach(key => delete setCache[key]);
+        Object.keys(memoryCache).forEach((key) => delete memoryCache[key]);
+        Object.keys(hashCache).forEach((key) => delete hashCache[key]);
+        Object.keys(listCache).forEach((key) => delete listCache[key]);
+        Object.keys(setCache).forEach((key) => delete setCache[key]);
         return 'OK';
       },
 
@@ -463,7 +514,7 @@ class RedisManager extends EventEmitter implements RedisConnectionManager {
       once: () => mockClient,
       emit: () => true,
       subscribe: (channel: string, callback: Function) => callback(null, 1),
-      quit: async () => 'OK'
+      quit: async () => 'OK',
     };
 
     return mockClient;
@@ -556,7 +607,12 @@ export async function getTTL(key: string): Promise<number> {
  * @param value - Değer
  * @param ttl - Yaşam süresi (saniye)
  */
-export async function setHashCache(hashKey: string, field: string, value: any, ttl?: number): Promise<number> {
+export async function setHashCache(
+  hashKey: string,
+  field: string,
+  value: any,
+  ttl?: number
+): Promise<number> {
   try {
     const serializedValue = JSON.stringify(value);
     const result = await redisClient.hset(hashKey, field, serializedValue);
@@ -684,11 +740,15 @@ export async function getCachedData<T>(
     forceRefresh = false,
     logHit = false,
     logMiss = false,
-    staleWhileRevalidate = false
+    staleWhileRevalidate = false,
   } = options;
 
   // GELİŞTİRME/TEST MODU: NODE_ENV development veya test ise veya Redis devre dışı bırakıldığında doğrudan veri kaynağından getir
-  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.REDIS_ENABLED === 'false') {
+  if (
+    process.env['NODE_ENV'] === 'development' ||
+    process.env['NODE_ENV'] === 'test' ||
+    process.env['REDIS_ENABLED'] === 'false'
+  ) {
     try {
       return await fetchFunction();
     } catch (error) {
@@ -733,13 +793,15 @@ export async function getCachedData<T>(
           // Eğer süre yarısından az kaldıysa, arka planda yenile
           if (remainingTtl > 0 && remainingTtl < ttl / 2) {
             // Arka planda veriyi yenile
-            fetchFunction().then(newData => {
-              setCache(key, newData, ttl).catch(error => {
-                logger.warn(`Arka plan önbellek yenileme hatası: ${(error as Error).message}`);
+            fetchFunction()
+              .then((newData) => {
+                setCache(key, newData, ttl).catch((error) => {
+                  logger.warn(`Arka plan önbellek yenileme hatası: ${(error as Error).message}`);
+                });
+              })
+              .catch((error) => {
+                logger.warn(`Arka plan veri getirme hatası: ${(error as Error).message}`);
               });
-            }).catch(error => {
-              logger.warn(`Arka plan veri getirme hatası: ${(error as Error).message}`);
-            });
           }
         }
 

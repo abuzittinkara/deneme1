@@ -10,22 +10,24 @@ services:
     container_name: sesli-sohbet-api
     restart: unless-stopped
     ports:
-      - "9999:9999"  # Dış port:İç port
+      - "${PORT:-9092}:9092"  # Dış port:İç port
     environment:
-      - NODE_ENV=development
-      - PORT=9999
-      - MONGODB_URI=mongodb+srv://atlas-sample-dataset-load-680408694495e57614ee6672:IMKcxZTRUm0CfpDS@fisk.0fi7bee.mongodb.net/?retryWrites=true&w=majority&appName=fisk
-      - JWT_SECRET=supersecretkey123456789
-      - JWT_EXPIRES_IN=1d
-      - JWT_REFRESH_SECRET=supersecretrefreshkey123456789
-      - JWT_REFRESH_EXPIRES_IN=7d
-      - CORS_ORIGIN=*
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=9092
+      # --- DİKKAT: Gizli bilgiler .env dosyasından okunmalı, burada tutulmamalı! ---
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - NODE_OPTIONS=${NODE_OPTIONS:---max-old-space-size=512}
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
     command: ["node", "dist/src/app.js"]
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:9999/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:9092/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

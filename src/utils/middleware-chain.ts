@@ -38,7 +38,7 @@ export function createMiddlewareChain<ReqType extends Request = Request>(
 
             // Eğer middleware bir Promise döndürüyorsa, onu bekle
             if (result instanceof Promise) {
-              result.then(() => resolve()).catch(err => reject(err));
+              result.then(() => resolve()).catch((err) => reject(err));
             }
           } catch (error) {
             reject(error);
@@ -62,12 +62,14 @@ export function createMiddlewareChain<ReqType extends Request = Request>(
  * @returns Express request handler
  */
 export function createAuthMiddlewareChain(
-  ...middlewares: Array<(req: AuthRequest, res: Response, next: NextFunction) => Promise<void> | void>
+  ...middlewares: Array<
+    (req: AuthRequest, res: Response, next: NextFunction) => Promise<void> | void
+  >
 ): RequestHandler {
   return createMiddlewareChain<AuthRequest>(...middlewares);
 }
 
 export default {
   createMiddlewareChain,
-  createAuthMiddlewareChain
+  createAuthMiddlewareChain,
 };

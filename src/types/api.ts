@@ -3,7 +3,15 @@
  * API istek/yanıt tipleri
  */
 
-import { ID, UserRole, UserStatus, ChannelType, MessageType, NotificationTypes, FriendshipStatus } from './common';
+import {
+  ID,
+  UserRole,
+  UserStatus,
+  ChannelType,
+  MessageType,
+  NotificationTypes,
+  FriendshipStatus,
+} from './common';
 
 /**
  * API yanıtı için temel arayüz
@@ -30,7 +38,7 @@ export function createSuccessResponse<T>(data: T, message?: string): ApiResponse
   return {
     success: true,
     data,
-    message
+    message,
   };
 }
 
@@ -50,7 +58,7 @@ export function createErrorResponse(
     success: false,
     message,
     code,
-    errors
+    errors,
   };
 }
 

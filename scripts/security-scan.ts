@@ -137,7 +137,7 @@ async function scanFile(filePath: string): Promise<void> {
   try {
     const content = await readFileAsync(filePath, 'utf8');
     const lines = content.split('\n');
-    
+
     for (const pattern of SECURITY_PATTERNS) {
       let match;
       while ((match = pattern.pattern.exec(content)) !== null) {
@@ -145,15 +145,17 @@ async function scanFile(filePath: string): Promise<void> {
         const lineIndex = content.substring(0, match.index).split('\n').length - 1;
         const line = lines[lineIndex];
         const column = match.index - content.substring(0, content.lastIndexOf('\n', match.index)).length;
-        
-        results.push({
-          file: filePath,
-          line: lineIndex + 1,
-          column: column,
-          issue: pattern.name,
-          severity: pattern.severity,
-          code: line.trim()
-        });
+
+        if (line) {
+          results.push({
+            file: filePath,
+            line: lineIndex + 1,
+            column: column,
+            issue: pattern.name,
+            severity: pattern.severity,
+            code: line.trim()
+          });
+        }
       }
     }
   } catch (error) {
@@ -168,17 +170,17 @@ async function scanFile(filePath: string): Promise<void> {
 async function scanDirectory(directory: string): Promise<void> {
   try {
     const files = fs.readdirSync(directory);
-    
+
     for (const file of files) {
       const filePath = path.join(directory, file);
       const stat = fs.statSync(filePath);
-      
+
       if (stat.isDirectory()) {
         // Hariç tutulan dizinleri atla
         if (EXCLUDE_DIRS.includes(file)) {
           continue;
         }
-        
+
         await scanDirectory(filePath);
       } else if (stat.isFile()) {
         // Sadece belirtilen uzantılara sahip dosyaları tara
@@ -199,22 +201,23 @@ async function scanDirectory(directory: string): Promise<void> {
 async function scanDependencies(): Promise<void> {
   try {
     console.log(chalk.blue('Bağımlılıklar taranıyor...'));
-    
+
     // npm audit ile bağımlılıkları tara
     const { stdout } = await execAsync('npm audit --json');
     const auditResult = JSON.parse(stdout);
-    
+
     // Sonuçları göster
     if (auditResult.vulnerabilities) {
-      const vulnCount = Object.values(auditResult.vulnerabilities).reduce((acc: number, vuln: any) => acc + vuln.length, 0);
-      
+      const vulnerabilities = auditResult.vulnerabilities as Record<string, any[]>;
+      const vulnCount = Object.values(vulnerabilities).reduce((acc: number, vuln: any[]) => acc + vuln.length, 0);
+
       if (vulnCount > 0) {
         console.log(chalk.yellow(`${vulnCount} güvenlik açığı bulundu:`));
-        
+
         for (const [severity, vulns] of Object.entries(auditResult.vulnerabilities)) {
           console.log(chalk.yellow(`  ${severity}: ${(vulns as any[]).length}`));
         }
-        
+
         console.log(chalk.blue('\nÖnerilen çözümler:'));
         console.log(chalk.green('  npm audit fix'));
         console.log(chalk.green('  npm audit fix --force (Dikkatli kullanın!)'));
@@ -237,43 +240,78 @@ function displayResults(): void {
     console.log(chalk.green('Kod taramasında güvenlik sorunu bulunamadı.'));
     return;
   }
-  
+
   console.log(chalk.yellow(`${results.length} potansiyel güvenlik sorunu bulundu:`));
-  
+
   // Sonuçları şiddetine göre grupla
-  const groupedResults: Record<string, ScanResult[]> = {};
-  
+  const groupedResults = {
+    'CRITICAL': [] as ScanResult[],
+    'HIGH': [] as ScanResult[],
+    'MEDIUM': [] as ScanResult[],
+    'LOW': [] as ScanResult[]
+  };
+
   for (const result of results) {
-    if (!groupedResults[result.severity]) {
-      groupedResults[result.severity] = [];
+    // Şiddet seviyesini kontrol et ve uygun gruba ekle
+    if (result.severity === 'CRITICAL') {
+      groupedResults.CRITICAL.push(result);
+    } else if (result.severity === 'HIGH') {
+      groupedResults.HIGH.push(result);
+    } else if (result.severity === 'MEDIUM') {
+      groupedResults.MEDIUM.push(result);
+    } else if (result.severity === 'LOW') {
+      groupedResults.LOW.push(result);
+    } else {
+      // Bilinmeyen şiddet seviyelerini MEDIUM olarak kabul et
+      groupedResults.MEDIUM.push(result);
     }
-    
-    groupedResults[result.severity].push(result);
   }
-  
-  // Şiddet sıralaması
-  const severityOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
-  
+
   // Sonuçları göster
-  for (const severity of severityOrder) {
-    if (groupedResults[severity]) {
-      const severityColor = 
-        severity === 'CRITICAL' ? chalk.bgRed.white :
-        severity === 'HIGH' ? chalk.red :
-        severity === 'MEDIUM' ? chalk.yellow :
-        chalk.blue;
-      
-      console.log(severityColor(`\n${severity} (${groupedResults[severity].length}):`));
-      
-      for (const result of groupedResults[severity]) {
-        console.log(chalk.white(`  ${result.file}:${result.line}:${result.column}`));
-        console.log(chalk.gray(`    ${result.issue}`));
-        console.log(chalk.gray(`    ${result.code}`));
-        console.log();
-      }
+  // CRITICAL sonuçları
+  if (groupedResults.CRITICAL.length > 0) {
+    console.log(chalk.bgRed.white(`\nCRITICAL (${groupedResults.CRITICAL.length}):`));
+    for (const result of groupedResults.CRITICAL) {
+      console.log(chalk.white(`  ${result.file}:${result.line}:${result.column}`));
+      console.log(chalk.gray(`    ${result.issue}`));
+      console.log(chalk.gray(`    ${result.code}`));
+      console.log();
     }
   }
-  
+
+  // HIGH sonuçları
+  if (groupedResults.HIGH.length > 0) {
+    console.log(chalk.red(`\nHIGH (${groupedResults.HIGH.length}):`));
+    for (const result of groupedResults.HIGH) {
+      console.log(chalk.white(`  ${result.file}:${result.line}:${result.column}`));
+      console.log(chalk.gray(`    ${result.issue}`));
+      console.log(chalk.gray(`    ${result.code}`));
+      console.log();
+    }
+  }
+
+  // MEDIUM sonuçları
+  if (groupedResults.MEDIUM.length > 0) {
+    console.log(chalk.yellow(`\nMEDIUM (${groupedResults.MEDIUM.length}):`));
+    for (const result of groupedResults.MEDIUM) {
+      console.log(chalk.white(`  ${result.file}:${result.line}:${result.column}`));
+      console.log(chalk.gray(`    ${result.issue}`));
+      console.log(chalk.gray(`    ${result.code}`));
+      console.log();
+    }
+  }
+
+  // LOW sonuçları
+  if (groupedResults.LOW.length > 0) {
+    console.log(chalk.blue(`\nLOW (${groupedResults.LOW.length}):`));
+    for (const result of groupedResults.LOW) {
+      console.log(chalk.white(`  ${result.file}:${result.line}:${result.column}`));
+      console.log(chalk.gray(`    ${result.issue}`));
+      console.log(chalk.gray(`    ${result.code}`));
+      console.log();
+    }
+  }
+
   // Öneriler
   console.log(chalk.blue('\nÖneriler:'));
   console.log(chalk.green('  1. Hardcoded credentials yerine ortam değişkenleri kullanın.'));
@@ -295,18 +333,18 @@ async function saveResults(): Promise<void> {
   if (results.length === 0) {
     return;
   }
-  
+
   try {
     const reportDir = 'reports';
     if (!fs.existsSync(reportDir)) {
       fs.mkdirSync(reportDir);
     }
-    
+
     const timestamp = new Date().toISOString().replace(/:/g, '-');
     const reportPath = path.join(reportDir, `security-scan-${timestamp}.json`);
-    
+
     await writeFileAsync(reportPath, JSON.stringify(results, null, 2));
-    
+
     console.log(chalk.blue(`\nSonuçlar kaydedildi: ${reportPath}`));
   } catch (error) {
     console.error(chalk.red('Sonuçları kaydetme hatası:'), error);
@@ -318,26 +356,26 @@ async function saveResults(): Promise<void> {
  */
 async function main(): Promise<void> {
   console.log(chalk.blue('Güvenlik taraması başlatılıyor...'));
-  
+
   // Bağımlılıkları tara
   await scanDependencies();
-  
+
   console.log(chalk.blue('\nKod taraması başlatılıyor...'));
-  
+
   // Dizinleri tara
   for (const dir of DIRS_TO_SCAN) {
     if (fs.existsSync(dir)) {
       await scanDirectory(dir);
     }
   }
-  
+
   // Sonuçları göster
   console.log(chalk.blue('\nKod taraması sonuçları:'));
   displayResults();
-  
+
   // Sonuçları kaydet
   await saveResults();
-  
+
   console.log(chalk.blue('\nGüvenlik taraması tamamlandı.'));
 }
 

@@ -12,10 +12,7 @@ import { UserStatus } from '../../types/common';
  * @param socket - Socket.IO soketi
  * @param dependencies - Bağımlılıklar
  */
-export function registerUserHandlers(
-  socket: TypedSocket,
-  dependencies: any
-): void {
+export function registerUserHandlers(socket: TypedSocket, dependencies: any): void {
   const { userManager, friendManager, users, onlineUsernames } = dependencies;
   const userId = socket.data.userId;
   const username = socket.data.username;
@@ -28,36 +25,33 @@ export function registerUserHandlers(
 
     try {
       // Kullanıcı durumunu güncelle
-      await measurePerformanceAsync(
-        async () => {
-          await userManager.updateUserStatus(userId, status);
-        },
-        'Kullanıcı durumu güncelleme'
-      );
+      await measurePerformanceAsync(async () => {
+        await userManager.updateUserStatus(userId, status);
+      }, 'Kullanıcı durumu güncelleme');
 
       // Tüm kullanıcılara durum değişikliğini bildir
       socket.broadcast.emit('user:status', {
         userId,
         username,
-        status
+        status,
       });
 
       logger.debug('Kullanıcı durumu güncellendi', {
         userId,
         username,
-        status
+        status,
       });
     } catch (error) {
       logger.error('Kullanıcı durumu güncelleme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        status
+        status,
       });
 
       socket.emit('error', {
         message: 'Durum güncellenemedi',
-        code: 'STATUS_UPDATE_ERROR'
+        code: 'STATUS_UPDATE_ERROR',
       });
     }
   });
@@ -74,21 +68,21 @@ export function registerUserHandlers(
         userId,
         username,
         channelId,
-        isTyping
+        isTyping,
       });
 
       logger.debug('Kullanıcı yazıyor durumu gönderildi', {
         userId,
         username,
         channelId,
-        isTyping
+        isTyping,
       });
     } catch (error) {
       logger.error('Yazıyor durumu gönderme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        channelId
+        channelId,
       });
     }
   });
@@ -100,7 +94,7 @@ export function registerUserHandlers(
     logger.info('Kullanıcı bağlantısı kesildi', {
       userId,
       username,
-      socketId: socket.id
+      socketId: socket.id,
     });
 
     // Kullanıcının socket ID'sini kaldır

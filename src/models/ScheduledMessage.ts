@@ -24,7 +24,7 @@ export interface IScheduledMessage {
 }
 
 // Zamanlanmış mesaj dokümanı arayüzü
-export interface ScheduledMessageDocument extends TypedDocument<IScheduledMessage> {}
+export type ScheduledMessageDocument = TypedDocument<IScheduledMessage>;
 
 // Zamanlanmış mesaj modeli arayüzü
 export interface ScheduledMessageModel extends FullModelType<IScheduledMessage> {
@@ -45,11 +45,11 @@ const ScheduledMessageSchema = new Schema<ScheduledMessageDocument, ScheduledMes
     sent: { type: Boolean, default: false },
     sentTime: { type: Date },
     messageId: { type: Schema.Types.ObjectId, ref: 'Message' },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -61,12 +61,12 @@ ScheduledMessageSchema.index({ sender: 1, scheduledTime: 1 });
 ScheduledMessageSchema.index({ channel: 1, scheduledTime: 1 });
 
 // Statik metodlar
-ScheduledMessageSchema.statics.findPendingMessages = function(
+ScheduledMessageSchema.statics['findPendingMessages'] = function (
   currentTime: Date
 ): Promise<ScheduledMessageDocument[]> {
   return this.find({
     scheduledTime: { $lte: currentTime },
-    sent: false
+    sent: false,
   })
     .populate('sender', 'username avatar status')
     .populate('channel', 'name')
@@ -94,8 +94,12 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as ScheduledMessageModel;
 } else {
   // Gerçek model
-  ScheduledMessage = (mongoose.models.ScheduledMessage as ScheduledMessageModel) ||
-    mongoose.model<ScheduledMessageDocument, ScheduledMessageModel>('ScheduledMessage', ScheduledMessageSchema);
+  ScheduledMessage =
+    (mongoose.models['ScheduledMessage'] as ScheduledMessageModel) ||
+    mongoose.model<ScheduledMessageDocument, ScheduledMessageModel>(
+      'ScheduledMessage',
+      ScheduledMessageSchema
+    );
 }
 
 export default ScheduledMessage;

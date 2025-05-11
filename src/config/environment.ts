@@ -46,7 +46,7 @@ export function getEnv(key: string, defaultValue: string = ''): string {
 export function getEnvNumber(key: string, defaultValue: number = 0): number {
   const value = process.env[key];
   if (!value) return defaultValue;
-  
+
   const parsed = parseInt(value, 10);
   return isNaN(parsed) ? defaultValue : parsed;
 }
@@ -60,7 +60,7 @@ export function getEnvNumber(key: string, defaultValue: number = 0): number {
 export function getEnvBoolean(key: string, defaultValue: boolean = false): boolean {
   const value = process.env[key];
   if (!value) return defaultValue;
-  
+
   return value.toLowerCase() === 'true';
 }
 
@@ -71,9 +71,13 @@ export function getEnvBoolean(key: string, defaultValue: boolean = false): boole
  * @param defaultValue - Varsayılan değer
  * @returns Ortam değişkeni değeri veya varsayılan değer
  */
-export function getEnvArray(key: string, separator: string = ',', defaultValue: string[] = []): string[] {
+export function getEnvArray(
+  key: string,
+  separator: string = ',',
+  defaultValue: string[] = []
+): string[] {
   const value = process.env[key];
   if (!value) return defaultValue;
-  
-  return value.split(separator).map(item => item.trim());
+
+  return value.split(separator).map((item) => item.trim());
 }

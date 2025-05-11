@@ -8,7 +8,11 @@ import { z } from 'zod';
 import { createRouteHandler, createAuthRouteHandler } from '../../utils/express-helpers';
 import { AuthRequest } from '../../types/express';
 import { requireAuth } from '../../middleware/requireAuth';
-import { validateBodyMiddleware, validateParamsMiddleware, validateQueryMiddleware } from '../../middleware/validateRequest';
+import {
+  validateBodyMiddleware,
+  validateParamsMiddleware,
+  validateQueryMiddleware,
+} from '../../middleware/validateRequest';
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { createMiddlewareChain, createAuthMiddlewareChain } from '../../utils/middleware-chain';
 import { userCreateSchema, userUpdateSchema } from '../../validators/user';
@@ -18,19 +22,25 @@ const router = express.Router();
 
 // ID parametresi şeması
 const idParamSchema = z.object({
-  id: z.string().min(1, { message: 'ID gereklidir' })
+  id: z.string().min(1, { message: 'ID gereklidir' }),
 });
 
 // Sayfalama sorgu şeması
 const paginationQuerySchema = z.object({
-  page: z.union([z.string(), z.number()]).optional().transform(val => {
-    if (typeof val === 'string') return val ? parseInt(val, 10) : 1;
-    return val || 1;
-  }),
-  limit: z.union([z.string(), z.number()]).optional().transform(val => {
-    if (typeof val === 'string') return val ? parseInt(val, 10) : 10;
-    return val || 10;
-  })
+  page: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => {
+      if (typeof val === 'string') return val ? parseInt(val, 10) : 1;
+      return val || 1;
+    }),
+  limit: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => {
+      if (typeof val === 'string') return val ? parseInt(val, 10) : 10;
+      return val || 10;
+    }),
 });
 
 /**
@@ -38,10 +48,9 @@ const paginationQuerySchema = z.object({
  * @desc Örnek liste endpoint'i
  * @access Public
  */
-router.get('/',
-  createMiddlewareChain(
-    validateQueryMiddleware(paginationQuerySchema)
-  ),
+router.get(
+  '/',
+  createMiddlewareChain(validateQueryMiddleware(paginationQuerySchema)),
   createRouteHandler(async (req, res, next) => {
     try {
       const result = paginationQuerySchema.safeParse(req.query);
@@ -54,7 +63,7 @@ router.get('/',
       const items = Array.from({ length: 20 }, (_, i) => ({
         id: `item-${i + 1}`,
         name: `Örnek Öğe ${i + 1}`,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       }));
 
       // Sayfalama
@@ -62,15 +71,17 @@ router.get('/',
       const endIndex = page * limit;
       const paginatedItems = items.slice(startIndex, endIndex);
 
-      return res.json(createSuccessResponse({
-        items: paginatedItems,
-        pagination: {
-          page,
-          limit,
-          total: items.length,
-          pages: Math.ceil(items.length / limit)
-        }
-      }));
+      return res.json(
+        createSuccessResponse({
+          items: paginatedItems,
+          pagination: {
+            page,
+            limit,
+            total: items.length,
+            pages: Math.ceil(items.length / limit),
+          },
+        })
+      );
     } catch (error) {
       logger.error('Örnek liste hatası', { error: (error as Error).message });
       return res.status(500).json(createErrorResponse('Sunucu hatası'));
@@ -83,10 +94,9 @@ router.get('/',
  * @desc Örnek detay endpoint'i
  * @access Public
  */
-router.get('/:id',
-  createMiddlewareChain(
-    validateParamsMiddleware(idParamSchema)
-  ),
+router.get(
+  '/:id',
+  createMiddlewareChain(validateParamsMiddleware(idParamSchema)),
   createRouteHandler(async (req, res, next) => {
     try {
       const { id } = req.params as z.infer<typeof idParamSchema>;
@@ -96,7 +106,7 @@ router.get('/:id',
         id,
         name: `Örnek Öğe ${id}`,
         description: 'Bu bir örnek açıklamadır.',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       return res.json(createSuccessResponse(item));
@@ -112,11 +122,9 @@ router.get('/:id',
  * @desc Örnek oluşturma endpoint'i
  * @access Private
  */
-router.post('/',
-  createAuthMiddlewareChain(
-    requireAuth,
-    validateBodyMiddleware(userCreateSchema)
-  ),
+router.post(
+  '/',
+  createAuthMiddlewareChain(requireAuth, validateBodyMiddleware(userCreateSchema)),
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const userData = req.body as z.infer<typeof userCreateSchema>;
@@ -125,10 +133,12 @@ router.post('/',
       const newUser = {
         id: `user-${Date.now()}`,
         ...userData,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
-      return res.status(201).json(createSuccessResponse(newUser, 'Kullanıcı başarıyla oluşturuldu'));
+      return res
+        .status(201)
+        .json(createSuccessResponse(newUser, 'Kullanıcı başarıyla oluşturuldu'));
     } catch (error) {
       logger.error('Kullanıcı oluşturma hatası', { error: (error as Error).message });
       return res.status(500).json(createErrorResponse('Sunucu hatası'));
@@ -141,7 +151,8 @@ router.post('/',
  * @desc Örnek güncelleme endpoint'i
  * @access Private
  */
-router.put('/:id',
+router.put(
+  '/:id',
   createAuthMiddlewareChain(
     requireAuth,
     validateParamsMiddleware(idParamSchema),
@@ -156,7 +167,7 @@ router.put('/:id',
       const updatedUser = {
         id,
         ...userData,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       return res.json(createSuccessResponse(updatedUser, 'Kullanıcı başarıyla güncellendi'));
@@ -172,11 +183,9 @@ router.put('/:id',
  * @desc Örnek silme endpoint'i
  * @access Private
  */
-router.delete('/:id',
-  createAuthMiddlewareChain(
-    requireAuth,
-    validateParamsMiddleware(idParamSchema)
-  ),
+router.delete(
+  '/:id',
+  createAuthMiddlewareChain(requireAuth, validateParamsMiddleware(idParamSchema)),
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const { id } = req.params as z.infer<typeof idParamSchema>;

@@ -4,8 +4,9 @@
  */
 import express, { Application } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { requestLogger } from '../utils/logger';
+import { requestLogger, logger } from '../utils/logger';
 import { setupSecurityMiddleware } from './security';
 import { apiLimiter, authLimiter } from './rateLimit';
 import sentryHandler from './sentryHandler';
@@ -31,10 +32,34 @@ export function setupMiddleware(app: Application): void {
   // Loglama middleware'i
   app.use(requestLogger);
 
-  // Statik dosyalar
-  app.use(express.static(path.join(__dirname, '../../public')));
-  app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
-  
+  // Statik dosyalar - güvenli yollar kullanarak
+  const publicPath = path.resolve(path.join(__dirname, '../../public'));
+  const uploadsPath = path.resolve(path.join(__dirname, '../../uploads'));
+
+  // Yolların varlığını kontrol et
+  if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+  } else {
+    logger.warn('Public dizini bulunamadı', { path: publicPath });
+  }
+
+  // Uploads dizini için güvenlik kontrolü
+  if (fs.existsSync(uploadsPath)) {
+    app.use(
+      '/uploads',
+      (req, res, next) => {
+        // Yol geçişi saldırılarına karşı kontrol et
+        if (req.path.includes('..') || req.path.includes('~')) {
+          return res.status(403).send('Geçersiz dosya yolu');
+        }
+        next();
+      },
+      express.static(uploadsPath)
+    );
+  } else {
+    logger.warn('Uploads dizini bulunamadı', { path: uploadsPath });
+  }
+
   // Body parsing middleware'leri
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));

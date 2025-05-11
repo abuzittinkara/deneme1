@@ -36,12 +36,15 @@ interface ErrorFingerprint {
 const errorCounts: Record<string, ErrorCount> = {};
 
 // Hata grupları
-const errorGroups: Record<string, {
-  fingerprints: string[];
-  count: number;
-  firstSeen: Date;
-  lastSeen: Date;
-}> = {};
+const errorGroups: Record<
+  string,
+  {
+    fingerprints: string[];
+    count: number;
+    firstSeen: Date;
+    lastSeen: Date;
+  }
+> = {};
 
 // Hata eşikleri
 const ERROR_THRESHOLDS = {
@@ -66,16 +69,16 @@ let errorCountLastMinute = 0;
  */
 export function createErrorFingerprint(error: Error, context?: string): string {
   const errorObj = error as any;
-  
+
   // Temel parmak izi bileşenleri
   const components = [
     error.name || 'UnknownError',
     error.message || 'Unknown error message',
     errorObj.code,
     errorObj.statusCode,
-    context
+    context,
   ];
-  
+
   // Null veya undefined değerleri filtrele
   return components
     .filter(Boolean)
@@ -91,30 +94,39 @@ export function createErrorFingerprint(error: Error, context?: string): string {
  */
 export function determineErrorGroup(error: Error): string {
   const errorObj = error as any;
-  
+
   // Hata türüne göre gruplandır
   if (error.name === 'ValidationError') return 'validation';
-  if (error.name === 'AuthenticationError' || error.name === 'TokenExpiredError') return 'authentication';
-  if (error.name === 'AuthorizationError' || error.name === 'ForbiddenError') return 'authorization';
+  if (error.name === 'AuthenticationError' || error.name === 'TokenExpiredError')
+    return 'authentication';
+  if (error.name === 'AuthorizationError' || error.name === 'ForbiddenError')
+    return 'authorization';
   if (error.name === 'NotFoundError') return 'not_found';
-  if (error.name === 'DatabaseError' || error.name.includes('Mongo') || error.name.includes('DB')) return 'database';
-  if (error.name === 'NetworkError' || error.name.includes('Socket') || error.name.includes('Connection')) return 'network';
+  if (error.name === 'DatabaseError' || error.name.includes('Mongo') || error.name.includes('DB'))
+    return 'database';
+  if (
+    error.name === 'NetworkError' ||
+    error.name.includes('Socket') ||
+    error.name.includes('Connection')
+  )
+    return 'network';
   if (error.name === 'TimeoutError') return 'timeout';
   if (error.name === 'RateLimitError') return 'rate_limit';
-  
+
   // HTTP durum koduna göre gruplandır
   if (errorObj.statusCode) {
     if (errorObj.statusCode >= 400 && errorObj.statusCode < 500) return 'client_error';
     if (errorObj.statusCode >= 500) return 'server_error';
   }
-  
+
   // Hata mesajına göre gruplandır
   const message = error.message.toLowerCase();
   if (message.includes('timeout')) return 'timeout';
   if (message.includes('memory') || message.includes('heap')) return 'memory';
-  if (message.includes('disk') || message.includes('storage') || message.includes('space')) return 'disk';
+  if (message.includes('disk') || message.includes('storage') || message.includes('space'))
+    return 'disk';
   if (message.includes('cpu') || message.includes('load')) return 'cpu';
-  
+
   // Varsayılan grup
   return 'other';
 }
@@ -129,58 +141,58 @@ export function trackError(error: Error, context?: string, metadata?: Record<str
   try {
     // Hata parmak izi oluştur
     const fingerprint = createErrorFingerprint(error, context);
-    
+
     // Hata grubunu belirle
     const group = determineErrorGroup(error);
-    
+
     // Hata sayacını güncelle
     if (!errorCounts[fingerprint]) {
       errorCounts[fingerprint] = {
         count: 0,
         firstSeen: new Date(),
         lastSeen: new Date(),
-        samples: []
+        samples: [],
       };
     }
-    
+
     // Sayacı artır
     errorCounts[fingerprint].count++;
     errorCounts[fingerprint].lastSeen = new Date();
-    
+
     // Örnek ekle (en fazla 10 örnek)
     if (errorCounts[fingerprint].samples.length < 10) {
       errorCounts[fingerprint].samples.push({
         timestamp: new Date(),
         context,
-        metadata
+        metadata,
       });
     }
-    
+
     // Hata grubunu güncelle
     if (!errorGroups[group]) {
       errorGroups[group] = {
         fingerprints: [],
         count: 0,
         firstSeen: new Date(),
-        lastSeen: new Date()
+        lastSeen: new Date(),
       };
     }
-    
+
     // Parmak izini gruba ekle
     if (!errorGroups[group].fingerprints.includes(fingerprint)) {
       errorGroups[group].fingerprints.push(fingerprint);
     }
-    
+
     // Grup sayacını artır
     errorGroups[group].count++;
     errorGroups[group].lastSeen = new Date();
-    
+
     // Tekrarlayan hataları tespit et
     detectRepeatedErrors(fingerprint, group, error, context, metadata);
-    
+
     // Hata artışlarını tespit et
     detectErrorSpikes(error, context);
-    
+
     // Hata olayını yayınla
     errorEmitter.emit('error', {
       error,
@@ -188,14 +200,14 @@ export function trackError(error: Error, context?: string, metadata?: Record<str
       group,
       context,
       metadata,
-      count: errorCounts[fingerprint].count
+      count: errorCounts[fingerprint].count,
     });
-    
+
     // Son hata zamanını güncelle
     lastErrorTime = Date.now();
     // Son 1 dakikadaki hata sayısını artır
     errorCountLastMinute++;
-    
+
     // 1 dakika sonra sayacı azalt
     setTimeout(() => {
       errorCountLastMinute = Math.max(0, errorCountLastMinute - 1);
@@ -204,7 +216,7 @@ export function trackError(error: Error, context?: string, metadata?: Record<str
     // Hata izleme sırasında hata oluşursa sessizce logla
     logger.error('Hata izleme sırasında hata oluştu', {
       error: trackingError instanceof Error ? trackingError.message : 'Bilinmeyen hata',
-      originalError: error.message
+      originalError: error.message,
     });
   }
 }
@@ -225,59 +237,59 @@ function detectRepeatedErrors(
   metadata?: Record<string, any>
 ): void {
   const errorData = errorCounts[fingerprint];
-  
+
   // Tekrarlayan hata eşiğini kontrol et
-  if (errorData.count >= ERROR_THRESHOLDS.REPEATED_ERROR.count) {
+  if (errorData && errorData.count >= ERROR_THRESHOLDS.REPEATED_ERROR.count) {
     const timeDiff = errorData.lastSeen.getTime() - errorData.firstSeen.getTime();
-    
+
     // Zaman penceresi içinde tekrarlayan hata
     if (timeDiff <= ERROR_THRESHOLDS.REPEATED_ERROR.timeWindow) {
       logger.warn('Tekrarlayan hata tespit edildi', {
         error: error.message,
         name: error.name,
         group,
-        count: errorData.count,
+        count: errorData ? errorData.count : 0,
         timeSpan: `${Math.round(timeDiff / 1000)} saniye`,
-        context
+        context,
       });
-      
+
       // Tekrarlayan hata olayını yayınla
       errorEmitter.emit('repeated_error', {
         error,
         fingerprint,
         group,
-        count: errorData.count,
+        count: errorData ? errorData.count : 0,
         timeSpan: timeDiff,
         context,
-        metadata
+        metadata,
       });
     }
   }
-  
+
   // Kritik hata eşiğini kontrol et
-  if (errorData.count >= ERROR_THRESHOLDS.CRITICAL_ERROR.count) {
+  if (errorData && errorData.count >= ERROR_THRESHOLDS.CRITICAL_ERROR.count) {
     const timeDiff = errorData.lastSeen.getTime() - errorData.firstSeen.getTime();
-    
+
     // Zaman penceresi içinde kritik hata
     if (timeDiff <= ERROR_THRESHOLDS.CRITICAL_ERROR.timeWindow) {
       logger.error('Kritik hata tespit edildi', {
         error: error.message,
         name: error.name,
         group,
-        count: errorData.count,
+        count: errorData ? errorData.count : 0,
         timeSpan: `${Math.round(timeDiff / 1000)} saniye`,
-        context
+        context,
       });
-      
+
       // Kritik hata olayını yayınla
       errorEmitter.emit('critical_error', {
         error,
         fingerprint,
         group,
-        count: errorData.count,
+        count: errorData ? errorData.count : 0,
         timeSpan: timeDiff,
         context,
-        metadata
+        metadata,
       });
     }
   }
@@ -294,15 +306,15 @@ function detectErrorSpikes(error: Error, context?: string): void {
     logger.warn('Hata artışı tespit edildi', {
       count: errorCountLastMinute,
       timeWindow: '1 dakika',
-      context
+      context,
     });
-    
+
     // Hata artışı olayını yayınla
     errorEmitter.emit('error_spike', {
       count: errorCountLastMinute,
       timeWindow: '1 dakika',
       lastError: error,
-      context
+      context,
     });
   }
 }
@@ -321,9 +333,9 @@ export async function getErrorStats(): Promise<any> {
         count: data.count,
         uniqueErrors: data.fingerprints.length,
         firstSeen: data.firstSeen,
-        lastSeen: data.lastSeen
+        lastSeen: data.lastSeen,
       }));
-      
+
       // En sık görülen hataları hesapla
       const topErrors = Object.entries(errorCounts)
         .map(([fingerprint, data]) => ({
@@ -331,17 +343,17 @@ export async function getErrorStats(): Promise<any> {
           count: data.count,
           firstSeen: data.firstSeen,
           lastSeen: data.lastSeen,
-          samples: data.samples
+          samples: data.samples,
         }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
-      
+
       // Son 1 saatteki hataları hesapla
       const now = Date.now();
       const lastHourErrors = Object.entries(errorCounts)
         .filter(([_, data]) => now - data.lastSeen.getTime() <= 60 * 60 * 1000)
         .reduce((count, [_, data]) => count + data.count, 0);
-      
+
       return {
         totalErrors: Object.values(errorCounts).reduce((sum, data) => sum + data.count, 0),
         uniqueErrors: Object.keys(errorCounts).length,
@@ -349,7 +361,7 @@ export async function getErrorStats(): Promise<any> {
         topErrors,
         lastHourErrors,
         errorCountLastMinute,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     },
     { ttl: 60, staleWhileRevalidate: true }
@@ -362,33 +374,36 @@ export async function getErrorStats(): Promise<any> {
  */
 export function cleanupErrorCounts(maxAge: number = 24 * 60 * 60 * 1000): void {
   const now = Date.now();
-  
+
   // Eski hata sayaçlarını temizle
   Object.entries(errorCounts).forEach(([fingerprint, data]) => {
     if (now - data.lastSeen.getTime() > maxAge) {
       delete errorCounts[fingerprint];
     }
   });
-  
+
   // Eski hata gruplarını temizle
   Object.entries(errorGroups).forEach(([group, data]) => {
     if (now - data.lastSeen.getTime() > maxAge) {
       delete errorGroups[group];
     }
   });
-  
+
   logger.debug('Eski hata sayaçları temizlendi', {
     remainingErrors: Object.keys(errorCounts).length,
-    remainingGroups: Object.keys(errorGroups).length
+    remainingGroups: Object.keys(errorGroups).length,
   });
 }
 
 // Periyodik temizleme
 if (env.isProduction) {
   // 6 saatte bir temizle
-  setInterval(() => {
-    cleanupErrorCounts();
-  }, 6 * 60 * 60 * 1000);
+  setInterval(
+    () => {
+      cleanupErrorCounts();
+    },
+    6 * 60 * 60 * 1000
+  );
 }
 
 // Hata izleme olaylarını dinle
@@ -422,5 +437,5 @@ export default {
   determineErrorGroup,
   getErrorStats,
   cleanupErrorCounts,
-  errorEmitter
+  errorEmitter,
 };

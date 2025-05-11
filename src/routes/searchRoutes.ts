@@ -4,14 +4,14 @@
  */
 import express from 'express';
 import searchController from '../controllers/searchController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
 
 // Tüm rotalar için kimlik doğrulama gerekli
 // TypeScript ile Express 4.x'te router.use() ile middleware kullanımı için düzeltme
-router.use(function(req, res, next) {
-  return authMiddleware(req, res, next);
+router.use(function (req, res, next) {
+  return requireAuth(req, res, next);
 });
 
 // Arama rotaları

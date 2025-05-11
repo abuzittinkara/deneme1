@@ -28,7 +28,7 @@ sentryHandler.setupSentry(app);
 app.get('/', (req: Request, res: Response) => {
   logger.info('Ana sayfa ziyaret edildi', {
     ip: req.ip,
-    userAgent: req.get('user-agent')
+    userAgent: req.get('user-agent'),
   });
 
   res.send(`
@@ -54,7 +54,7 @@ app.get('/log-test', (req: Request, res: Response) => {
   logger.info('Structured log test', {
     requestId: uuidv4(),
     ip: req.ip,
-    userAgent: req.get('user-agent')
+    userAgent: req.get('user-agent'),
   });
 
   res.send(`
@@ -74,7 +74,7 @@ app.get('/error-test', (req: Request, res: Response) => {
     // Hatayı logla
     logError(error as Error, 'Error test', {
       requestId: uuidv4(),
-      ip: req.ip
+      ip: req.ip,
     });
 
     res.send(`
@@ -93,12 +93,12 @@ app.get('/performance-test', async (req: Request, res: Response) => {
     'sleep-test',
     async () => {
       // 2 saniye bekle
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       return { success: true };
     },
     {
       requestId: uuidv4(),
-      ip: req.ip
+      ip: req.ip,
     }
   );
 
@@ -113,7 +113,7 @@ app.get('/performance-test', async (req: Request, res: Response) => {
 
 // Sentry testi
 // @ts-ignore
-app.get('/sentry-test', ((req: Request, res: Response) => {
+app.get('/sentry-test', (req: Request, res: Response) => {
   // Sentry'nin yapılandırılıp yapılandırılmadığını kontrol et
   const sentryInitialized = process.env.SENTRY_DSN && isSentryInitialized();
 
@@ -133,11 +133,11 @@ app.get('/sentry-test', ((req: Request, res: Response) => {
   sentryHandler.sentryReportError(testError, {
     endpoint: '/sentry-test',
     ip: req.ip,
-    userAgent: req.get('user-agent')
+    userAgent: req.get('user-agent'),
   });
 
   logger.info('Sentry test completed', {
-    error: testError.message
+    error: testError.message,
   });
 
   res.send(`
@@ -146,7 +146,7 @@ app.get('/sentry-test', ((req: Request, res: Response) => {
     <p><a href="/logs">Log Dosyalarını Görüntüle</a></p>
     <p><a href="/">Ana Sayfa</a></p>
   `);
-}));
+});
 
 // Log dosyalarını listele
 app.get('/logs', (req: Request, res: Response) => {
@@ -158,7 +158,7 @@ app.get('/logs', (req: Request, res: Response) => {
       <ul>
     `;
 
-    logFiles.forEach(file => {
+    logFiles.forEach((file) => {
       const filePath = path.join(LOG_DIR, file);
       const stats = fs.statSync(filePath);
       const fileSizeKB = Math.round(stats.size / 1024);

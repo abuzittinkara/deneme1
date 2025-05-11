@@ -121,10 +121,7 @@ export interface SearchOptions {
  * @param options - Arama seçenekleri
  * @returns Arama sonuçları
  */
-export async function search(
-  query: string,
-  options: SearchOptions = {}
-): Promise<SearchResult> {
+export async function search(query: string, options: SearchOptions = {}): Promise<SearchResult> {
   try {
     if (!query || query.trim().length < 2) {
       throw new ValidationError('Arama sorgusu en az 2 karakter olmalıdır.');
@@ -137,8 +134,8 @@ export async function search(
     // Regex oluştur (case insensitive)
     const regex = new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
 
-    let result: SearchResult = {
-      totalCount: 0
+    const result: SearchResult = {
+      totalCount: 0,
     };
 
     // Arama türüne göre işlem yap
@@ -170,7 +167,7 @@ export async function search(
     logger.info('Arama yapıldı', {
       query,
       searchType,
-      totalCount: result.totalCount
+      totalCount: result.totalCount,
     });
 
     return result;
@@ -178,7 +175,7 @@ export async function search(
     logger.error('Arama hatası', {
       error: (error as Error).message,
       query,
-      options
+      options,
     });
     throw error;
   }
@@ -200,26 +197,21 @@ async function searchUsers(
 ): Promise<UserSearchResult[]> {
   // Kullanıcı araması
   const users = await UserHelper.find({
-    $or: [
-      { username: regex },
-      { name: regex },
-      { surname: regex },
-      { email: regex }
-    ],
-    isActive: true
+    $or: [{ username: regex }, { name: regex }, { surname: regex }, { email: regex }],
+    isActive: true,
   })
-  .sort({ username: 1 })
-  .skip(offset)
-  .limit(limit)
-  .exec();
+    .sort({ username: 1 })
+    .skip(offset)
+    .limit(limit)
+    .exec();
 
-  return users.map(user => ({
+  return users.map((user) => ({
     id: user._id.toString(),
     username: user.username,
     name: user.name,
     surname: user.surname,
     profilePicture: user.profilePicture?.toString(),
-    status: user.status
+    status: user.status,
   }));
 }
 
@@ -239,7 +231,7 @@ async function searchMessages(
 ): Promise<MessageSearchResult[]> {
   // Mesaj araması için filtre oluştur
   const filter: any = {
-    content: regex
+    content: regex,
   };
 
   // Grup ve kanal filtreleri
@@ -247,7 +239,7 @@ async function searchMessages(
     const group = await GroupHelper.findOne({ groupId: options.groupId }).exec();
     if (group) {
       const channels = await ChannelHelper.find({ group: group._id }).exec();
-      filter.channel = { $in: channels.map(c => c._id) };
+      filter.channel = { $in: channels.map((c) => c._id) };
     }
   }
 
@@ -285,26 +277,26 @@ async function searchMessages(
       path: 'channel',
       populate: {
         path: 'group',
-        select: 'groupId name'
-      }
+        select: 'groupId name',
+      },
     })
     .sort(sort)
     .skip(offset)
     .limit(limit)
     .exec();
 
-  return messages.map(message => {
+  return messages.map((message) => {
     // İçeriği vurgula
     const content = message.content;
     let highlightedContent = content;
 
     try {
       // Regex ile eşleşen kısmı vurgula
-      highlightedContent = content.replace(regex, match => `<mark>${match}</mark>`);
+      highlightedContent = content.replace(regex, (match) => `<mark>${match}</mark>`);
     } catch (error) {
       logger.warn('İçerik vurgulama hatası', {
         error: (error as Error).message,
-        messageId: message._id
+        messageId: message._id,
       });
     }
 
@@ -314,17 +306,17 @@ async function searchMessages(
       timestamp: message.timestamp,
       user: {
         id: (message.user as any)._id.toString(),
-        username: (message.user as any).username
+        username: (message.user as any).username,
       },
       channel: {
         id: (message.channel as any).channelId,
-        name: (message.channel as any).name
+        name: (message.channel as any).name,
       },
       group: {
         id: (message.channel as any).group?.groupId,
-        name: (message.channel as any).group?.name
+        name: (message.channel as any).group?.name,
       },
-      highlightedContent
+      highlightedContent,
     };
   });
 }
@@ -345,15 +337,12 @@ async function searchDmMessages(
 ): Promise<DmMessageSearchResult[]> {
   // DM mesaj araması için filtre oluştur
   const filter: any = {
-    content: regex
+    content: regex,
   };
 
   // Kullanıcı filtresi
   if (options.userId) {
-    filter.$or = [
-      { sender: options.userId },
-      { receiver: options.userId }
-    ];
+    filter.$or = [{ sender: options.userId }, { receiver: options.userId }];
   }
 
   // Tarih filtreleri
@@ -384,18 +373,18 @@ async function searchDmMessages(
     .limit(limit)
     .exec();
 
-  return dmMessages.map(message => {
+  return dmMessages.map((message) => {
     // İçeriği vurgula
     const content = message.content;
     let highlightedContent = content;
 
     try {
       // Regex ile eşleşen kısmı vurgula
-      highlightedContent = content.replace(regex, match => `<mark>${match}</mark>`);
+      highlightedContent = content.replace(regex, (match) => `<mark>${match}</mark>`);
     } catch (error) {
       logger.warn('İçerik vurgulama hatası', {
         error: (error as Error).message,
-        messageId: message._id
+        messageId: message._id,
       });
     }
 
@@ -405,13 +394,13 @@ async function searchDmMessages(
       timestamp: message.timestamp,
       sender: {
         id: (message.sender as any)._id.toString(),
-        username: (message.sender as any).username
+        username: (message.sender as any).username,
       },
       receiver: {
         id: (message.receiver as any)._id.toString(),
-        username: (message.receiver as any).username
+        username: (message.receiver as any).username,
       },
-      highlightedContent
+      highlightedContent,
     };
   });
 }
@@ -432,11 +421,8 @@ async function searchChannels(
 ): Promise<ChannelSearchResult[]> {
   // Kanal araması için filtre oluştur
   const filter: any = {
-    $or: [
-      { name: regex },
-      { description: regex }
-    ],
-    isArchived: false
+    $or: [{ name: regex }, { description: regex }],
+    isArchived: false,
   };
 
   // Grup filtresi
@@ -463,15 +449,15 @@ async function searchChannels(
     .limit(limit)
     .exec();
 
-  return channels.map(channel => ({
+  return channels.map((channel) => ({
     id: channel.channelId,
     name: channel.name,
     description: channel.description,
     type: channel.type,
     group: {
       id: (channel.group as any).groupId,
-      name: (channel.group as any).name
-    }
+      name: (channel.group as any).name,
+    },
   }));
 }
 
@@ -491,11 +477,8 @@ async function searchGroups(
 ): Promise<GroupSearchResult[]> {
   // Grup araması için filtre oluştur
   const filter: any = {
-    $or: [
-      { name: regex },
-      { description: regex }
-    ],
-    isPublic: true
+    $or: [{ name: regex }, { description: regex }],
+    isPublic: true,
   };
 
   // Sıralama seçenekleri
@@ -515,24 +498,26 @@ async function searchGroups(
     .exec();
 
   // Grup üye sayılarını getir
-  const groupResults = await Promise.all(groups.map(async group => {
-    const memberCount = await GroupMemberHelper.countDocuments({ group: group._id });
+  const groupResults = await Promise.all(
+    groups.map(async (group) => {
+      const memberCount = await GroupMemberHelper.countDocuments({ group: group._id });
 
-    return {
-      id: group.groupId,
-      name: group.name,
-      description: group.description,
-      memberCount,
-      owner: {
-        id: (group.owner as any)._id.toString(),
-        username: (group.owner as any).username
-      }
-    };
-  }));
+      return {
+        id: group.groupId,
+        name: group.name,
+        description: group.description,
+        memberCount,
+        owner: {
+          id: (group.owner as any)._id.toString(),
+          username: (group.owner as any).username,
+        },
+      };
+    })
+  );
 
   return groupResults;
 }
 
 export default {
-  search
+  search,
 };

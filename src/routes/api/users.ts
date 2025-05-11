@@ -34,16 +34,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
       logger.error('Kullanıcı bilgilerini getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Kullanıcı bilgileri getirilirken bir hata oluştu'
+        message: 'Kullanıcı bilgileri getirilirken bir hata oluştu',
       });
     }
   })
@@ -62,12 +62,12 @@ router.get(
       .isString()
       .notEmpty()
       .withMessage('Geçersiz kullanıcı adı')
-      .customSanitizer(value => sanitizeAll(value))
+      .customSanitizer((value) => sanitizeAll(value)),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { username } = req.params;
+      const username = req.params['username'] || '';
 
       const user = await userManager.getUserProfileByUsername(username);
 
@@ -81,12 +81,12 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
       logger.error('Kullanıcı profili getirme hatası', {
         error: (error as Error).message,
-        username: req.params.username
+        username: req.params['username'],
       });
 
       // Hata mesajını belirle
@@ -103,7 +103,7 @@ router.get(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -118,30 +118,14 @@ router.patch(
   '/me',
   requireAuth,
   [
-    body('name')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz isim formatı')
-      .trim(),
-    body('surname')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz soyisim formatı')
-      .trim(),
-    body('bio')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz bio formatı')
-      .trim(),
+    body('name').optional().isString().withMessage('Geçersiz isim formatı').trim(),
+    body('surname').optional().isString().withMessage('Geçersiz soyisim formatı').trim(),
+    body('bio').optional().isString().withMessage('Geçersiz bio formatı').trim(),
     body('status')
       .optional()
       .isIn(['online', 'away', 'busy', 'invisible'])
       .withMessage('Geçersiz durum'),
-    body('customStatus')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz özel durum formatı')
-      .trim()
+    body('customStatus').optional().isString().withMessage('Geçersiz özel durum formatı').trim(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -153,17 +137,17 @@ router.patch(
 
       return res.status(200).json({
         success: true,
-        data: updatedUser
+        data: updatedUser,
       });
     } catch (error) {
       logger.error('Kullanıcı profili güncelleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        updates: req.body
+        updates: req.body,
       });
       return res.status(500).json({
         success: false,
-        message: 'Kullanıcı profili güncellenirken bir hata oluştu'
+        message: 'Kullanıcı profili güncellenirken bir hata oluştu',
       });
     }
   })
@@ -185,16 +169,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: blockedUsers
+        data: blockedUsers,
       });
     } catch (error) {
       logger.error('Engellenen kullanıcıları getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Engellenen kullanıcılar getirilirken bir hata oluştu'
+        message: 'Engellenen kullanıcılar getirilirken bir hata oluştu',
       });
     }
   })
@@ -208,28 +192,24 @@ router.get(
 router.post(
   '/:userId/block',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { userId: blockedUserId } = req.params;
+      const blockedUserId = req.params['userId'] || '';
       const userId = req.user!.id;
 
       await blockManager.blockUser(userId, blockedUserId);
 
       return res.status(200).json({
         success: true,
-        message: 'Kullanıcı engellendi'
+        message: 'Kullanıcı engellendi',
       });
     } catch (error) {
       logger.error('Kullanıcı engelleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        blockedUserId: req.params.userId
+        blockedUserId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -246,7 +226,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -260,28 +240,24 @@ router.post(
 router.delete(
   '/:userId/block',
   requireAuth,
-  [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
-  ],
+  [param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { userId: blockedUserId } = req.params;
+      const blockedUserId = req.params['userId'] || '';
       const userId = req.user!.id;
 
       await blockManager.unblockUser(userId, blockedUserId);
 
       return res.status(200).json({
         success: true,
-        message: 'Kullanıcı engeli kaldırıldı'
+        message: 'Kullanıcı engeli kaldırıldı',
       });
     } catch (error) {
       logger.error('Kullanıcı engeli kaldırma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        blockedUserId: req.params.userId
+        blockedUserId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -298,7 +274,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -313,26 +289,17 @@ router.post(
   '/:userId/report',
   requireAuth,
   [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID'),
+    param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID'),
     body('reason')
       .isIn(Object.values(reportManager.ReportReason))
       .withMessage('Geçersiz rapor nedeni'),
-    body('details')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz detay formatı')
-      .trim(),
-    body('evidence')
-      .optional()
-      .isArray()
-      .withMessage('Kanıtlar bir dizi olmalıdır')
+    body('details').optional().isString().withMessage('Geçersiz detay formatı').trim(),
+    body('evidence').optional().isArray().withMessage('Kanıtlar bir dizi olmalıdır'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { userId: reportedUserId } = req.params;
+      const reportedUserId = req.params['userId'] || '';
       const { reason, details, evidence } = req.body;
       const reporterId = req.user!.id;
 
@@ -341,19 +308,19 @@ router.post(
         reportedUserId,
         reason,
         details,
-        evidence
+        evidence,
       });
 
       return res.status(201).json({
         success: true,
-        data: report
+        data: report,
       });
     } catch (error) {
       logger.error('Kullanıcı raporlama hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        reportedUserId: req.params.userId,
-        reason: req.body.reason
+        reportedUserId: req.params['userId'],
+        reason: req.body.reason,
       });
 
       // Hata mesajını belirle
@@ -370,7 +337,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -392,16 +359,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: reports
+        data: reports,
       });
     } catch (error) {
       logger.error('Kullanıcı raporlarını getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Raporlar getirilirken bir hata oluştu'
+        message: 'Raporlar getirilirken bir hata oluştu',
       });
     }
   })
@@ -416,10 +383,7 @@ router.get(
   '/activity',
   requireAuth,
   [
-    query('type')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz aktivite türü'),
+    query('type').optional().isString().withMessage('Geçersiz aktivite türü'),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
@@ -429,7 +393,7 @@ router.get(
       .optional()
       .isInt({ min: 0 })
       .withMessage('Skip 0 veya daha büyük olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -448,23 +412,23 @@ router.get(
         result = await activityManager.getActivityHistory({
           userId,
           limit: Number(limit),
-          skip: Number(skip)
+          skip: Number(skip),
         });
       }
 
       return res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       logger.error('Kullanıcı aktivite geçmişi getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        query: req.query
+        query: req.query,
       });
       return res.status(500).json({
         success: false,
-        message: 'Aktivite geçmişi getirilirken bir hata oluştu'
+        message: 'Aktivite geçmişi getirilirken bir hata oluştu',
       });
     }
   })
@@ -479,10 +443,7 @@ router.get(
   '/search',
   requireAuth,
   [
-    query('q')
-      .isString()
-      .withMessage('Arama sorgusu gereklidir')
-      .trim(),
+    query('q').isString().withMessage('Arama sorgusu gereklidir').trim(),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 50 })
@@ -492,7 +453,7 @@ router.get(
       .optional()
       .isInt({ min: 0 })
       .withMessage('Skip 0 veya daha büyük olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -503,22 +464,22 @@ router.get(
       // Kullanıcı arama işlemi
       const result = await userManager.searchUsers(q as string, {
         limit: Number(limit),
-        skip: Number(skip)
+        skip: Number(skip),
       });
 
       return res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       logger.error('Kullanıcı arama hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        query: req.query
+        query: req.query,
       });
       return res.status(500).json({
         success: false,
-        message: 'Kullanıcı arama sırasında bir hata oluştu'
+        message: 'Kullanıcı arama sırasında bir hata oluştu',
       });
     }
   })
@@ -541,7 +502,7 @@ router.post(
       if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).json({
           success: false,
-          message: 'Dosya yüklenmedi'
+          message: 'Dosya yüklenmedi',
         });
       }
 
@@ -553,7 +514,7 @@ router.post(
       if (!allowedTypes.includes(avatar.mimetype)) {
         return res.status(400).json({
           success: false,
-          message: 'Sadece JPEG, PNG ve GIF formatları desteklenmektedir'
+          message: 'Sadece JPEG, PNG ve GIF formatları desteklenmektedir',
         });
       }
 
@@ -562,7 +523,7 @@ router.post(
       if (avatar.size > maxSize) {
         return res.status(400).json({
           success: false,
-          message: 'Dosya boyutu 5MB\'dan küçük olmalıdır'
+          message: 'Dosya boyutu 5MB\'dan küçük olmalıdır',
         });
       }
 
@@ -576,11 +537,11 @@ router.post(
       } catch (error) {
         logger.error('Dosya yükleme hatası', {
           error: (error as Error).message,
-          userId
+          userId,
         });
         return res.status(500).json({
           success: false,
-          message: 'Dosya yüklenirken bir hata oluştu'
+          message: 'Dosya yüklenirken bir hata oluştu',
         });
       }
 
@@ -591,14 +552,14 @@ router.post(
       return res.status(200).json({
         success: true,
         data: {
-          avatarUrl: result.avatarUrl
+          avatarUrl: result.avatarUrl,
         },
-        message: 'Profil resmi başarıyla güncellendi'
+        message: 'Profil resmi başarıyla güncellendi',
       });
     } catch (error) {
       logger.error('Profil resmi yükleme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
 
       // Hata mesajını belirle
@@ -612,7 +573,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -635,16 +596,16 @@ router.delete(
 
       return res.status(200).json({
         success: true,
-        message: 'Profil resmi başarıyla kaldırıldı'
+        message: 'Profil resmi başarıyla kaldırıldı',
       });
     } catch (error) {
       logger.error('Profil resmi kaldırma hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Profil resmi kaldırılırken bir hata oluştu'
+        message: 'Profil resmi kaldırılırken bir hata oluştu',
       });
     }
   })

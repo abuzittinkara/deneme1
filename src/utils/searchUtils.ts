@@ -16,10 +16,10 @@ export function getPaginationParams(req: Request): {
   limit: number;
   skip: number;
 } {
-  const page = Math.max(1, parseInt(req.query.page as string || '1'));
-  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string || '20')));
+  const page = Math.max(1, parseInt((req.query['page'] as string) || '1'));
+  const limit = Math.min(100, Math.max(1, parseInt((req.query['limit'] as string) || '20')));
   const skip = (page - 1) * limit;
-  
+
   return { page, limit, skip };
 }
 
@@ -38,14 +38,14 @@ export function getSortParams(
   sortBy: string;
   sortOrder: 1 | -1;
 } {
-  let sortBy = req.query.sortBy as string || defaultSortField;
-  const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
-  
+  let sortBy = (req.query['sortBy'] as string) || defaultSortField;
+  const sortOrder = req.query['sortOrder'] === 'asc' ? 1 : -1;
+
   // İzin verilen alanları kontrol et
   if (allowedSortFields.length > 0 && !allowedSortFields.includes(sortBy)) {
     sortBy = defaultSortField;
   }
-  
+
   return { sortBy, sortOrder };
 }
 
@@ -55,21 +55,22 @@ export function getSortParams(
  * @param searchFields Arama alanları
  * @returns Arama sorgusu
  */
-export function createSearchQuery(
-  searchText: string,
-  searchFields: string[]
-): any {
+export function createSearchQuery(searchText: string, searchFields: string[]): any {
   if (!searchText || searchFields.length === 0) {
     return {};
   }
-  
-  // Arama sorgusunu oluştur
+
+  // Arama metnini temizle ve güvenli hale getir
+  const sanitizedText = searchText.trim();
+  const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Güvenli regex ile arama sorgusunu oluştur
   const searchQuery = {
-    $or: searchFields.map(field => ({
-      [field]: { $regex: searchText, $options: 'i' }
-    }))
+    $or: searchFields.map((field) => ({
+      [field]: { $regex: new RegExp(escapedText, 'i') },
+    })),
   };
-  
+
   return searchQuery;
 }
 
@@ -78,65 +79,67 @@ export function createSearchQuery(
  * @param filters Filtreler
  * @returns Filtreleme sorgusu
  */
-export function createFilterQuery(
-  filters: Record<string, any>
-): any {
+export function createFilterQuery(filters: Record<string, any>): any {
   if (!filters || Object.keys(filters).length === 0) {
     return {};
   }
-  
+
   const filterQuery: Record<string, any> = {};
-  
+
   // Filtreleri işle
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === null) {
       continue;
     }
-    
+
     // Özel operatörler
     if (typeof value === 'object' && !Array.isArray(value)) {
       const operators: Record<string, any> = {};
-      
+
       for (const [op, opValue] of Object.entries(value)) {
         if (opValue === undefined || opValue === null) {
           continue;
         }
-        
+
         switch (op) {
           case 'eq':
-            operators.$eq = opValue;
+            operators['$eq'] = opValue;
             break;
           case 'ne':
-            operators.$ne = opValue;
+            operators['$ne'] = opValue;
             break;
           case 'gt':
-            operators.$gt = opValue;
+            operators['$gt'] = opValue;
             break;
           case 'gte':
-            operators.$gte = opValue;
+            operators['$gte'] = opValue;
             break;
           case 'lt':
-            operators.$lt = opValue;
+            operators['$lt'] = opValue;
             break;
           case 'lte':
-            operators.$lte = opValue;
+            operators['$lte'] = opValue;
             break;
           case 'in':
-            operators.$in = Array.isArray(opValue) ? opValue : [opValue];
+            operators['$in'] = Array.isArray(opValue) ? opValue : [opValue];
             break;
           case 'nin':
-            operators.$nin = Array.isArray(opValue) ? opValue : [opValue];
+            operators['$nin'] = Array.isArray(opValue) ? opValue : [opValue];
             break;
           case 'regex':
-            operators.$regex = opValue;
-            operators.$options = 'i';
+            if (typeof opValue === 'string') {
+              // Regex için güvenli hale getir
+              const sanitizedText = opValue.trim();
+              const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              operators['$regex'] = new RegExp(escapedText, 'i');
+            }
             break;
           case 'exists':
-            operators.$exists = Boolean(opValue);
+            operators['$exists'] = Boolean(opValue);
             break;
         }
       }
-      
+
       if (Object.keys(operators).length > 0) {
         filterQuery[key] = operators;
       }
@@ -163,7 +166,7 @@ export function createFilterQuery(
       filterQuery[key] = value;
     }
   }
-  
+
   return filterQuery;
 }
 
@@ -182,19 +185,19 @@ export function createDateRangeQuery(
   if (!startDate && !endDate) {
     return {};
   }
-  
+
   const dateQuery: Record<string, any> = {};
-  
+
   if (startDate) {
     const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
-    dateQuery.$gte = start;
+    dateQuery['$gte'] = start;
   }
-  
+
   if (endDate) {
     const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
-    dateQuery.$lte = end;
+    dateQuery['$lte'] = end;
   }
-  
+
   return { [field]: dateQuery };
 }
 
@@ -221,23 +224,19 @@ export function getSearchAndFilterParams(
   try {
     // Sayfalama parametrelerini al
     const paginationParams = getPaginationParams(req);
-    
+
     // Sıralama parametrelerini al
-    const sortParams = getSortParams(
-      req,
-      options.defaultSortField,
-      options.allowedSortFields
-    );
-    
+    const sortParams = getSortParams(req, options.defaultSortField, options.allowedSortFields);
+
     // Arama sorgusunu oluştur
-    const searchText = req.query.search as string;
+    const searchText = req.query['search'] as string;
     const searchQuery = options.searchFields
       ? createSearchQuery(searchText, options.searchFields)
       : {};
-    
+
     // Filtreleme sorgusunu oluştur
     const filters: Record<string, any> = {};
-    
+
     if (options.allowedFilters) {
       for (const filter of options.allowedFilters) {
         if (req.query[filter] !== undefined) {
@@ -245,39 +244,39 @@ export function getSearchAndFilterParams(
         }
       }
     }
-    
+
     const filterQuery = createFilterQuery(filters);
-    
+
     // Tarih aralığı sorgusunu oluştur
-    if (req.query.startDate || req.query.endDate) {
-      const dateField = req.query.dateField as string || 'createdAt';
+    if (req.query['startDate'] || req.query['endDate']) {
+      const dateField = (req.query['dateField'] as string) || 'createdAt';
       const dateRangeQuery = createDateRangeQuery(
         dateField,
-        req.query.startDate as string,
-        req.query.endDate as string
+        req.query['startDate'] as string,
+        req.query['endDate'] as string
       );
-      
+
       Object.assign(filterQuery, dateRangeQuery);
     }
-    
+
     return {
       searchQuery,
       filterQuery,
       sortParams,
-      paginationParams
+      paginationParams,
     };
   } catch (error) {
-    logger.error('Arama ve filtreleme parametreleri alınırken hata oluştu', { 
+    logger.error('Arama ve filtreleme parametreleri alınırken hata oluştu', {
       error: (error as Error).message,
-      query: req.query
+      query: req.query,
     });
-    
+
     // Varsayılan değerleri döndür
     return {
       searchQuery: {},
       filterQuery: {},
       sortParams: { sortBy: 'createdAt', sortOrder: -1 },
-      paginationParams: { page: 1, limit: 20, skip: 0 }
+      paginationParams: { page: 1, limit: 20, skip: 0 },
     };
   }
 }
@@ -306,7 +305,7 @@ export function formatSearchResults<T>(
 } {
   const { page, limit } = paginationParams;
   const pages = Math.ceil(total / limit);
-  
+
   return {
     results,
     pagination: {
@@ -315,8 +314,8 @@ export function formatSearchResults<T>(
       limit,
       pages,
       hasNextPage: page < pages,
-      hasPrevPage: page > 1
-    }
+      hasPrevPage: page > 1,
+    },
   };
 }
 
@@ -327,5 +326,5 @@ export default {
   createFilterQuery,
   createDateRangeQuery,
   getSearchAndFilterParams,
-  formatSearchResults
+  formatSearchResults,
 };

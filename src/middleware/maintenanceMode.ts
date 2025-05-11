@@ -9,35 +9,38 @@ import { logger } from '../utils/logger';
 // Bakım modu durumu
 let maintenanceMode = false;
 let maintenanceEndTime: Date | null = null;
-let maintenanceMessage = 'Şu anda sistemimizde bakım çalışması yapılmaktadır. Kısa süre içinde hizmetinize devam edeceğiz.';
+let maintenanceMessage =
+  'Şu anda sistemimizde bakım çalışması yapılmaktadır. Kısa süre içinde hizmetinize devam edeceğiz.';
 
 /**
  * Bakım modu middleware'i
  * @param options Bakım modu seçenekleri
  * @returns Express middleware
  */
-export function maintenanceModeMiddleware(options: {
-  allowedIPs?: string[];
-  allowedPaths?: string[];
-} = {}) {
+export function maintenanceModeMiddleware(
+  options: {
+    allowedIPs?: string[];
+    allowedPaths?: string[];
+  } = {}
+) {
   const { allowedIPs = [], allowedPaths = ['/api/health', '/api/health/detailed'] } = options;
-  
+
   return (req: Request, res: Response, next: NextFunction) => {
     // Bakım modunda değilse devam et
     if (!maintenanceMode) {
       return next();
     }
-    
+
     // İzin verilen IP'ler için devam et
-    if (allowedIPs.includes(req.ip)) {
+    if (req.ip && allowedIPs.includes(req.ip)) {
       return next();
     }
-    
+
     // İzin verilen yollar için devam et
-    if (allowedPaths.some(path => req.path.startsWith(path))) {
+    if (allowedPaths.some((path) => req.path.startsWith(path))) {
       return next();
     }
-    
+
     // API istekleri için JSON yanıtı
     if (req.path.startsWith('/api')) {
       return res.status(503).json({
@@ -45,22 +48,22 @@ export function maintenanceModeMiddleware(options: {
         error: {
           message: maintenanceMessage,
           statusCode: 503,
-          maintenanceEndTime: maintenanceEndTime?.toISOString()
-        }
+          maintenanceEndTime: maintenanceEndTime?.toISOString(),
+        },
       });
     }
-    
+
     // Web istekleri için bakım sayfası
-    const maintenanceEndTimeStr = maintenanceEndTime 
-      ? formatRemainingTime(maintenanceEndTime) 
+    const maintenanceEndTimeStr = maintenanceEndTime
+      ? formatRemainingTime(maintenanceEndTime)
       : '30 dakika';
-    
+
     res.status(503).sendFile(path.join(process.cwd(), 'public', 'maintenance.html'), {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
     });
   };
 }
@@ -73,15 +76,15 @@ export function maintenanceModeMiddleware(options: {
 export function enableMaintenanceMode(durationMinutes = 30, message?: string): void {
   maintenanceMode = true;
   maintenanceEndTime = new Date(Date.now() + durationMinutes * 60 * 1000);
-  
+
   if (message) {
     maintenanceMessage = message;
   }
-  
+
   logger.info('Bakım modu etkinleştirildi', {
     durationMinutes,
     endTime: maintenanceEndTime.toISOString(),
-    message: maintenanceMessage
+    message: maintenanceMessage,
   });
 }
 
@@ -91,7 +94,7 @@ export function enableMaintenanceMode(durationMinutes = 30, message?: string): v
 export function disableMaintenanceMode(): void {
   maintenanceMode = false;
   maintenanceEndTime = null;
-  
+
   logger.info('Bakım modu devre dışı bırakıldı');
 }
 
@@ -107,7 +110,7 @@ export function getMaintenanceStatus(): {
   return {
     enabled: maintenanceMode,
     endTime: maintenanceEndTime,
-    message: maintenanceMessage
+    message: maintenanceMessage,
   };
 }
 
@@ -118,13 +121,13 @@ export function getMaintenanceStatus(): {
  */
 function formatRemainingTime(endTime: Date): string {
   const remainingMs = endTime.getTime() - Date.now();
-  
+
   if (remainingMs <= 0) {
     return 'Çok yakında';
   }
-  
+
   const minutes = Math.floor(remainingMs / (1000 * 60));
-  
+
   if (minutes < 1) {
     return 'Çok yakında';
   } else if (minutes < 60) {
@@ -132,7 +135,7 @@ function formatRemainingTime(endTime: Date): string {
   } else {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    
+
     if (remainingMinutes === 0) {
       return `${hours} saat`;
     } else {
@@ -145,5 +148,5 @@ export default {
   maintenanceModeMiddleware,
   enableMaintenanceMode,
   disableMaintenanceMode,
-  getMaintenanceStatus
+  getMaintenanceStatus,
 };

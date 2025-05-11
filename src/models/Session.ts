@@ -63,15 +63,15 @@ const sessionSchema = new Schema<SessionDocument, SessionModel>(
       browser: { type: String },
       os: { type: String },
       device: { type: String },
-      isMobile: { type: Boolean }
+      isMobile: { type: Boolean },
     },
     location: {
       country: { type: String },
-      city: { type: String }
-    }
+      city: { type: String },
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -84,19 +84,20 @@ sessionSchema.index(
   { logoutTime: 1 },
   {
     expireAfterSeconds: 7 * 24 * 60 * 60, // 7 gün sonra otomatik sil
-    partialFilterExpression: { isActive: false }
+    partialFilterExpression: { isActive: false },
   }
 );
 
 // Statik metodlar
-sessionSchema.statics.findActiveByUser = function(
+sessionSchema.statics['findActiveByUser'] = function (
   userId: mongoose.Types.ObjectId
 ): Promise<SessionDocument[]> {
-  return this.find({ user: userId, isActive: true })
-    .sort({ lastActivity: -1 }) as unknown as Promise<SessionDocument[]>;
+  return this.find({ user: userId, isActive: true }).sort({
+    lastActivity: -1,
+  }) as unknown as Promise<SessionDocument[]>;
 };
 
-sessionSchema.statics.updateActivity = function(
+sessionSchema.statics['updateActivity'] = function (
   socketId: string
 ): Promise<SessionDocument | null> {
   return this.findOneAndUpdate(
@@ -126,7 +127,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as SessionModel;
 } else {
   // Gerçek model
-  Session = (mongoose.models.Session as SessionModel) ||
+  Session =
+    (mongoose.models['Session'] as SessionModel) ||
     mongoose.model<SessionDocument, SessionModel>('Session', sessionSchema);
 }
 

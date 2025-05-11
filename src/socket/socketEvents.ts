@@ -10,13 +10,18 @@ import { registerUserHandlers } from './handlers/userHandlers';
 import { registerGroupHandlers } from './handlers/groupHandlers';
 import { registerFriendHandlers } from './handlers/friendHandlers';
 import { registerCallHandlers } from './handlers/callHandlers';
+import { registerVoiceHandlers } from './handlers/voiceHandlers';
+import { registerMediasoupHandlers } from './handlers/mediasoupHandlers';
 import { measurePerformanceAsync } from '../utils/performance';
 
 // Socket.IO olaylarını yöneten ana fonksiyon
 const socketEvents = (io: TypedServer, dependencies: any) => {
   // Socket.IO engine bağlantı olaylarını dinle
   io.engine.on('connection', (socket) => {
-    logger.info('Socket.IO Engine bağlantısı alındı', { socketId: socket.id, transport: socket.transport });
+    logger.info('Socket.IO Engine bağlantısı alındı', {
+      socketId: socket.id,
+      transport: socket.transport,
+    });
   });
 
   // Socket.IO bağlantı hatalarını dinle
@@ -68,21 +73,18 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     logger.info('Socket.IO istatistikleri', {
       socketCount,
       roomCount,
-      activeRooms: Object.keys(activeRooms).length > 10
-        ? { ...Object.fromEntries(Object.entries(activeRooms).slice(0, 10)), more: true }
-        : activeRooms,
+      activeRooms:
+        Object.keys(activeRooms).length > 10
+          ? { ...Object.fromEntries(Object.entries(activeRooms).slice(0, 10)), more: true }
+          : activeRooms,
       connections: {
         total: totalCount,
         polling: pollingCount,
         websocket: websocketCount,
-        pollingPercentage: totalCount > 0
-          ? Math.round((pollingCount / totalCount) * 100)
-          : 0,
-        websocketPercentage: totalCount > 0
-          ? Math.round((websocketCount / totalCount) * 100)
-          : 0
+        pollingPercentage: totalCount > 0 ? Math.round((pollingCount / totalCount) * 100) : 0,
+        websocketPercentage: totalCount > 0 ? Math.round((websocketCount / totalCount) * 100) : 0,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }, 60000); // Her dakika
   const {
@@ -112,7 +114,7 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     emailNotifications,
     scheduledMessageManager,
     sessionManager,
-    reportManager
+    reportManager,
   } = dependencies;
 
   // Bağlantı olayı
@@ -123,7 +125,7 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
       remoteAddress: socket.handshake.address,
       userAgent: socket.handshake.headers['user-agent'],
       query: socket.handshake.query,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Bağlantı olaylarını dinle
@@ -131,7 +133,7 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
       logger.debug('Socket.IO bağlantısı kesildi', {
         socketId: socket.id,
         reason,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     });
 
@@ -139,7 +141,9 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     const isDevelopment = process.env.NODE_ENV === 'development' || true; // Geliştirme için her zaman true
 
     // Token kontrolü
-    const token = socket.handshake.auth.token || (socket.handshake.query.token as string);
+    const token =
+      (socket.handshake.auth && socket.handshake.auth['token']) ||
+      (socket.handshake.query && (socket.handshake.query['token'] as string));
 
     // Kullanıcı bilgilerini al
     const userId = (socket.request as any).user?.id;
@@ -155,7 +159,7 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     socket.conn.on('upgrade', (transport) => {
       logger.info('Socket.IO transport yükseltildi', {
         socketId: socket.id,
-        transport: transport.name
+        transport: transport.name,
       });
     });
 
@@ -167,18 +171,18 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
       (socket as any).emit('auth:success', {
         userId: socket.data.userId,
         username: socket.data.username,
-        message: 'Socket.IO bağlantısı başarılı'
+        message: 'Socket.IO bağlantısı başarılı',
       });
 
       logger.info('Socket.IO kimlik doğrulama başarılı', {
         socketId: socket.id,
         userId: socket.data.userId,
-        username: socket.data.username
+        username: socket.data.username,
       });
     } else {
       // Bu duruma düşmemesi gerekir, çünkü middleware'de kontrol edildi
       logger.warn('Kimliği doğrulanmamış bağlantı girişimi (beklenmeyen durum)', {
-        socketId: socket.id
+        socketId: socket.id,
       });
       // 'auth:error' olayını özel olarak tanımla
       (socket as any).emit('auth:error', { message: 'Yetkilendirme hatası', code: 'AUTH_ERROR' });
@@ -192,7 +196,7 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     logger.info('Kullanıcı bağlandı', {
       userId: socket.data.userId,
       username: socket.data.username,
-      socketId: socket.id
+      socketId: socket.id,
     });
 
     // Kullanıcıyı çevrimiçi olarak işaretle
@@ -205,12 +209,24 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     onlineUsernames[socket.data.userId] = socket.data.username;
 
     // Kullanıcı durumunu güncelle
-    userManager.updateUserStatus(socket.data.userId, 'online');
+    if (typeof userManager.updateUserStatus === 'function') {
+      userManager.updateUserStatus(socket.data.userId, 'online').catch((err) =>
+        logger.error('Kullanıcı durumu güncelleme hatası', {
+          error: err.message,
+          userId: socket.data.userId,
+        })
+      );
+    } else {
+      logger.warn('userManager.updateUserStatus fonksiyonu bulunamadı', {
+        userId: socket.data.userId,
+        username: socket.data.username,
+      });
+    }
 
     // Kullanıcının bağlantı durumunu bildir
     socket.broadcast.emit('user:connect', {
       userId: socket.data.userId,
-      username: socket.data.username
+      username: socket.data.username,
     });
 
     // Çevrimiçi kullanıcıları gönder
@@ -219,29 +235,51 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     // Kullanıcının gruplarına katıl
     measurePerformanceAsync(async () => {
       try {
-        const userGroups = await groupManager.getUserGroups(socket.data.userId);
+        // Geliştirme modunda grupları atla
+        if (process.env.NODE_ENV === 'development') {
+          // Geliştirme modunda sahte grup odalarına katıl
+          socket.join('dev-group-1');
+          socket.join('dev-channel-1');
+          socket.join('dev-channel-2');
 
-        for (const group of userGroups) {
-          // Grup odasına katıl
-          socket.join(group._id.toString());
-          socket.data.currentGroup = group._id.toString();
-
-          // Gruptaki tüm kanallara katıl
-          for (const channel of group.channels) {
-            socket.join(channel._id.toString());
-          }
+          logger.info('Geliştirme modunda sahte gruplara katıldı', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+          });
+          return;
         }
 
-        logger.info('Kullanıcı gruplarına katıldı', {
-          userId: socket.data.userId,
-          username: socket.data.username,
-          groupCount: userGroups.length
-        });
+        // Üretim modunda gerçek grupları kullan
+        if (typeof groupManager.getUserGroups === 'function') {
+          const userGroups = await groupManager.getUserGroups(socket.data.userId);
+
+          for (const group of userGroups) {
+            // Grup odasına katıl
+            socket.join(group._id.toString());
+            socket.data.currentGroup = group._id.toString();
+
+            // Gruptaki tüm kanallara katıl
+            for (const channel of group.channels) {
+              socket.join(channel._id.toString());
+            }
+          }
+
+          logger.info('Kullanıcı gruplarına katıldı', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+            groupCount: userGroups.length,
+          });
+        } else {
+          logger.warn('groupManager.getUserGroups fonksiyonu bulunamadı', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+          });
+        }
       } catch (error) {
         logger.error('Kullanıcı gruplarına katılma hatası', {
           error: (error as Error).message,
           userId: socket.data.userId,
-          username: socket.data.username
+          username: socket.data.username,
         });
       }
     }, 'Kullanıcı gruplarına katılma');
@@ -249,22 +287,43 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     // Kullanıcının DM kanallarına katıl
     measurePerformanceAsync(async () => {
       try {
-        const userDMs = await dmManager.getUserDMs(socket.data.userId);
+        // Geliştirme modunda DM kanallarını atla
+        if (process.env.NODE_ENV === 'development') {
+          // Geliştirme modunda sahte DM odalarına katıl
+          socket.join('dev-dm-1');
+          socket.join('dev-dm-2');
 
-        for (const dm of userDMs) {
-          socket.join(dm._id.toString());
+          logger.info('Geliştirme modunda sahte DM kanallarına katıldı', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+          });
+          return;
         }
 
-        logger.info('Kullanıcı DM kanallarına katıldı', {
-          userId: socket.data.userId,
-          username: socket.data.username,
-          dmCount: userDMs.length
-        });
+        // Üretim modunda gerçek DM kanallarını kullan
+        if (typeof dmManager.getUserDMs === 'function') {
+          const userDMs = await dmManager.getUserDMs(socket.data.userId);
+
+          for (const dm of userDMs) {
+            socket.join(dm._id.toString());
+          }
+
+          logger.info('Kullanıcı DM kanallarına katıldı', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+            dmCount: userDMs.length,
+          });
+        } else {
+          logger.warn('dmManager.getUserDMs fonksiyonu bulunamadı', {
+            userId: socket.data.userId,
+            username: socket.data.username,
+          });
+        }
       } catch (error) {
         logger.error('Kullanıcı DM kanallarına katılma hatası', {
           error: (error as Error).message,
           userId: socket.data.userId,
-          username: socket.data.username
+          username: socket.data.username,
         });
       }
     }, 'Kullanıcı DM kanallarına katılma');
@@ -275,6 +334,8 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
     registerGroupHandlers(socket, dependencies);
     registerFriendHandlers(socket, dependencies);
     registerCallHandlers(socket, dependencies);
+    registerVoiceHandlers(socket, dependencies);
+    registerMediasoupHandlers(socket, dependencies);
 
     // Hata olayı
     socket.on('error', (error: any) => {
@@ -282,7 +343,7 @@ const socketEvents = (io: TypedServer, dependencies: any) => {
         error,
         userId: socket.data.userId,
         username: socket.data.username,
-        socketId: socket.id
+        socketId: socket.id,
       });
     });
   });

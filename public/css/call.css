@@ -1,0 +1,287 @@
+/**
+ * public/css/call.css
+ * Görüntülü görüşme stilleri
+ */
+
+/* Görüşme konteynırı */
+.call-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.call-container.hidden {
+  display: none;
+}
+
+/* Video konteynırları */
+.videos-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: calc(100% - 80px);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.local-video-container {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  width: 240px;
+  height: 180px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+}
+
+.remote-videos-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-auto-rows: 240px;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Video elementleri */
+.local-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Ayna görüntüsü */
+  background-color: #222;
+  border-radius: 8px;
+}
+
+.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: #222;
+  border-radius: 8px;
+}
+
+/* Kontrol butonları */
+.call-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 15px 30px;
+  background-color: rgba(34, 34, 34, 0.8);
+  border-radius: 50px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.call-control-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: none;
+  background-color: #444;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.call-control-button:hover {
+  background-color: #555;
+}
+
+.call-control-button.muted {
+  background-color: #f44336;
+}
+
+.call-control-button.active {
+  background-color: #4caf50;
+}
+
+.end-call-button {
+  background-color: #f44336;
+}
+
+.end-call-button:hover {
+  background-color: #d32f2f;
+}
+
+/* Katılımcı bilgileri */
+.participant-info {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.participant-media-status {
+  display: flex;
+  gap: 5px;
+}
+
+.participant-media-status i {
+  font-size: 12px;
+}
+
+.participant-media-status .muted {
+  color: #f44336;
+}
+
+/* Ekran paylaşımı */
+.screen-share-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  z-index: 999;
+}
+
+.screen-share-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Mobil uyumluluk */
+@media (max-width: 768px) {
+  .remote-videos-container {
+    grid-template-columns: 1fr;
+  }
+
+  .local-video-container {
+    width: 120px;
+    height: 90px;
+    bottom: 90px;
+    right: 10px;
+  }
+
+  .call-controls {
+    padding: 10px 20px;
+    gap: 10px;
+  }
+
+  .call-control-button {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* Animasyonlar */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.speaking {
+  animation: pulse 1.5s infinite;
+  border: 2px solid #4caf50;
+}
+
+/* Görüşme davet modalı */
+.call-invite-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  background-color: #333;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1002;
+  text-align: center;
+}
+
+.call-invite-modal h3 {
+  margin-top: 0;
+  color: white;
+}
+
+.call-invite-modal p {
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.call-invite-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.call-invite-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.call-invite-accept {
+  background-color: #4caf50;
+  color: white;
+}
+
+.call-invite-decline {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Yükleniyor animasyonu */
+.call-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 18px;
+  text-align: center;
+}
+
+.call-loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid white;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

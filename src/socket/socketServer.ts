@@ -13,8 +13,8 @@ const users: Record<string, any> = {
     passwordHash: '$2b$10$XpC5o8bIIl.//wqQVrUQ8.WZJ.uli58EOEF9zQqIzJVBM.1vwJET6', // "test" şifresinin hash'i
     name: 'Test',
     surname: 'User',
-    email: 'test@example.com'
-  }
+    email: 'test@example.com',
+  },
 };
 
 // Aktif kullanıcılar
@@ -28,8 +28,8 @@ export function initSocketEvents(server: any): void {
   ioServer = new Server(server, {
     cors: {
       origin: '*',
-      methods: ['GET', 'POST']
-    }
+      methods: ['GET', 'POST'],
+    },
   });
 
   ioServer.on('connection', (socket) => {
@@ -46,7 +46,7 @@ export function initSocketEvents(server: any): void {
         if (!user) {
           socket.emit('loginResult', {
             success: false,
-            message: 'Geçersiz kullanıcı adı veya şifre'
+            message: 'Geçersiz kullanıcı adı veya şifre',
           });
           return;
         }
@@ -57,7 +57,7 @@ export function initSocketEvents(server: any): void {
         if (!isPasswordValid) {
           socket.emit('loginResult', {
             success: false,
-            message: 'Geçersiz kullanıcı adı veya şifre'
+            message: 'Geçersiz kullanıcı adı veya şifre',
           });
           return;
         }
@@ -66,7 +66,7 @@ export function initSocketEvents(server: any): void {
         activeUsers[socket.id] = {
           username: user.username,
           name: user.name,
-          surname: user.surname
+          surname: user.surname,
         };
 
         // Başarılı giriş
@@ -74,7 +74,7 @@ export function initSocketEvents(server: any): void {
           success: true,
           username: user.username,
           name: user.name,
-          surname: user.surname
+          surname: user.surname,
         });
 
         logger.info('Kullanıcı girişi başarılı', { username: user.username });
@@ -82,7 +82,7 @@ export function initSocketEvents(server: any): void {
         logger.error('Giriş hatası', { error: (error as Error).message });
         socket.emit('loginResult', {
           success: false,
-          message: 'Giriş sırasında bir hata oluştu'
+          message: 'Giriş sırasında bir hata oluştu',
         });
       }
     });
@@ -96,7 +96,7 @@ export function initSocketEvents(server: any): void {
         if (users[username]) {
           socket.emit('registerResult', {
             success: false,
-            message: 'Bu kullanıcı adı zaten kullanılıyor'
+            message: 'Bu kullanıcı adı zaten kullanılıyor',
           });
           return;
         }
@@ -110,13 +110,13 @@ export function initSocketEvents(server: any): void {
           passwordHash,
           name,
           surname,
-          email
+          email,
         };
 
         // Başarılı kayıt
         socket.emit('registerResult', {
           success: true,
-          message: 'Kayıt başarılı'
+          message: 'Kayıt başarılı',
         });
 
         logger.info('Kullanıcı kaydı başarılı', { username });
@@ -124,7 +124,7 @@ export function initSocketEvents(server: any): void {
         logger.error('Kayıt hatası', { error: (error as Error).message });
         socket.emit('registerResult', {
           success: false,
-          message: 'Kayıt sırasında bir hata oluştu'
+          message: 'Kayıt sırasında bir hata oluştu',
         });
       }
     });
@@ -152,7 +152,7 @@ export const io = {
       } else {
         logger.debug(`Socket.IO emit (test): ${room} - ${event}`, { data });
       }
-    }
+    },
   }),
   emit: (event: string, data: any) => {
     if (ioServer) {
@@ -160,10 +160,10 @@ export const io = {
     } else {
       logger.debug(`Socket.IO emit (test): ${event}`, { data });
     }
-  }
+  },
 };
 
 export default {
   io,
-  initSocketEvents
+  initSocketEvents,
 };

@@ -35,8 +35,10 @@ export function objectIdEquals(id1: any, id2: any): boolean {
   if (!id1 || !id2) return false;
 
   // ObjectId nesnelerini string'e dönüştür
-  const objId1 = id1 instanceof Types.ObjectId ? id1.toString() : (typeof id1 === 'string' ? id1 : String(id1));
-  const objId2 = id2 instanceof Types.ObjectId ? id2.toString() : (typeof id2 === 'string' ? id2 : String(id2));
+  const objId1 =
+    id1 instanceof Types.ObjectId ? id1.toString() : typeof id1 === 'string' ? id1 : String(id1);
+  const objId2 =
+    id2 instanceof Types.ObjectId ? id2.toString() : typeof id2 === 'string' ? id2 : String(id2);
 
   return objId1 === objId2;
 }
@@ -53,5 +55,5 @@ export function isValidObjectId(id: any): boolean {
 export default {
   toObjectId,
   objectIdEquals,
-  isValidObjectId
+  isValidObjectId,
 };

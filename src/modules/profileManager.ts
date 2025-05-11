@@ -3,7 +3,7 @@
  * Kullanıcı profil yönetimi işlemleri
  */
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { User, UserDocument, UserPreferences } from '../models/User';
 import * as fileUpload from './fileUpload';
 import { logger } from '../utils/logger';
@@ -113,7 +113,10 @@ export async function updateUserProfile(
 
     return userObj;
   } catch (error) {
-    logger.error('Kullanıcı profili güncelleme hatası', { error: (error as Error).message, userId });
+    logger.error('Kullanıcı profili güncelleme hatası', {
+      error: (error as Error).message,
+      userId,
+    });
     throw error;
   }
 }
@@ -154,7 +157,10 @@ export async function changeUserPassword(
 
     return { success: true, message: 'Şifre başarıyla güncellendi' };
   } catch (error) {
-    logger.error('Kullanıcı şifresi değiştirme hatası', { error: (error as Error).message, userId });
+    logger.error('Kullanıcı şifresi değiştirme hatası', {
+      error: (error as Error).message,
+      userId,
+    });
     throw error;
   }
 }
@@ -189,14 +195,19 @@ export async function updateProfilePicture(
         logger.warn('Eski profil resmi silinirken hata oluştu', {
           error: (error as Error).message,
           userId,
-          profilePictureId: profilePicture
+          profilePictureId: profilePicture,
         });
         // Silme başarısız olsa bile devam et
       }
     }
 
     // Yeni profil resmini yükle
-    const fileAttachment = await fileUpload.handleFileUpload(fileData, originalName, mimeType, userId);
+    const fileAttachment = await fileUpload.handleFileUpload(
+      fileData,
+      originalName,
+      mimeType,
+      userId
+    );
 
     // Kullanıcı profilini güncelle
     user.set('profilePicture', fileAttachment._id);
@@ -206,13 +217,13 @@ export async function updateProfilePicture(
 
     return {
       success: true,
-      profilePicture: fileAttachment
+      profilePicture: fileAttachment,
     };
   } catch (error) {
     logger.error('Profil resmi güncelleme hatası', {
       error: (error as Error).message,
       userId,
-      originalName
+      originalName,
     });
     throw error;
   }
@@ -225,16 +236,14 @@ export async function updateProfilePicture(
  */
 export async function getUserProfile(userId: string): Promise<Partial<UserDocument>> {
   try {
-    const user = await User.findById(userId)
-      .populate('profilePicture')
-      .lean();
+    const user = await User.findById(userId).populate('profilePicture').lean();
 
     if (!user) {
       throw new NotFoundError('Kullanıcı bulunamadı');
     }
 
     // Hassas bilgileri kaldır
-    const userObj = user.toObject();
+    const userObj = { ...user };
     delete userObj.passwordHash;
 
     logger.debug('Kullanıcı profili getirildi', { userId });
@@ -295,13 +304,13 @@ export async function changeUsername(
     return {
       success: true,
       oldUsername,
-      newUsername
+      newUsername,
     };
   } catch (error) {
     logger.error('Kullanıcı adı değiştirme hatası', {
       error: (error as Error).message,
       userId,
-      newUsername
+      newUsername,
     });
     throw error;
   }
@@ -349,7 +358,7 @@ export async function updateUserStatus(
       error: (error as Error).message,
       userId,
       status,
-      customStatus
+      customStatus,
     });
     throw error;
   }
@@ -387,19 +396,23 @@ export async function updateNotificationPreferences(
       preferences.notificationTypes = preferences.notificationTypes || {};
 
       if (types[NotificationType.DIRECT_MESSAGES] !== undefined) {
-        preferences.notificationTypes[NotificationType.DIRECT_MESSAGES] = types[NotificationType.DIRECT_MESSAGES];
+        preferences.notificationTypes[NotificationType.DIRECT_MESSAGES] =
+          types[NotificationType.DIRECT_MESSAGES];
       }
       if (types[NotificationType.MENTIONS] !== undefined) {
         preferences.notificationTypes[NotificationType.MENTIONS] = types[NotificationType.MENTIONS];
       }
       if (types[NotificationType.FRIEND_REQUESTS] !== undefined) {
-        preferences.notificationTypes[NotificationType.FRIEND_REQUESTS] = types[NotificationType.FRIEND_REQUESTS];
+        preferences.notificationTypes[NotificationType.FRIEND_REQUESTS] =
+          types[NotificationType.FRIEND_REQUESTS];
       }
       if (types[NotificationType.GROUP_INVITES] !== undefined) {
-        preferences.notificationTypes[NotificationType.GROUP_INVITES] = types[NotificationType.GROUP_INVITES];
+        preferences.notificationTypes[NotificationType.GROUP_INVITES] =
+          types[NotificationType.GROUP_INVITES];
       }
       if (types[NotificationType.CHANNEL_MESSAGES] !== undefined) {
-        preferences.notificationTypes[NotificationType.CHANNEL_MESSAGES] = types[NotificationType.CHANNEL_MESSAGES];
+        preferences.notificationTypes[NotificationType.CHANNEL_MESSAGES] =
+          types[NotificationType.CHANNEL_MESSAGES];
       }
     }
 
@@ -417,7 +430,7 @@ export async function updateNotificationPreferences(
   } catch (error) {
     logger.error('Bildirim tercihleri güncelleme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -430,5 +443,5 @@ export default {
   getUserProfile,
   changeUsername,
   updateUserStatus,
-  updateNotificationPreferences
+  updateNotificationPreferences,
 };

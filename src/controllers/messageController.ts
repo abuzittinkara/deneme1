@@ -22,7 +22,7 @@ const messageFilterConfigs: FilterConfig[] = [
   { field: 'userId' },
   { field: 'includeDeleted', transform: (value) => value === 'true' },
   { field: 'pinned', transform: (value) => value === 'true' },
-  { field: 'sort', transform: (value) => value === 'asc' ? 'asc' : 'desc' }
+  { field: 'sort', transform: (value) => (value === 'asc' ? 'asc' : 'desc') },
 ];
 
 /**
@@ -32,28 +32,31 @@ const messageFilterConfigs: FilterConfig[] = [
 export const getChannelMessages = [
   // Sayfalama middleware'i
   paginationMiddleware(20, 100),
-  
+
   // Filtreleme middleware'i
   filteringMiddleware(messageFilterConfigs),
-  
+
   // Controller
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { channelId } = req.params;
-      
+      const channelId = req.params['channelId'];
+
       // Sayfalama ve filtreleme parametrelerini al
       const pagination = req.pagination!;
       const filters = req.filters || {};
-      
+
       // Mesajları getir
+      if (!channelId) {
+        throw new Error('Kanal ID gereklidir');
+      }
       const result = await messageService.getChannelMessages(channelId, pagination, filters);
-      
+
       // Yanıtı döndür
       res.json(result);
     } catch (error) {
       next(error);
     }
-  }
+  },
 ];
 
 /**
@@ -63,28 +66,32 @@ export const getChannelMessages = [
 export const getChannelMessagesWithCursor = [
   // Filtreleme middleware'i
   filteringMiddleware(messageFilterConfigs),
-  
+
   // Controller
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { channelId } = req.params;
-      const { cursor, limit } = req.query;
-      
+      const channelId = req.params['channelId'];
+      const cursor = req.query['cursor'] as string;
+      const limit = req.query['limit'] as string;
+
       // Filtreleme parametrelerini al
       const filters = req.filters || {};
-      
+
       // Mesajları getir
+      if (!channelId) {
+        throw new Error('Kanal ID gereklidir');
+      }
       const result = await messageService.getChannelMessagesWithCursor(
         channelId,
-        cursor as string,
-        limit ? parseInt(limit as string) : 20,
+        cursor,
+        limit ? parseInt(limit) : 20,
         filters
       );
-      
+
       // Yanıtı döndür
       res.json(result);
     } catch (error) {
       next(error);
     }
-  }
+  },
 ];

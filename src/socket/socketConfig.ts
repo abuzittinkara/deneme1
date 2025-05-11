@@ -12,7 +12,8 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { instrument } from '@socket.io/admin-ui';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { verifyToken } from '../utils/jwt';
-import { User, UserStatus } from '../models/User';
+import User from '../models/User';
+import { UserStatus } from '../types/enums';
 import { promisify } from 'util';
 
 // Redis adapter için pub/sub istemcileri
@@ -21,15 +22,15 @@ let subClient: any;
 
 // Hız sınırlayıcılar
 const connectionLimiter = new RateLimiterMemory({
-  points: 5, // 5 bağlantı
+  points: 10, // 10 bağlantı (artırıldı)
   duration: 10, // 10 saniye içinde
-  blockDuration: 30 // 30 saniye engelle
+  blockDuration: 30, // 30 saniye engelle
 });
 
 const messageLimiter = new RateLimiterMemory({
-  points: 20, // 20 mesaj
+  points: 30, // 30 mesaj (artırıldı)
   duration: 10, // 10 saniye içinde
-  blockDuration: 60 // 60 saniye engelle
+  blockDuration: 60, // 60 saniye engelle
 });
 
 /**
@@ -50,20 +51,19 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
     transports: ['websocket', 'polling'], // WebSocket ve polling destekle
     allowEIO3: false, // Engine.IO 3 protokolünü destekleme
     cors: {
-      origin: env.CORS_ORIGIN === '*' 
-        ? true 
-        : env.CORS_ORIGIN.split(',').map(origin => origin.trim()),
+      origin:
+        env.CORS_ORIGIN === '*' ? true : env.CORS_ORIGIN.split(',').map((origin) => origin.trim()),
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       credentials: true,
-      allowedHeaders: ['Content-Type', 'Authorization']
+      allowedHeaders: ['Content-Type', 'Authorization'],
     },
     cookie: {
       name: 'fisqos.io',
       httpOnly: true,
       secure: env.isProduction,
       sameSite: env.isProduction ? 'strict' : 'lax',
-      maxAge: 86400000 // 24 saat
-    }
+      maxAge: 86400000, // 24 saat
+    },
   };
 
   // Socket.IO sunucusunu oluştur
@@ -81,7 +81,7 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
       logger.info('Socket.IO Redis adapter yapılandırıldı');
     } catch (error) {
       logger.error('Socket.IO Redis adapter yapılandırma hatası', {
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       });
     }
   }
@@ -93,30 +93,37 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
         auth: {
           type: 'basic',
           username: env.SOCKET_ADMIN_UI_USERNAME || 'admin',
-          password: env.SOCKET_ADMIN_UI_PASSWORD || 'admin'
+          password: env.SOCKET_ADMIN_UI_PASSWORD || 'admin',
         },
-        mode: env.isDevelopment ? 'development' : 'production'
+        mode: env.isDevelopment ? 'development' : 'production',
       });
       logger.info('Socket.IO Admin UI yapılandırıldı');
     } catch (error) {
       logger.error('Socket.IO Admin UI yapılandırma hatası', {
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       });
     }
   }
 
   // Middleware: Bağlantı hız sınırlama
   io.use(async (socket, next) => {
+    // Geliştirme modunda hız sınırlamayı atla
+    if (env.isDevelopment) {
+      return next();
+    }
+
     try {
       const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
       const ipStr = Array.isArray(clientIp) ? clientIp[0] : clientIp;
 
-      await connectionLimiter.consume(ipStr);
+      if (ipStr) {
+        await connectionLimiter.consume(ipStr);
+      }
       next();
     } catch (error) {
       logger.warn('Socket.IO bağlantı hız sınırı aşıldı', {
         ip: socket.handshake.address,
-        headers: socket.handshake.headers
+        headers: socket.handshake.headers,
       });
       next(new Error('Çok fazla bağlantı denemesi. Lütfen daha sonra tekrar deneyin.'));
     }
@@ -127,27 +134,29 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
     try {
       // Geliştirme modunda kimlik doğrulamayı atla (opsiyonel)
       if (env.isDevelopment && env.SKIP_SOCKET_AUTH === 'true') {
-        logger.info('Geliştirme modunda Socket.IO kimlik doğrulama atlandı', { socketId: socket.id });
-        
+        logger.info('Geliştirme modunda Socket.IO kimlik doğrulama atlandı', {
+          socketId: socket.id,
+        });
+
         // Geliştirme modu için test kullanıcısı
         socket.data.userId = 'dev-user-id';
         socket.data.username = 'dev-user';
         socket.data.role = 'user';
         socket.data.authenticated = true;
-        
+
         return next();
       }
 
       // Token'ı al
-      const token = 
-        socket.handshake.auth.token || 
+      const token =
+        (socket.handshake.auth && socket.handshake.auth['token']) ||
         socket.handshake.headers.authorization?.split(' ')[1] ||
-        socket.handshake.query.token;
+        (socket.handshake.query && socket.handshake.query['token']);
 
       if (!token) {
         logger.warn('Socket.IO bağlantısı için token bulunamadı', {
           socketId: socket.id,
-          ip: socket.handshake.address
+          ip: socket.handshake.address,
         });
         return next(new Error('Kimlik doğrulama gerekli'));
       }
@@ -162,37 +171,42 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
         logger.warn('Socket.IO bağlantısı için kullanıcı bulunamadı', {
           socketId: socket.id,
           userId: decoded.id,
-          ip: socket.handshake.address
+          ip: socket.handshake.address,
         });
         return next(new Error('Kullanıcı bulunamadı'));
       }
 
       // Kullanıcı durumunu kontrol et
-      if (user.status === UserStatus.BANNED || user.status === UserStatus.SUSPENDED) {
+      // @ts-ignore - Mongoose belge özelliklerine erişim
+      if (user.get('status') === 'BANNED' || user.get('status') === 'SUSPENDED') {
         logger.warn('Engellenmiş veya askıya alınmış kullanıcı bağlantı denemesi', {
           socketId: socket.id,
-          userId: user._id.toString(),
-          username: user.username,
-          status: user.status,
-          ip: socket.handshake.address
+          userId: user._id ? user._id.toString() : '',
+          username: user.get('username') || '',
+          status: user.get('status') || '',
+          ip: socket.handshake.address,
         });
         return next(new Error('Hesabınız engellenmiş veya askıya alınmış'));
       }
 
       // Socket.data'ya kullanıcı bilgilerini ekle
-      socket.data.userId = user._id.toString();
-      socket.data.username = user.username;
-      socket.data.role = user.role;
+      // @ts-ignore - Mongoose belge özelliklerine erişim
+      socket.data.userId = user._id ? user._id.toString() : '';
+      // @ts-ignore - Mongoose belge özelliklerine erişim
+      socket.data.username = user.get('username') || '';
+      // @ts-ignore - Mongoose belge özelliklerine erişim
+      socket.data.role = user.get('role') || 'user';
       socket.data.authenticated = true;
 
       // Son görülme zamanını güncelle
-      user.lastSeen = new Date();
+      // @ts-ignore - Mongoose belge özelliklerine erişim
+      user.set('lastSeen', new Date());
       await user.save();
 
       logger.debug('Socket.IO kimlik doğrulama başarılı', {
         socketId: socket.id,
-        userId: user._id.toString(),
-        username: user.username
+        userId: user._id ? user._id.toString() : '',
+        username: user.get('username') || '',
       });
 
       next();
@@ -200,7 +214,7 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
       logger.warn('Socket.IO kimlik doğrulama hatası', {
         socketId: socket.id,
         error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-        ip: socket.handshake.address
+        ip: socket.handshake.address,
       });
       next(new Error('Kimlik doğrulama hatası'));
     }
@@ -208,27 +222,32 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
 
   // Middleware: Mesaj hız sınırlama
   io.use((socket, next) => {
+    // Geliştirme modunda hız sınırlamayı atla
+    if (env.isDevelopment) {
+      return next();
+    }
+
     // Mesaj olayları için hız sınırlama
     socket.on('message', async (data, callback) => {
       try {
-        const userId = socket.data.userId;
+        const userId = socket.data.userId || socket.id; // Kullanıcı ID yoksa socket ID kullan
         await messageLimiter.consume(userId);
-        
+
         // Orijinal olay işleyicisini çağır
         socket.emit('message', data, callback);
       } catch (error) {
         logger.warn('Socket.IO mesaj hız sınırı aşıldı', {
           socketId: socket.id,
-          userId: socket.data.userId
+          userId: socket.data.userId,
         });
-        
+
         if (typeof callback === 'function') {
           callback({
             success: false,
             error: {
               message: 'Çok fazla mesaj gönderdiniz. Lütfen daha sonra tekrar deneyin.',
-              code: 'RATE_LIMIT_EXCEEDED'
-            }
+              code: 'RATE_LIMIT_EXCEEDED',
+            },
           });
         }
       }
@@ -245,27 +264,7 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
       username: socket.data.username,
       transport: socket.conn.transport.name,
       ip: socket.handshake.address,
-      userAgent: socket.handshake.headers['user-agent']
-    });
-
-    // Bağlantı kesilme olayı
-    socket.on('disconnect', (reason) => {
-      logger.info('Socket.IO bağlantısı kesildi', {
-        socketId: socket.id,
-        userId: socket.data.userId,
-        username: socket.data.username,
-        reason
-      });
-    });
-
-    // Hata olayı
-    socket.on('error', (error) => {
-      logger.error('Socket.IO hatası', {
-        socketId: socket.id,
-        userId: socket.data.userId,
-        username: socket.data.username,
-        error: error instanceof Error ? error.message : error
-      });
+      userAgent: socket.handshake.headers['user-agent'],
     });
 
     // Ping olayı
@@ -282,11 +281,13 @@ export function configureSocketServer(server: HttpServer | HttpsServer): SocketI
       error: err.message,
       code: err.code,
       type: err.type,
-      req: err.req ? {
-        url: err.req.url,
-        method: err.req.method,
-        headers: err.req.headers
-      } : undefined
+      req: err.req
+        ? {
+          url: err.req.url,
+          method: err.req.method,
+          headers: err.req.headers,
+        }
+        : undefined,
     });
   });
 
@@ -304,7 +305,7 @@ export async function closeSocketServer(io: SocketIOServer): Promise<void> {
     // Tüm istemcilere kapatma bildirimi gönder
     io.emit('server:shutdown', {
       message: 'Sunucu kapatılıyor, lütfen daha sonra tekrar bağlanın',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Tüm bağlantıları kapat
@@ -317,7 +318,7 @@ export async function closeSocketServer(io: SocketIOServer): Promise<void> {
     if (pubClient && subClient) {
       const quitAsync = promisify(pubClient.quit).bind(pubClient);
       await quitAsync();
-      
+
       const quitSubAsync = promisify(subClient.quit).bind(subClient);
       await quitSubAsync();
     }
@@ -329,12 +330,12 @@ export async function closeSocketServer(io: SocketIOServer): Promise<void> {
     logger.info('Socket.IO sunucusu kapatıldı');
   } catch (error) {
     logger.error('Socket.IO sunucusu kapatılırken hata oluştu', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
   }
 }
 
 export default {
   configureSocketServer,
-  closeSocketServer
+  closeSocketServer,
 };

@@ -49,11 +49,14 @@ export interface MemoryGroups {
     owner: string;
     name: string;
     users: GroupUser[];
-    rooms: Record<string, {
-      name: string;
-      type: string;
-      users: GroupUser[];
-    }>;
+    rooms: Record<
+      string,
+      {
+        name: string;
+        type: string;
+        users: GroupUser[];
+      }
+    >;
   };
 }
 

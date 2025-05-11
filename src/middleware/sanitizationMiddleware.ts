@@ -44,17 +44,17 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
   if (req.body && typeof req.body === 'object') {
     sanitizeObject(req.body);
   }
-  
+
   // Query sanitize et
   if (req.query && typeof req.query === 'object') {
     sanitizeObject(req.query);
   }
-  
+
   // Params sanitize et
   if (req.params && typeof req.params === 'object') {
     sanitizeObject(req.params);
   }
-  
+
   next();
 }
 
@@ -67,7 +67,7 @@ function sanitizeObject(obj: Record<string, any>): void {
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         const value = obj[key];
-        
+
         if (typeof value === 'string') {
           // String değerleri sanitize et
           if (key.toLowerCase().includes('url') || key.toLowerCase().includes('link')) {
@@ -89,7 +89,7 @@ function sanitizeObject(obj: Record<string, any>): void {
   } catch (error) {
     logger.error('Sanitizasyon sırasında hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 }
@@ -98,5 +98,5 @@ export default {
   sanitizeRequestBody,
   sanitizeRequestQuery,
   sanitizeRequestParams,
-  sanitizeRequest
+  sanitizeRequest,
 };

@@ -50,7 +50,11 @@ export async function archiveChannel(
 ): Promise<ArchiveOperationResult> {
   try {
     // İzin kontrolü
-    const hasPermission = await roleManager.checkPermission(username, groupId, Permission.MANAGE_CHANNELS);
+    const hasPermission = await roleManager.checkPermission(
+      username,
+      groupId,
+      Permission.MANAGE_CHANNELS
+    );
     if (!hasPermission) {
       throw new ForbiddenError('Bu işlem için yetkiniz yok.');
     }
@@ -79,7 +83,7 @@ export async function archiveChannel(
     logger.info('Kanal arşivlendi', {
       channelId,
       username,
-      groupId
+      groupId,
     });
 
     return {
@@ -90,15 +94,15 @@ export async function archiveChannel(
         name: channel.name,
         type: channel.type,
         isArchived: channel.isArchived,
-        archivedAt: channel.archivedAt
-      }
+        archivedAt: channel.archivedAt,
+      },
     };
   } catch (error) {
     logger.error('Kanal arşivleme hatası', {
       error: (error as Error).message,
       channelId,
       username,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -118,7 +122,11 @@ export async function unarchiveChannel(
 ): Promise<ArchiveOperationResult> {
   try {
     // İzin kontrolü
-    const hasPermission = await roleManager.checkPermission(username, groupId, Permission.MANAGE_CHANNELS);
+    const hasPermission = await roleManager.checkPermission(
+      username,
+      groupId,
+      Permission.MANAGE_CHANNELS
+    );
     if (!hasPermission) {
       throw new ForbiddenError('Bu işlem için yetkiniz yok.');
     }
@@ -142,7 +150,7 @@ export async function unarchiveChannel(
     logger.info('Kanal arşivden çıkarıldı', {
       channelId,
       username,
-      groupId
+      groupId,
     });
 
     return {
@@ -152,15 +160,15 @@ export async function unarchiveChannel(
         id: channel.channelId,
         name: channel.name,
         type: channel.type,
-        isArchived: channel.isArchived
-      }
+        isArchived: channel.isArchived,
+      },
     };
   } catch (error) {
     logger.error('Kanal arşivden çıkarma hatası', {
       error: (error as Error).message,
       channelId,
       username,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -181,7 +189,7 @@ export async function getArchivedChannels(groupId: string): Promise<ArchivedChan
     const channels = await ChannelHelper.find(
       {
         group: group._id,
-        isArchived: true
+        isArchived: true,
       },
       null,
       { populate: { path: 'archivedBy', select: 'username' } }
@@ -189,21 +197,21 @@ export async function getArchivedChannels(groupId: string): Promise<ArchivedChan
 
     logger.info('Arşivlenmiş kanallar getirildi', {
       groupId,
-      count: channels.length
+      count: channels.length,
     });
 
-    return channels.map(channel => ({
+    return channels.map((channel) => ({
       id: channel.channelId,
       name: channel.name,
       type: channel.type,
       isArchived: true,
       archivedAt: channel.archivedAt,
-      archivedBy: (channel.archivedBy as any)?.username
+      archivedBy: (channel.archivedBy as any)?.username,
     }));
   } catch (error) {
     logger.error('Arşivlenmiş kanalları getirme hatası', {
       error: (error as Error).message,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -212,5 +220,5 @@ export async function getArchivedChannels(groupId: string): Promise<ArchivedChan
 export default {
   archiveChannel,
   unarchiveChannel,
-  getArchivedChannels
+  getArchivedChannels,
 };

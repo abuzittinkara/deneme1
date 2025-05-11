@@ -8,7 +8,7 @@ import {
   memoryUsageMonitor,
   cpuUsageMonitor,
   largeResponseMonitor,
-  performanceMonitoring
+  performanceMonitoring,
 } from '../../middleware/performanceMiddleware';
 import { logger } from '../../utils/logger';
 
@@ -18,18 +18,18 @@ jest.mock('../../utils/logger', () => ({
     debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 
 // memoryOptimizer'ı mock'la
 jest.mock('../../utils/memoryOptimizer', () => ({
-  logMemoryUsage: jest.fn()
+  logMemoryUsage: jest.fn(),
 }));
 
 // securityUtils'i mock'la
 jest.mock('../../utils/securityUtils', () => ({
-  getClientIp: jest.fn().mockReturnValue('192.168.1.1')
+  getClientIp: jest.fn().mockReturnValue('192.168.1.1'),
 }));
 
 describe('Performance Middleware', () => {
@@ -43,14 +43,14 @@ describe('Performance Middleware', () => {
       method: 'GET',
       ip: '127.0.0.1',
       headers: {
-        'x-forwarded-for': '192.168.1.1'
-      }
+        'x-forwarded-for': '192.168.1.1',
+      },
     };
 
     res = {
       on: jest.fn(),
       setHeader: jest.fn(),
-      statusCode: 200
+      statusCode: 200,
     };
 
     next = jest.fn();
@@ -70,7 +70,8 @@ describe('Performance Middleware', () => {
     it('should log slow requests', () => {
       // Mock performance.now to simulate elapsed time
       const originalNow = performance.now;
-      performance.now = jest.fn()
+      performance.now = jest
+        .fn()
         .mockReturnValueOnce(1000) // Start time
         .mockReturnValueOnce(1600); // End time (600ms elapsed)
 
@@ -82,12 +83,15 @@ describe('Performance Middleware', () => {
       // Call the finish callback
       finishCallback();
 
-      expect(logger.logger?.warn || logger.warn).toHaveBeenCalledWith('Yavaş istek tespit edildi', expect.objectContaining({
-        path: '/test',
-        method: 'GET',
-        status: 200,
-        duration: expect.stringContaining('ms')
-      }));
+      expect(logger.logger?.warn || logger.warn).toHaveBeenCalledWith(
+        'Yavaş istek tespit edildi',
+        expect.objectContaining({
+          path: '/test',
+          method: 'GET',
+          status: 200,
+          duration: expect.stringContaining('ms'),
+        })
+      );
 
       // Restore original performance.now
       performance.now = originalNow;
@@ -96,7 +100,8 @@ describe('Performance Middleware', () => {
     it('should log normal requests', () => {
       // Mock performance.now to simulate elapsed time
       const originalNow = performance.now;
-      performance.now = jest.fn()
+      performance.now = jest
+        .fn()
         .mockReturnValueOnce(1000) // Start time
         .mockReturnValueOnce(1100); // End time (100ms elapsed)
 
@@ -108,12 +113,15 @@ describe('Performance Middleware', () => {
       // Call the finish callback
       finishCallback();
 
-      expect(logger.logger?.debug || logger.debug).toHaveBeenCalledWith('İstek süresi', expect.objectContaining({
-        path: '/test',
-        method: 'GET',
-        status: 200,
-        duration: expect.stringContaining('ms')
-      }));
+      expect(logger.logger?.debug || logger.debug).toHaveBeenCalledWith(
+        'İstek süresi',
+        expect.objectContaining({
+          path: '/test',
+          method: 'GET',
+          status: 200,
+          duration: expect.stringContaining('ms'),
+        })
+      );
 
       // Restore original performance.now
       performance.now = originalNow;
@@ -163,11 +171,13 @@ describe('Performance Middleware', () => {
         largeResponseMonitor: (req, res, next) => {
           res.on('finish', () => {});
           next();
-        }
+        },
       }));
 
       // Re-import the module to use the mocked version
-      const { largeResponseMonitor: mockedLargeResponseMonitor } = require('../../middleware/performanceMiddleware');
+      const {
+        largeResponseMonitor: mockedLargeResponseMonitor,
+      } = require('../../middleware/performanceMiddleware');
 
       mockedLargeResponseMonitor(req as Request, res as Response, next);
 

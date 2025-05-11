@@ -39,74 +39,80 @@ const FileSchema = new Schema<FileDocument>(
   {
     originalName: {
       type: String,
-      required: true
+      required: true,
     },
     fileName: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
     },
     filePath: {
       type: String,
-      required: true
+      required: true,
     },
     fileUrl: {
       type: String,
-      required: true
+      required: true,
     },
     fileType: {
       type: String,
       required: true,
       enum: ['image', 'audio', 'video', 'document', 'other'],
-      index: true
+      index: true,
     },
     mimeType: {
       type: String,
-      required: true
+      required: true,
     },
     size: {
       type: Number,
-      required: true
+      required: true,
     },
     dimensions: {
       width: Number,
-      height: Number
+      height: Number,
     },
     duration: {
-      type: Number
+      type: Number,
     },
     thumbnail: {
       fileName: String,
       filePath: String,
       fileUrl: String,
       width: Number,
-      height: Number
+      height: Number,
     },
     metadata: {
-      type: Schema.Types.Mixed
+      type: Schema.Types.Mixed,
     },
     uploadedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true
-    }
+      index: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
 // Dosya model arayüzü
 export interface FileModel extends mongoose.Model<FileDocument> {
-  // Özel model metodları buraya eklenebilir
+  find: (query?: any) => Promise<FileDocument[]>;
+  findById: (id: string | mongoose.Types.ObjectId) => Promise<FileDocument | null>;
+  findOne: (query: any) => Promise<FileDocument | null>;
+  create: (data: any) => Promise<FileDocument>;
+  updateOne: (query: any, update: any) => Promise<{ modifiedCount: number }>;
+  deleteOne: (query: any) => Promise<{ deletedCount: number }>;
+  countDocuments: (query?: any) => Promise<number>;
 }
 
 // Dosya modeli
 let File: FileModel;
 
 // Geliştirme modunda mock model oluştur
-if (process.env.NODE_ENV === 'development') {
+if (process.env['NODE_ENV'] === 'development') {
   // Mock model
   File = {
     find: () => Promise.resolve([]),

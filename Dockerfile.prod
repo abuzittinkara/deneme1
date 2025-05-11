@@ -29,7 +29,7 @@ ENV NODE_ENV=production
 ENV PORT=9999
 
 # Uygulama portunu aç
-EXPOSE ${PORT}
+EXPOSE 9092
 
 # Sağlık kontrolü
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

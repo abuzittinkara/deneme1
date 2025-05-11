@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fisqos - Kullanıcı Profili">
+  <meta name="theme-color" content="#c61884">
+  <title>Kullanıcı Profili - Fisqos</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" href="images/logo.png" type="image/png">
+  <script src="/socket.io/socket.io.js"></script>
+  <!-- Tema ve dil tercihleri -->
+  <script>
+    // Kullanıcı tercihlerini yerel depolamadan al
+    const userPreferences = {
+      theme: localStorage.getItem('theme') || 'dark',
+      language: localStorage.getItem('language') || 'tr'
+    };
+
+    // Tema sınıfını body'ye ekle
+    document.documentElement.setAttribute('data-theme', userPreferences.theme);
+
+    // Dil tercihini ayarla
+    document.documentElement.setAttribute('lang', userPreferences.language);
+  </script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sol Menü -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="logo">
+          <img src="images/logo.png" alt="Fisqos Logo">
+        </a>
+      </div>
+      <div class="sidebar-menu">
+        <a href="index.html" class="sidebar-item">
+          <span class="material-icons">home</span>
+          <span class="sidebar-text">Ana Sayfa</span>
+        </a>
+        <a href="profile.html" class="sidebar-item active">
+          <span class="material-icons">person</span>
+          <span class="sidebar-text">Profil</span>
+        </a>
+        <a href="settings.html" class="sidebar-item">
+          <span class="material-icons">settings</span>
+          <span class="sidebar-text">Ayarlar</span>
+        </a>
+        <a href="help.html" class="sidebar-item">
+          <span class="material-icons">help</span>
+          <span class="sidebar-text">Yardım</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Ana İçerik -->
+    <div class="main-content">
+      <div class="profile-container">
+        <div class="profile-header">
+          <h1>Kullanıcı Profili</h1>
+          <div class="profile-actions">
+            <button id="editProfileBtn" class="btn primary">
+              <span class="material-icons">edit</span>
+              Profili Düzenle
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-content">
+          <!-- Profil Bilgileri -->
+          <div class="profile-card">
+            <div class="profile-info">
+              <div class="profile-avatar-container">
+                <img id="profileAvatar" src="images/default-avatar.png" alt="Profil Fotoğrafı" class="profile-avatar">
+              </div>
+              <div class="profile-details">
+                <h2 id="profileUsername">Kullanıcı Adı</h2>
+                <div class="profile-status">
+                  <span id="statusIndicator" class="status-indicator online"></span>
+                  <span id="statusText">Çevrimiçi</span>
+                </div>
+                <div class="profile-custom-status" id="customStatus">Merhaba, ben Fisqos kullanıyorum!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profil Sekmeleri -->
+          <div class="profile-tabs">
+            <button class="profile-tab active" data-tab="about">Hakkında</button>
+            <button class="profile-tab" data-tab="activity">Aktivite</button>
+            <button class="profile-tab" data-tab="friends">Arkadaşlar</button>
+            <button class="profile-tab" data-tab="servers">Sunucular</button>
+          </div>
+
+          <!-- Sekme İçerikleri -->
+          <div class="profile-tab-content active" id="about-tab">
+            <div class="profile-section">
+              <h3>Hakkında</h3>
+              <div class="profile-bio" id="profileBio">
+                Henüz bir biyografi eklenmemiş.
+              </div>
+            </div>
+
+            <div class="profile-section">
+              <h3>Kişisel Bilgiler</h3>
+              <div class="profile-info-list">
+                <div class="profile-info-item">
+                  <div class="profile-info-label">Ad Soyad</div>
+                  <div class="profile-info-value" id="profileName">-</div>
+                </div>
+                <div class="profile-info-item">
+                  <div class="profile-info-label">E-posta</div>
+                  <div class="profile-info-value" id="profileEmail">-</div>
+                </div>
+                <div class="profile-info-item">
+                  <div class="profile-info-label">Telefon</div>
+                  <div class="profile-info-value" id="profilePhone">-</div>
+                </div>
+                <div class="profile-info-item">
+                  <div class="profile-info-label">Katılma Tarihi</div>
+                  <div class="profile-info-value" id="profileJoinDate">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-tab-content" id="activity-tab">
+            <div class="profile-section">
+              <h3>Son Aktiviteler</h3>
+              <div class="activity-list" id="activityList">
+                <div class="activity-empty">Henüz aktivite yok.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-tab-content" id="friends-tab">
+            <div class="profile-section">
+              <h3>Arkadaşlar</h3>
+              <div class="friends-list" id="friendsList">
+                <div class="friends-empty">Henüz arkadaş yok.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-tab-content" id="servers-tab">
+            <div class="profile-section">
+              <h3>Sunucular</h3>
+              <div class="servers-list" id="serversList">
+                <div class="servers-empty">Henüz sunucu yok.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profil Düzenleme Modalı -->
+  <div id="editProfileModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Profili Düzenle</h2>
+        <button class="modal-close" id="closeProfileModal">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editProfileForm">
+          <div class="form-group">
+            <label for="editProfileAvatar" class="form-label">Profil Fotoğrafı</label>
+            <div class="profile-avatar-upload">
+              <img id="editProfileAvatarPreview" src="images/default-avatar.png" alt="Profil Fotoğrafı">
+              <label for="avatarUpload" class="avatar-upload-btn">
+                <span class="material-icons">photo_camera</span>
+                <input type="file" id="avatarUpload" accept="image/*">
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="editUsername" class="form-label">Kullanıcı Adı</label>
+            <input type="text" id="editUsername" class="form-input" placeholder="Kullanıcı adınız" disabled>
+          </div>
+
+          <div class="form-group">
+            <label for="editStatus" class="form-label">Durum</label>
+            <select id="editStatus" class="form-input">
+              <option value="online">Çevrimiçi</option>
+              <option value="idle">Boşta</option>
+              <option value="dnd">Rahatsız Etmeyin</option>
+              <option value="invisible">Görünmez</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="editCustomStatus" class="form-label">Özel Durum</label>
+            <input type="text" id="editCustomStatus" class="form-input" placeholder="Özel durumunuz">
+          </div>
+
+          <div class="form-group">
+            <label for="editBio" class="form-label">Hakkında</label>
+            <textarea id="editBio" class="form-textarea" placeholder="Kendiniz hakkında bir şeyler yazın"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="editName" class="form-label">Ad Soyad</label>
+            <input type="text" id="editName" class="form-input" placeholder="Adınız ve soyadınız">
+          </div>
+
+          <div class="form-group">
+            <label for="editEmail" class="form-label">E-posta</label>
+            <input type="email" id="editEmail" class="form-input" placeholder="E-posta adresiniz">
+          </div>
+
+          <div class="form-group">
+            <label for="editPhone" class="form-label">Telefon</label>
+            <input type="tel" id="editPhone" class="form-input" placeholder="Telefon numaranız">
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn secondary" id="cancelEditProfile">İptal</button>
+            <button type="submit" class="btn primary">Kaydet</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/profile.js"></script>
+</body>
+</html>

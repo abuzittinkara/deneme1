@@ -31,7 +31,7 @@ router.get(
     query('type')
       .optional()
       .isIn(Object.values(ActivityType))
-      .withMessage('Geçersiz aktivite türü')
+      .withMessage('Geçersiz aktivite türü'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -42,15 +42,9 @@ router.get(
       // Aktiviteleri getir
       let activities;
       if (type) {
-        activities = await activityManager.getActivitiesByType(
-          type as ActivityType,
-          Number(limit)
-        );
+        activities = await activityManager.getActivitiesByType(type as ActivityType, Number(limit));
       } else {
-        activities = await activityManager.getUserActivities(
-          userId,
-          Number(limit)
-        );
+        activities = await activityManager.getUserActivities(userId, Number(limit));
       }
 
       // Aktiviteleri formatla
@@ -59,17 +53,17 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedActivities.length,
-        data: formattedActivities
+        data: formattedActivities,
       });
     } catch (error) {
       logger.error('Aktiviteleri getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        query: req.query
+        query: req.query,
       });
       return res.status(500).json({
         success: false,
-        message: 'Aktiviteler getirilirken bir hata oluştu'
+        message: 'Aktiviteler getirilirken bir hata oluştu',
       });
     }
   })
@@ -84,14 +78,12 @@ router.get(
   '/user/:userId',
   requireAuth,
   [
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID'),
+    param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID'),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
       .withMessage('Limit 1-100 arasında olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -100,7 +92,7 @@ router.get(
       if (req.user!.role !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Bu işlem için yetkiniz yok'
+          message: 'Bu işlem için yetkiniz yok',
         });
       }
 
@@ -108,10 +100,7 @@ router.get(
       const { limit = 50 } = req.query;
 
       // Aktiviteleri getir
-      const activities = await activityManager.getUserActivities(
-        userId,
-        Number(limit)
-      );
+      const activities = await activityManager.getUserActivities(userId, Number(limit));
 
       // Aktiviteleri formatla
       const formattedActivities = activities.map(activityManager.formatActivity);
@@ -119,17 +108,17 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedActivities.length,
-        data: formattedActivities
+        data: formattedActivities,
       });
     } catch (error) {
       logger.error('Kullanıcı aktivitelerini getirme hatası', {
         error: (error as Error).message,
         adminId: req.user!.id,
-        userId: req.params.userId
+        userId: req.params.userId,
       });
       return res.status(500).json({
         success: false,
-        message: 'Kullanıcı aktiviteleri getirilirken bir hata oluştu'
+        message: 'Kullanıcı aktiviteleri getirilirken bir hata oluştu',
       });
     }
   })
@@ -144,14 +133,12 @@ router.get(
   '/type/:type',
   requireAuth,
   [
-    param('type')
-      .isIn(Object.values(ActivityType))
-      .withMessage('Geçersiz aktivite türü'),
+    param('type').isIn(Object.values(ActivityType)).withMessage('Geçersiz aktivite türü'),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
       .withMessage('Limit 1-100 arasında olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -160,7 +147,7 @@ router.get(
       if (req.user!.role !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Bu işlem için yetkiniz yok'
+          message: 'Bu işlem için yetkiniz yok',
         });
       }
 
@@ -179,17 +166,17 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedActivities.length,
-        data: formattedActivities
+        data: formattedActivities,
       });
     } catch (error) {
       logger.error('Aktivite türüne göre getirme hatası', {
         error: (error as Error).message,
         adminId: req.user!.id,
-        type: req.params.type
+        type: req.params.type,
       });
       return res.status(500).json({
         success: false,
-        message: 'Aktiviteler getirilirken bir hata oluştu'
+        message: 'Aktiviteler getirilirken bir hata oluştu',
       });
     }
   })
@@ -207,14 +194,12 @@ router.get(
     param('targetType')
       .isIn(['message', 'directMessage', 'user', 'group', 'channel', 'role'])
       .withMessage('Geçersiz hedef türü'),
-    param('targetId')
-      .isMongoId()
-      .withMessage('Geçersiz hedef ID'),
+    param('targetId').isMongoId().withMessage('Geçersiz hedef ID'),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
       .withMessage('Limit 1-100 arasında olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -226,7 +211,7 @@ router.get(
       if (targetType === 'user' && targetId !== req.user!.id && req.user!.role !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Bu kullanıcının aktivitelerini görüntüleme yetkiniz yok'
+          message: 'Bu kullanıcının aktivitelerini görüntüleme yetkiniz yok',
         });
       }
 
@@ -243,18 +228,18 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedActivities.length,
-        data: formattedActivities
+        data: formattedActivities,
       });
     } catch (error) {
       logger.error('Hedefe göre aktiviteleri getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
         targetType: req.params.targetType,
-        targetId: req.params.targetId
+        targetId: req.params.targetId,
       });
       return res.status(500).json({
         success: false,
-        message: 'Aktiviteler getirilirken bir hata oluştu'
+        message: 'Aktiviteler getirilirken bir hata oluştu',
       });
     }
   })

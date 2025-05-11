@@ -2,8 +2,9 @@
  * src/models/Message.ts
  * Mesaj modeli
  */
-import mongoose, { Document, Schema } from 'mongoose';
-import { TypedDocument, FullModelType } from '../types/mongoose-types';
+import mongoose, { Document, Schema, Model, Query } from 'mongoose';
+import { TypedDocument } from '../types/mongoose-types';
+import { FullModelType } from '../types/mongoose-model';
 
 // Düzenleme geçmişi arayüzü
 export interface EditHistory {
@@ -48,31 +49,82 @@ export interface IMessage {
 }
 
 // Mesaj dokümanı arayüzü
-export interface MessageDocument extends TypedDocument<IMessage> {}
+export type MessageDocument = TypedDocument<IMessage>;
 
-// Mesaj modeli arayüzü
-export interface MessageModel extends FullModelType<IMessage> {
-  // Özel statik metodlar buraya eklenebilir
-  findRecentByChannel(channelId: mongoose.Types.ObjectId, limit?: number): Promise<MessageDocument[]>;
-  findPinnedByChannel(channelId: mongoose.Types.ObjectId): Promise<MessageDocument[]>;
-  findByUser(userId: mongoose.Types.ObjectId, limit?: number): Promise<MessageDocument[]>;
-  findMentioningUser(userId: mongoose.Types.ObjectId, limit?: number): Promise<MessageDocument[]>;
-  findUnreadByUser(userId: mongoose.Types.ObjectId, channelId?: mongoose.Types.ObjectId): Promise<MessageDocument[]>;
+// Mesaj modeli statik metodları
+export interface MessageStaticMethods {
+  findRecentByChannel(
+    channelId: mongoose.Types.ObjectId,
+    limit?: number
+  ): Query<MessageDocument[], MessageDocument>;
+  findPinnedByChannel(
+    channelId: mongoose.Types.ObjectId
+  ): Query<MessageDocument[], MessageDocument>;
+  findByUser(
+    userId: mongoose.Types.ObjectId,
+    limit?: number
+  ): Query<MessageDocument[], MessageDocument>;
+  findMentioningUser(
+    userId: mongoose.Types.ObjectId,
+    limit?: number
+  ): Query<MessageDocument[], MessageDocument>;
+  findUnreadByUser(
+    userId: mongoose.Types.ObjectId,
+    channelId?: mongoose.Types.ObjectId
+  ): Query<MessageDocument[], MessageDocument>;
   markAsRead(messageId: mongoose.Types.ObjectId, userId: mongoose.Types.ObjectId): Promise<void>;
 }
 
+// Mesaj modeli arayüzü
+export interface MessageModel
+  extends FullModelType<MessageDocument, {}, {}, {}, MessageStaticMethods> {
+  // Mongoose model metodları
+  find(filter?: any, projection?: any, options?: any): Query<MessageDocument[], MessageDocument>;
+  findOne(
+    filter?: any,
+    projection?: any,
+    options?: any
+  ): Query<MessageDocument | null, MessageDocument>;
+  findById(
+    id: string | mongoose.Types.ObjectId,
+    projection?: any,
+    options?: any
+  ): Query<MessageDocument | null, MessageDocument>;
+  create(doc: Partial<IMessage>): Promise<MessageDocument>;
+  updateOne(filter: any, update: any, options?: any): Promise<mongoose.UpdateWriteOpResult>;
+  updateMany(filter: any, update: any, options?: any): Promise<mongoose.UpdateWriteOpResult>;
+  deleteOne(filter: any, options?: any): Promise<mongoose.DeleteResult>;
+  deleteMany(filter: any, options?: any): Promise<mongoose.DeleteResult>;
+  countDocuments(filter?: any): Promise<number>;
+  findByIdAndUpdate(
+    id: string | mongoose.Types.ObjectId,
+    update: any,
+    options?: any
+  ): Query<MessageDocument | null, MessageDocument>;
+  findByIdAndDelete(
+    id: string | mongoose.Types.ObjectId,
+    options?: any
+  ): Query<MessageDocument | null, MessageDocument>;
+}
+
 // Düzenleme geçmişi şeması
-const EditHistorySchema = new Schema({
-  content: { type: String, required: true },
-  editedAt: { type: Date, default: Date.now },
-  editedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
-}, { _id: false });
+const EditHistorySchema = new Schema(
+  {
+    content: { type: String, required: true },
+    editedAt: { type: Date, default: Date.now },
+    editedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  },
+  { _id: false }
+);
 
 // Okundu bilgisi şeması
-const ReadReceiptSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  readAt: { type: Date, default: Date.now }
-}, { _id: false });
+const ReadReceiptSchema = new Schema(
+  {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    readAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
 
 // Mesaj şeması
 const messageSchema = new Schema<MessageDocument, MessageModel>(
@@ -96,7 +148,7 @@ const messageSchema = new Schema<MessageDocument, MessageModel>(
     reactions: {
       type: Map,
       of: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-      default: new Map()
+      default: new Map(),
     },
     // Is this message pinned?
     isPinned: { type: Boolean, default: false },
@@ -109,107 +161,174 @@ const messageSchema = new Schema<MessageDocument, MessageModel>(
     // User mentions
     mentions: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     // Is this a system message?
-    isSystemMessage: { type: Boolean, default: false }
+    isSystemMessage: { type: Boolean, default: false },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
 // İndeksler
-// Şema tanımında index: true kullanıldığı için burada tekrar tanımlamıyoruz
-// Sadece özel indeksleri tanımlıyoruz
-messageSchema.index({ channel: 1, timestamp: -1 });
-messageSchema.index({ user: 1, timestamp: -1 });
-messageSchema.index({ content: 'text' });
-messageSchema.index({ quotedMessage: 1 });
-messageSchema.index({ 'mentions': 1 });
-messageSchema.index({ 'readReceipts.user': 1 });
+// Temel indeksler
+messageSchema.index({ channel: 1, timestamp: -1 }, { name: 'channel_timestamp' }); // Kanal mesajları için
+messageSchema.index({ user: 1, timestamp: -1 }, { name: 'user_timestamp' }); // Kullanıcı mesajları için
+messageSchema.index({ mentions: 1, timestamp: -1 }, { name: 'mentions_timestamp' }); // Bahsetmeler için
+messageSchema.index({ quotedMessage: 1 }, { name: 'quoted_message' }); // Alıntılanan mesajlar için
+messageSchema.index({ 'readReceipts.user': 1 }, { name: 'read_receipts_user' }); // Okunma bilgileri için
+
+// Performans iyileştirmeleri için bileşik indeksler
+messageSchema.index(
+  { channel: 1, isPinned: 1, timestamp: -1 },
+  { name: 'channel_pinned_timestamp' }
+); // Sabitlenmiş mesajlar için
+messageSchema.index(
+  { channel: 1, isDeleted: 1, timestamp: -1 },
+  { name: 'channel_deleted_timestamp' }
+); // Silinmemiş mesajlar için
+messageSchema.index(
+  { channel: 1, isSystemMessage: 1, timestamp: -1 },
+  { name: 'channel_system_timestamp' }
+); // Sistem mesajları için
+messageSchema.index({ channel: 1, user: 1, timestamp: -1 }, { name: 'channel_user_timestamp' }); // Kanal içindeki kullanıcı mesajları için
+
+// Metin arama indeksi
+messageSchema.index(
+  { content: 'text' },
+  {
+    name: 'content_text',
+    weights: { content: 10 },
+    default_language: 'turkish',
+    language_override: 'language',
+  }
+);
+
 // TTL indeksi - silinen mesajları 30 gün sonra otomatik sil
 messageSchema.index(
   { deletedAt: 1 },
   {
     expireAfterSeconds: 30 * 24 * 60 * 60, // 30 gün sonra otomatik sil
-    partialFilterExpression: { isDeleted: true }
+    partialFilterExpression: { isDeleted: true },
+    name: 'ttl_deleted_messages',
   }
 );
 
 // Statik metodlar
-messageSchema.statics.findRecentByChannel = function(
+messageSchema.statics['findRecentByChannel'] = function (
   channelId: mongoose.Types.ObjectId,
-  limit = 50
-): Promise<MessageDocument[]> {
-  return this.find({ channel: channelId, isDeleted: false })
-    .sort({ timestamp: -1 })
-    .limit(limit)
-    .populate('user', 'username profilePicture') as unknown as Promise<MessageDocument[]>;
+  limit = 50,
+  lastMessageTimestamp?: Date,
+  options: {
+    includeDeleted?: boolean;
+    includeSystemMessages?: boolean;
+    lean?: boolean;
+  } = {}
+): Query<MessageDocument[], MessageDocument> {
+  // Sorgu filtresi oluştur
+  const filter: any = { channel: channelId };
+
+  // Silinmiş mesajları dahil etme (varsayılan olarak etme)
+  if (!options.includeDeleted) {
+    filter.isDeleted = false;
+  }
+
+  // Sistem mesajlarını dahil etme (varsayılan olarak et)
+  if (options.includeSystemMessages === false) {
+    filter.isSystemMessage = false;
+  }
+
+  // Belirli bir zamandan sonraki mesajları getir (pagination için)
+  if (lastMessageTimestamp) {
+    filter.timestamp = { $lt: lastMessageTimestamp };
+  }
+
+  // Sorguyu oluştur
+  let query = (this as MessageModel).find(filter).sort({ timestamp: -1 }).limit(limit);
+
+  // Sadece gerekli alanları seç (projection)
+  query = query.select(
+    'content user timestamp isEdited isDeleted isPinned mentions attachments reactions'
+  );
+
+  // Kullanıcı bilgilerini populate et
+  query = query.populate('user', 'username profilePicture status');
+
+  // Performans için lean kullan (varsayılan olarak kullan)
+  if (options.lean !== false) {
+    query = query.lean();
+  }
+
+  return query;
 };
 
-messageSchema.statics.findPinnedByChannel = function(
+messageSchema.statics['findPinnedByChannel'] = function (
   channelId: mongoose.Types.ObjectId
-): Promise<MessageDocument[]> {
-  return this.find({ channel: channelId, isPinned: true, isDeleted: false })
+): Query<MessageDocument[], MessageDocument> {
+  return (this as MessageModel)
+    .find({ channel: channelId, isPinned: true, isDeleted: false })
     .sort({ pinnedAt: -1 })
     .populate('user', 'username profilePicture')
-    .populate('pinnedBy', 'username') as unknown as Promise<MessageDocument[]>;
+    .populate('pinnedBy', 'username');
 };
 
-messageSchema.statics.findByUser = function(
+messageSchema.statics['findByUser'] = function (
   userId: mongoose.Types.ObjectId,
   limit = 50
-): Promise<MessageDocument[]> {
-  return this.find({ user: userId, isDeleted: false })
+): Query<MessageDocument[], MessageDocument> {
+  return (this as MessageModel)
+    .find({ user: userId, isDeleted: false })
     .sort({ timestamp: -1 })
     .limit(limit)
-    .populate('channel', 'name') as unknown as Promise<MessageDocument[]>;
+    .populate('channel', 'name');
 };
 
-messageSchema.statics.findMentioningUser = function(
+messageSchema.statics['findMentioningUser'] = function (
   userId: mongoose.Types.ObjectId,
   limit = 50
-): Promise<MessageDocument[]> {
-  return this.find({ mentions: userId, isDeleted: false })
+): Query<MessageDocument[], MessageDocument> {
+  return (this as MessageModel)
+    .find({ mentions: userId, isDeleted: false })
     .sort({ timestamp: -1 })
     .limit(limit)
     .populate('user', 'username profilePicture')
-    .populate('channel', 'name') as unknown as Promise<MessageDocument[]>;
+    .populate('channel', 'name');
 };
 
-messageSchema.statics.findUnreadByUser = function(
+messageSchema.statics['findUnreadByUser'] = function (
   userId: mongoose.Types.ObjectId,
   channelId?: mongoose.Types.ObjectId
-): Promise<MessageDocument[]> {
+): Query<MessageDocument[], MessageDocument> {
   const query: any = {
     isDeleted: false,
-    'readReceipts.user': { $ne: userId }
+    'readReceipts.user': { $ne: userId },
   };
 
   if (channelId) {
     query.channel = channelId;
   }
 
-  return this.find(query)
+  return (this as MessageModel)
+    .find(query)
     .sort({ timestamp: -1 })
     .populate('user', 'username profilePicture')
-    .populate('channel', 'name') as unknown as Promise<MessageDocument[]>;
+    .populate('channel', 'name');
 };
 
-messageSchema.statics.markAsRead = async function(
+messageSchema.statics['markAsRead'] = async function (
   messageId: mongoose.Types.ObjectId,
   userId: mongoose.Types.ObjectId
 ): Promise<void> {
-  await this.updateOne(
+  await (this as MessageModel).updateOne(
     {
       _id: messageId,
-      'readReceipts.user': { $ne: userId }
+      'readReceipts.user': { $ne: userId },
     },
     {
       $push: {
         readReceipts: {
           user: userId,
-          readAt: new Date()
-        }
-      }
+          readAt: new Date(),
+        },
+      },
     }
   );
 };
@@ -217,28 +336,19 @@ messageSchema.statics.markAsRead = async function(
 // Mesaj modelini oluştur
 let MessageModel_: MessageModel;
 
-// Geliştirme modunda mock model oluştur
-if (process.env.NODE_ENV === 'development') {
-  // Mock model
-  MessageModel_ = {
-    find: () => Promise.resolve([]),
-    findById: () => Promise.resolve(null),
-    findOne: () => Promise.resolve(null),
-    create: () => Promise.resolve({} as any),
-    updateOne: () => Promise.resolve({ modifiedCount: 0 }),
-    deleteOne: () => Promise.resolve({ deletedCount: 0 }),
-    countDocuments: () => Promise.resolve(0),
-    findRecentByChannel: () => Promise.resolve([]),
-    findPinnedByChannel: () => Promise.resolve([]),
-    findByUser: () => Promise.resolve([]),
-    findMentioningUser: () => Promise.resolve([]),
-    findUnreadByUser: () => Promise.resolve([]),
-    markAsRead: () => Promise.resolve(),
-  } as unknown as MessageModel;
+// Gerçek model
+const existingModel = mongoose.models['Message'] as Model<
+  MessageDocument,
+  {},
+  {},
+  {},
+  MessageDocument
+>;
+
+if (existingModel) {
+  MessageModel_ = existingModel as unknown as MessageModel;
 } else {
-  // Gerçek model
-  MessageModel_ = (mongoose.models.Message as MessageModel) ||
-    mongoose.model<MessageDocument, MessageModel>('Message', messageSchema);
+  MessageModel_ = mongoose.model<MessageDocument, MessageModel>('Message', messageSchema);
 }
 
 // Hem default export hem de named export sağla

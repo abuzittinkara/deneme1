@@ -7,19 +7,19 @@ import {
   sanitizeRequestBody,
   sanitizeRequestQuery,
   sanitizeRequestParams,
-  sanitizeRequest
+  sanitizeRequest,
 } from '../../middleware/sanitizationMiddleware';
 import * as sanitizer from '../../utils/sanitizer';
 
 // Sanitizer modülünü mock'la
 jest.mock('../../utils/sanitizer', () => ({
-  sanitizeAll: jest.fn((input) => input ? input.replace(/<script>.*?<\/script>/g, '') : ''),
-  sanitizeXss: jest.fn((input) => input ? input.replace(/<script>.*?<\/script>/g, '') : ''),
+  sanitizeAll: jest.fn((input) => (input ? input.replace(/<script>.*?<\/script>/g, '') : '')),
+  sanitizeXss: jest.fn((input) => (input ? input.replace(/<script>.*?<\/script>/g, '') : '')),
   sanitizeUrl: jest.fn((input) => {
     if (!input) return '';
     if (input.startsWith('javascript:')) return '';
     return input;
-  })
+  }),
 }));
 
 describe('Sanitization Middleware', () => {
@@ -31,7 +31,7 @@ describe('Sanitization Middleware', () => {
     req = {
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
     res = {};
     next = jest.fn();
@@ -47,8 +47,8 @@ describe('Sanitization Middleware', () => {
         email: 'test@example.com',
         url: 'https://example.com',
         nested: {
-          content: '<script>alert("Nested XSS");</script>'
-        }
+          content: '<script>alert("Nested XSS");</script>',
+        },
       };
 
       // Mock fonksiyonlarını özelleştir
@@ -85,7 +85,7 @@ describe('Sanitization Middleware', () => {
       req.query = {
         search: 'Test <script>alert("XSS");</script>',
         page: '1',
-        url: 'javascript:alert("XSS")'
+        url: 'javascript:alert("XSS")',
       };
 
       // Mock fonksiyonlarını özelleştir
@@ -120,7 +120,7 @@ describe('Sanitization Middleware', () => {
     it('should sanitize request params', () => {
       req.params = {
         id: 'Test <script>alert("XSS");</script>',
-        slug: 'test-slug'
+        slug: 'test-slug',
       };
 
       // Mock fonksiyonlarını özelleştir
@@ -148,13 +148,13 @@ describe('Sanitization Middleware', () => {
   describe('sanitizeRequest', () => {
     it('should sanitize request body, query and params', () => {
       req.body = {
-        name: 'Test <script>alert("XSS");</script>'
+        name: 'Test <script>alert("XSS");</script>',
       };
       req.query = {
-        search: 'Test <script>alert("XSS");</script>'
+        search: 'Test <script>alert("XSS");</script>',
       };
       req.params = {
-        id: 'Test <script>alert("XSS");</script>'
+        id: 'Test <script>alert("XSS");</script>',
       };
 
       // Mock fonksiyonlarını özelleştir

@@ -3,32 +3,25 @@
  * Kullanıcı rotaları
  */
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { requireAuth } from '../middleware/authMiddleware';
+import userController from '../controllers/userController';
+import { AuthRequest } from '../types/express-types';
 
 const router = express.Router();
 
 // Tüm rotalar için kimlik doğrulama gerekli
-// TypeScript ile Express 4.x'te router.use() ile middleware kullanımı için düzeltme
-router.use(authMiddleware);
+router.use(requireAuth as express.RequestHandler);
 
 // Kullanıcıları listele
-router.get('/', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      message: 'Kullanıcılar listelendi (test)'
-    }
-  });
-});
+router.get('/', userController.getUsers);
 
 // Kullanıcı detayı
-router.get('/:id', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      message: `Kullanıcı detayı: ${req.params.id} (test)`
-    }
-  });
-});
+router.get('/:id', userController.getUserById);
+
+// Kullanıcı güncelle
+router.put('/:id', userController.updateUser);
+
+// Şifre değiştir
+router.post('/:id/change-password', userController.changePassword);
 
 export default router;

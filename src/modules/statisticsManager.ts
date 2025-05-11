@@ -150,11 +150,11 @@ export async function getSystemStats(): Promise<SystemStats> {
       topGroups,
       topChannels,
       topUsers,
-      messageCountByDay
+      messageCountByDay,
     };
   } catch (error) {
     logger.error('Sistem istatistikleri getirme hatası', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
     throw error;
   }
@@ -168,36 +168,35 @@ export async function getSystemStats(): Promise<SystemStats> {
 export async function getTopGroups(limit: number = 10): Promise<GroupStats[]> {
   try {
     // Grup üye sayılarını getir
-    const groups = await GroupHelper.find({})
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .exec();
+    const groups = await GroupHelper.find({}).sort({ createdAt: -1 }).limit(limit).exec();
 
-    const groupStats = await Promise.all(groups.map(async group => {
-      const memberCount = await GroupMemberHelper.countDocuments({ group: group._id });
-      const messageCount = await MessageHelper.countDocuments({
-        channel: {
-          $in: await ChannelHelper.getModel().find({ group: group._id }).distinct('_id')
-        }
-      });
-      const channelCount = await ChannelHelper.countDocuments({ group: group._id });
+    const groupStats = await Promise.all(
+      groups.map(async (group) => {
+        const memberCount = await GroupMemberHelper.countDocuments({ group: group._id });
+        const messageCount = await MessageHelper.countDocuments({
+          channel: {
+            $in: await ChannelHelper.getModel().find({ group: group._id }).distinct('_id'),
+          },
+        });
+        const channelCount = await ChannelHelper.countDocuments({ group: group._id });
 
-      return {
-        id: group.groupId,
-        name: group.name,
-        memberCount,
-        messageCount,
-        channelCount,
-        createdAt: group.createdAt
-      };
-    }));
+        return {
+          id: group.groupId,
+          name: group.name,
+          memberCount,
+          messageCount,
+          channelCount,
+          createdAt: group.createdAt,
+        };
+      })
+    );
 
     // Mesaj sayısına göre sırala
     return groupStats.sort((a, b) => b.messageCount - a.messageCount);
   } catch (error) {
     logger.error('En popüler grupları getirme hatası', {
       error: (error as Error).message,
-      limit
+      limit,
     });
     throw error;
   }
@@ -217,31 +216,31 @@ export async function getTopChannels(limit: number = 10): Promise<ChannelStats[]
       .limit(limit * 2) // Daha fazla getir, sonra filtreleyeceğiz
       .exec();
 
-    const channelStats = await Promise.all(channels.map(async channel => {
-      const messageCount = await MessageHelper.countDocuments({ channel: channel._id });
-      const lastMessage = await MessageHelper.findOne({ channel: channel._id })
-        .sort({ timestamp: -1 })
-        .limit(1)
-        .exec();
+    const channelStats = await Promise.all(
+      channels.map(async (channel) => {
+        const messageCount = await MessageHelper.countDocuments({ channel: channel._id });
+        const lastMessage = await MessageHelper.findOne({ channel: channel._id })
+          .sort({ timestamp: -1 })
+          .limit(1)
+          .exec();
 
-      return {
-        id: channel.channelId,
-        name: channel.name,
-        groupId: (channel.group as any).groupId,
-        groupName: (channel.group as any).name,
-        messageCount,
-        lastActivity: lastMessage?.timestamp || channel.createdAt
-      };
-    }));
+        return {
+          id: channel.channelId,
+          name: channel.name,
+          groupId: (channel.group as any).groupId,
+          groupName: (channel.group as any).name,
+          messageCount,
+          lastActivity: lastMessage?.timestamp || channel.createdAt,
+        };
+      })
+    );
 
     // Mesaj sayısına göre sırala ve limit uygula
-    return channelStats
-      .sort((a, b) => b.messageCount - a.messageCount)
-      .slice(0, limit);
+    return channelStats.sort((a, b) => b.messageCount - a.messageCount).slice(0, limit);
   } catch (error) {
     logger.error('En popüler kanalları getirme hatası', {
       error: (error as Error).message,
-      limit
+      limit,
     });
     throw error;
   }
@@ -260,56 +259,54 @@ export async function getTopUsers(limit: number = 10): Promise<UserStats[]> {
       .limit(limit * 2) // Daha fazla getir, sonra filtreleyeceğiz
       .exec();
 
-    const userStats = await Promise.all(users.map(async user => {
-      const messageCount = await MessageHelper.countDocuments({ user: user._id });
-      const dmMessageCount = await DmMessageHelper.countDocuments({
-        $or: [
-          { sender: user._id },
-          { receiver: user._id }
-        ]
-      });
-      const groupCount = await GroupMemberHelper.countDocuments({ user: user._id });
+    const userStats = await Promise.all(
+      users.map(async (user) => {
+        const messageCount = await MessageHelper.countDocuments({ user: user._id });
+        const dmMessageCount = await DmMessageHelper.countDocuments({
+          $or: [{ sender: user._id }, { receiver: user._id }],
+        });
+        const groupCount = await GroupMemberHelper.countDocuments({ user: user._id });
 
-      // Son aktivite
-      const lastMessage = await MessageHelper.findOne({ user: user._id })
-        .sort({ timestamp: -1 })
-        .limit(1)
-        .exec();
+        // Son aktivite
+        const lastMessage = await MessageHelper.findOne({ user: user._id })
+          .sort({ timestamp: -1 })
+          .limit(1)
+          .exec();
 
-      const lastDmMessage = await DmMessageHelper.findOne({
-        $or: [
-          { sender: user._id },
-          { receiver: user._id }
-        ]
+        const lastDmMessage = await DmMessageHelper.findOne({
+          $or: [{ sender: user._id }, { receiver: user._id }],
+        })
+          .sort({ timestamp: -1 })
+          .limit(1)
+          .exec();
+
+        const lastActivity = new Date(
+          Math.max(
+            user.lastSeen?.getTime() || 0,
+            lastMessage?.timestamp.getTime() || 0,
+            lastDmMessage?.timestamp.getTime() || 0
+          )
+        );
+
+        return {
+          id: user._id.toString(),
+          username: user.username,
+          messageCount,
+          dmMessageCount,
+          groupCount,
+          lastActivity,
+        };
       })
-        .sort({ timestamp: -1 })
-        .limit(1)
-        .exec();
-
-      const lastActivity = new Date(Math.max(
-        user.lastSeen?.getTime() || 0,
-        lastMessage?.timestamp.getTime() || 0,
-        lastDmMessage?.timestamp.getTime() || 0
-      ));
-
-      return {
-        id: user._id.toString(),
-        username: user.username,
-        messageCount,
-        dmMessageCount,
-        groupCount,
-        lastActivity
-      };
-    }));
+    );
 
     // Toplam mesaj sayısına göre sırala ve limit uygula
     return userStats
-      .sort((a, b) => (b.messageCount + b.dmMessageCount) - (a.messageCount + a.dmMessageCount))
+      .sort((a, b) => b.messageCount + b.dmMessageCount - (a.messageCount + a.dmMessageCount))
       .slice(0, limit);
   } catch (error) {
     logger.error('En aktif kullanıcıları getirme hatası', {
       error: (error as Error).message,
-      limit
+      limit,
     });
     throw error;
   }
@@ -338,20 +335,20 @@ export async function getMessageCountByDay(days: number = 7): Promise<DailyMessa
       const messageCount = await MessageHelper.countDocuments({
         timestamp: {
           $gte: date,
-          $lt: nextDate
-        }
+          $lt: nextDate,
+        },
       });
 
       const dmMessageCount = await DmMessageHelper.countDocuments({
         timestamp: {
           $gte: date,
-          $lt: nextDate
-        }
+          $lt: nextDate,
+        },
       });
 
       result.push({
         date: date.toISOString().split('T')[0],
-        count: messageCount + dmMessageCount
+        count: messageCount + dmMessageCount,
       });
     }
 
@@ -360,7 +357,7 @@ export async function getMessageCountByDay(days: number = 7): Promise<DailyMessa
   } catch (error) {
     logger.error('Günlük mesaj sayılarını getirme hatası', {
       error: (error as Error).message,
-      days
+      days,
     });
     throw error;
   }
@@ -373,9 +370,7 @@ export async function getMessageCountByDay(days: number = 7): Promise<DailyMessa
  */
 export async function getGroupStats(groupId: string): Promise<DetailedGroupStats> {
   try {
-    const group = await GroupHelper.findOne({ groupId })
-      .populate('owner', 'username')
-      .exec();
+    const group = await GroupHelper.findOne({ groupId }).populate('owner', 'username').exec();
 
     if (!group) {
       throw new NotFoundError('Grup bulunamadı.');
@@ -388,7 +383,7 @@ export async function getGroupStats(groupId: string): Promise<DetailedGroupStats
 
     // Mesaj sayısı
     const messageCount = await MessageHelper.countDocuments({
-      channel: { $in: channels.map(c => c._id) }
+      channel: { $in: channels.map((c) => c._id) },
     });
 
     // Aktif kullanıcı sayısı (son 7 gün)
@@ -396,8 +391,8 @@ export async function getGroupStats(groupId: string): Promise<DetailedGroupStats
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
     const activeUserIds = await MessageHelper.getModel().distinct('user', {
-      channel: { $in: channels.map(c => c._id) },
-      timestamp: { $gte: oneWeekAgo }
+      channel: { $in: channels.map((c) => c._id) },
+      timestamp: { $gte: oneWeekAgo },
     });
 
     const activeUserCount = activeUserIds.length;
@@ -427,12 +422,12 @@ export async function getGroupStats(groupId: string): Promise<DetailedGroupStats
       messageCountByDay,
       topChannels,
       topUsers,
-      messageDistribution
+      messageDistribution,
     };
   } catch (error) {
     logger.error('Grup istatistikleri getirme hatası', {
       error: (error as Error).message,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -453,7 +448,7 @@ async function getGroupMessageCountByDay(
 
   // Kanalları getir
   const channels = await ChannelHelper.find({ group: groupId }).exec();
-  const channelIds = channels.map(c => c._id);
+  const channelIds = channels.map((c) => c._id);
 
   // Son n gün için
   for (let i = 0; i < days; i++) {
@@ -469,13 +464,13 @@ async function getGroupMessageCountByDay(
       channel: { $in: channelIds },
       timestamp: {
         $gte: date,
-        $lt: nextDate
-      }
+        $lt: nextDate,
+      },
     });
 
     result.push({
       date: date.toISOString().split('T')[0],
-      count
+      count,
     });
   }
 
@@ -498,27 +493,27 @@ async function getGroupTopChannels(
     .populate('group', 'groupId name')
     .exec();
 
-  const channelStats = await Promise.all(channels.map(async channel => {
-    const messageCount = await MessageHelper.countDocuments({ channel: channel._id });
-    const lastMessage = await MessageHelper.findOne({ channel: channel._id })
-      .sort({ timestamp: -1 })
-      .limit(1)
-      .exec();
+  const channelStats = await Promise.all(
+    channels.map(async (channel) => {
+      const messageCount = await MessageHelper.countDocuments({ channel: channel._id });
+      const lastMessage = await MessageHelper.findOne({ channel: channel._id })
+        .sort({ timestamp: -1 })
+        .limit(1)
+        .exec();
 
-    return {
-      id: channel.channelId,
-      name: channel.name,
-      groupId: (channel.group as any).groupId,
-      groupName: (channel.group as any).name,
-      messageCount,
-      lastActivity: lastMessage?.timestamp || channel.createdAt
-    };
-  }));
+      return {
+        id: channel.channelId,
+        name: channel.name,
+        groupId: (channel.group as any).groupId,
+        groupName: (channel.group as any).name,
+        messageCount,
+        lastActivity: lastMessage?.timestamp || channel.createdAt,
+      };
+    })
+  );
 
   // Mesaj sayısına göre sırala ve limit uygula
-  return channelStats
-    .sort((a, b) => b.messageCount - a.messageCount)
-    .slice(0, limit);
+  return channelStats.sort((a, b) => b.messageCount - a.messageCount).slice(0, limit);
 }
 
 /**
@@ -538,53 +533,50 @@ async function getGroupTopUsers(
 
   // Kanalları getir
   const channels = await ChannelHelper.find({ group: groupId }).exec();
-  const channelIds = channels.map(c => c._id);
+  const channelIds = channels.map((c) => c._id);
 
-  const userStats = await Promise.all(members.map(async member => {
-    const user = member.user as any;
+  const userStats = await Promise.all(
+    members.map(async (member) => {
+      const user = member.user as any;
 
-    // Mesaj sayısını getir
-    const messageCount = await MessageHelper.countDocuments({
-      user: user._id,
-      channel: { $in: channelIds }
-    });
+      // Mesaj sayısını getir
+      const messageCount = await MessageHelper.countDocuments({
+        user: user._id,
+        channel: { $in: channelIds },
+      });
 
-    // DM mesaj sayısını getir (tüm DM'ler)
-    const dmMessageCount = await DmMessageHelper.countDocuments({
-      $or: [
-        { sender: user._id },
-        { receiver: user._id }
-      ]
-    });
+      // DM mesaj sayısını getir (tüm DM'ler)
+      const dmMessageCount = await DmMessageHelper.countDocuments({
+        $or: [{ sender: user._id }, { receiver: user._id }],
+      });
 
-    // Kullanıcının üye olduğu grup sayısı
-    const groupCount = await GroupMemberHelper.countDocuments({ user: user._id });
+      // Kullanıcının üye olduğu grup sayısı
+      const groupCount = await GroupMemberHelper.countDocuments({ user: user._id });
 
-    // Son aktivite
-    const lastMessage = await MessageHelper.findOne({
-      user: user._id,
-      channel: { $in: channelIds }
+      // Son aktivite
+      const lastMessage = await MessageHelper.findOne({
+        user: user._id,
+        channel: { $in: channelIds },
+      })
+        .sort({ timestamp: -1 })
+        .limit(1)
+        .exec();
+
+      const lastActivity = lastMessage?.timestamp || user.lastSeen || new Date();
+
+      return {
+        id: user._id.toString(),
+        username: user.username,
+        messageCount,
+        dmMessageCount,
+        groupCount,
+        lastActivity,
+      };
     })
-      .sort({ timestamp: -1 })
-      .limit(1)
-      .exec();
-
-    const lastActivity = lastMessage?.timestamp || user.lastSeen || new Date();
-
-    return {
-      id: user._id.toString(),
-      username: user.username,
-      messageCount,
-      dmMessageCount,
-      groupCount,
-      lastActivity
-    };
-  }));
+  );
 
   // Grup içindeki mesaj sayısına göre sırala ve limit uygula
-  return userStats
-    .sort((a, b) => b.messageCount - a.messageCount)
-    .slice(0, limit);
+  return userStats.sort((a, b) => b.messageCount - a.messageCount).slice(0, limit);
 }
 
 /**
@@ -598,17 +590,17 @@ async function getGroupMessageDistribution(groupId: mongoose.Types.ObjectId): Pr
 }> {
   // Kanalları getir
   const channels = await ChannelHelper.find({ group: groupId }).exec();
-  const channelIds = channels.map(c => c._id);
+  const channelIds = channels.map((c) => c._id);
 
   // Saate göre dağılım
   const byHour: { hour: number; count: number }[] = [];
   for (let hour = 0; hour < 24; hour++) {
     const messages = await MessageHelper.find({
-      channel: { $in: channelIds }
+      channel: { $in: channelIds },
     }).exec();
 
     // Saate göre filtrele
-    const count = messages.filter(msg => {
+    const count = messages.filter((msg) => {
       const msgHour = msg.timestamp.getHours();
       return msgHour === hour;
     }).length;
@@ -620,11 +612,11 @@ async function getGroupMessageDistribution(groupId: mongoose.Types.ObjectId): Pr
   const byDayOfWeek: { day: number; count: number }[] = [];
   for (let day = 0; day < 7; day++) {
     const messages = await MessageHelper.find({
-      channel: { $in: channelIds }
+      channel: { $in: channelIds },
     }).exec();
 
     // Güne göre filtrele
-    const count = messages.filter(msg => {
+    const count = messages.filter((msg) => {
       const msgDay = msg.timestamp.getDay();
       return msgDay === day;
     }).length;
@@ -650,10 +642,7 @@ export async function getUserStats(userId: string): Promise<DetailedUserStats> {
     // Temel istatistikler
     const messageCount = await MessageHelper.countDocuments({ user: user._id });
     const dmMessageCount = await DmMessageHelper.countDocuments({
-      $or: [
-        { sender: user._id },
-        { receiver: user._id }
-      ]
+      $or: [{ sender: user._id }, { receiver: user._id }],
     });
 
     // Kullanıcının üye olduğu gruplar
@@ -670,40 +659,41 @@ export async function getUserStats(userId: string): Promise<DetailedUserStats> {
       .exec();
 
     const lastDmMessage = await DmMessageHelper.findOne({
-      $or: [
-        { sender: user._id },
-        { receiver: user._id }
-      ]
+      $or: [{ sender: user._id }, { receiver: user._id }],
     })
       .sort({ timestamp: -1 })
       .limit(1)
       .exec();
 
-    const lastActivity = new Date(Math.max(
-      user.lastSeen?.getTime() || 0,
-      lastMessage?.timestamp.getTime() || 0,
-      lastDmMessage?.timestamp.getTime() || 0
-    ));
+    const lastActivity = new Date(
+      Math.max(
+        user.lastSeen?.getTime() || 0,
+        lastMessage?.timestamp.getTime() || 0,
+        lastDmMessage?.timestamp.getTime() || 0
+      )
+    );
 
     // Katıldığı gruplar ve mesaj sayıları
-    const joinedGroups = await Promise.all(memberships.map(async membership => {
-      const group = membership.group as any;
+    const joinedGroups = await Promise.all(
+      memberships.map(async (membership) => {
+        const group = membership.group as any;
 
-      // Grup kanallarını getir
-      const channels = await ChannelHelper.find({ group: group._id }).exec();
+        // Grup kanallarını getir
+        const channels = await ChannelHelper.find({ group: group._id }).exec();
 
-      // Kullanıcının gruptaki mesaj sayısı
-      const messageCount = await MessageHelper.countDocuments({
-        user: user._id,
-        channel: { $in: channels.map(c => c._id) }
-      });
+        // Kullanıcının gruptaki mesaj sayısı
+        const messageCount = await MessageHelper.countDocuments({
+          user: user._id,
+          channel: { $in: channels.map((c) => c._id) },
+        });
 
-      return {
-        id: group.groupId,
-        name: group.name,
-        messageCount
-      };
-    }));
+        return {
+          id: group.groupId,
+          name: group.name,
+          messageCount,
+        };
+      })
+    );
 
     // Günlük mesaj sayıları (son 30 gün)
     const messageCountByDay = await getUserMessageCountByDay(toObjectId(user._id), 30);
@@ -726,12 +716,12 @@ export async function getUserStats(userId: string): Promise<DetailedUserStats> {
       joinedGroups,
       messageCountByDay,
       activeHours,
-      activeDays
+      activeDays,
     };
   } catch (error) {
     logger.error('Kullanıcı istatistikleri getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -764,24 +754,21 @@ async function getUserMessageCountByDay(
       user: userId,
       timestamp: {
         $gte: date,
-        $lt: nextDate
-      }
+        $lt: nextDate,
+      },
     });
 
     const dmMessageCount = await DmMessageHelper.countDocuments({
-      $or: [
-        { sender: userId },
-        { receiver: userId }
-      ],
+      $or: [{ sender: userId }, { receiver: userId }],
       timestamp: {
         $gte: date,
-        $lt: nextDate
-      }
+        $lt: nextDate,
+      },
     });
 
     result.push({
       date: date.toISOString().split('T')[0],
-      count: messageCount + dmMessageCount
+      count: messageCount + dmMessageCount,
     });
   }
 
@@ -802,21 +789,18 @@ async function getUserActiveHours(
   // Tüm mesajları getir
   const messages = await MessageHelper.find({ user: userId }).exec();
   const dmMessages = await DmMessageHelper.find({
-    $or: [
-      { sender: userId },
-      { receiver: userId }
-    ]
+    $or: [{ sender: userId }, { receiver: userId }],
   }).exec();
 
   // Saate göre dağılım
   for (let hour = 0; hour < 24; hour++) {
     // Saate göre filtrele
-    const messageCount = messages.filter(msg => {
+    const messageCount = messages.filter((msg) => {
       const msgHour = msg.timestamp.getHours();
       return msgHour === hour;
     }).length;
 
-    const dmMessageCount = dmMessages.filter(msg => {
+    const dmMessageCount = dmMessages.filter((msg) => {
       const msgHour = msg.timestamp.getHours();
       return msgHour === hour;
     }).length;
@@ -840,21 +824,18 @@ async function getUserActiveDays(
   // Tüm mesajları getir
   const messages = await MessageHelper.find({ user: userId }).exec();
   const dmMessages = await DmMessageHelper.find({
-    $or: [
-      { sender: userId },
-      { receiver: userId }
-    ]
+    $or: [{ sender: userId }, { receiver: userId }],
   }).exec();
 
   // Güne göre dağılım
   for (let day = 0; day < 7; day++) {
     // Güne göre filtrele
-    const messageCount = messages.filter(msg => {
+    const messageCount = messages.filter((msg) => {
       const msgDay = msg.timestamp.getDay();
       return msgDay === day;
     }).length;
 
-    const dmMessageCount = dmMessages.filter(msg => {
+    const dmMessageCount = dmMessages.filter((msg) => {
       const msgDay = msg.timestamp.getDay();
       return msgDay === day;
     }).length;
@@ -872,5 +853,5 @@ export default {
   getTopUsers,
   getMessageCountByDay,
   getGroupStats,
-  getUserStats
+  getUserStats,
 };

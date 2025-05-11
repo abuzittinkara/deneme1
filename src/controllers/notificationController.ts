@@ -85,31 +85,31 @@ import mongoose from 'mongoose';
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const getNotifications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  
-  // Sorgu parametrelerini al
-  const limit = parseInt(req.query.limit as string || '20');
-  const skip = parseInt(req.query.skip as string || '0');
-  const isRead = req.query.isRead !== undefined 
-    ? req.query.isRead === 'true' 
-    : undefined;
-  const type = req.query.type as string;
-  const sortBy = req.query.sortBy as string || 'createdAt';
-  const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'desc';
-  
-  // Bildirimleri getir
-  const result = await notificationService.getUserNotifications(userId, {
-    limit,
-    skip,
-    isRead,
-    type: type as any,
-    sortBy,
-    sortOrder
-  });
-  
-  return sendSuccess(res, result);
-});
+export const getNotifications = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+
+    // Sorgu parametrelerini al
+    const limit = parseInt((req.query['limit'] as string) || '20');
+    const skip = parseInt((req.query['skip'] as string) || '0');
+    const isRead = req.query['isRead'] !== undefined ? req.query['isRead'] === 'true' : undefined;
+    const type = req.query['type'] as string;
+    const sortBy = (req.query['sortBy'] as string) || 'createdAt';
+    const sortOrder = (req.query['sortOrder'] as 'asc' | 'desc') || 'desc';
+
+    // Bildirimleri getir
+    const result = await notificationService.getUserNotifications(userId, {
+      limit,
+      skip,
+      isRead,
+      type: type as any,
+      sortBy,
+      sortOrder,
+    });
+
+    return sendSuccess(res, result);
+  }
+);
 
 /**
  * @swagger
@@ -143,17 +143,19 @@ export const getNotifications = asyncHandler(async (req: Request, res: Response,
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const getUnreadCount = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  
-  // Okunmamış bildirimleri getir
-  const result = await notificationService.getUserNotifications(userId, {
-    limit: 0,
-    isRead: false
-  });
-  
-  return sendSuccess(res, { unreadCount: result.unreadCount });
-});
+export const getUnreadCount = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+
+    // Okunmamış bildirimleri getir
+    const result = await notificationService.getUserNotifications(userId, {
+      limit: 0,
+      isRead: false,
+    });
+
+    return sendSuccess(res, { unreadCount: result.unreadCount });
+  }
+);
 
 /**
  * @swagger
@@ -208,20 +210,20 @@ export const getUnreadCount = asyncHandler(async (req: Request, res: Response, n
  */
 export const markAsRead = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const userId = (req as any).user._id;
-  const notificationId = req.params.id;
-  
+  const notificationId = req.params['id'];
+
   // ID'yi doğrula
-  if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+  if (!notificationId || !mongoose.Types.ObjectId.isValid(notificationId)) {
     throw new ValidationError('Geçersiz bildirim ID');
   }
-  
+
   // Bildirimi okundu olarak işaretle
-  const success = await notificationService.markAsRead(notificationId, userId);
-  
+  const success = await notificationService.markAsRead(notificationId || '', userId);
+
   if (!success) {
     throw new NotFoundError('Bildirim bulunamadı veya zaten okundu olarak işaretlenmiş');
   }
-  
+
   return sendSuccess(res, { message: 'Bildirim okundu olarak işaretlendi' });
 });
 
@@ -257,14 +259,16 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response, next:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const markAllAsRead = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  
-  // Tüm bildirimleri okundu olarak işaretle
-  await notificationService.markAllAsRead(userId);
-  
-  return sendSuccess(res, { message: 'Tüm bildirimler okundu olarak işaretlendi' });
-});
+export const markAllAsRead = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+
+    // Tüm bildirimleri okundu olarak işaretle
+    await notificationService.markAllAsRead(userId);
+
+    return sendSuccess(res, { message: 'Tüm bildirimler okundu olarak işaretlendi' });
+  }
+);
 
 /**
  * @swagger
@@ -317,24 +321,26 @@ export const markAllAsRead = asyncHandler(async (req: Request, res: Response, ne
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const deleteNotification = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  const notificationId = req.params.id;
-  
-  // ID'yi doğrula
-  if (!mongoose.Types.ObjectId.isValid(notificationId)) {
-    throw new ValidationError('Geçersiz bildirim ID');
+export const deleteNotification = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+    const notificationId = req.params['id'];
+
+    // ID'yi doğrula
+    if (!notificationId || !mongoose.Types.ObjectId.isValid(notificationId)) {
+      throw new ValidationError('Geçersiz bildirim ID');
+    }
+
+    // Bildirimi sil
+    const success = await notificationService.deleteNotification(notificationId || '', userId);
+
+    if (!success) {
+      throw new NotFoundError('Bildirim bulunamadı');
+    }
+
+    return sendSuccess(res, { message: 'Bildirim silindi' });
   }
-  
-  // Bildirimi sil
-  const success = await notificationService.deleteNotification(notificationId, userId);
-  
-  if (!success) {
-    throw new NotFoundError('Bildirim bulunamadı');
-  }
-  
-  return sendSuccess(res, { message: 'Bildirim silindi' });
-});
+);
 
 /**
  * @swagger
@@ -368,14 +374,16 @@ export const deleteNotification = asyncHandler(async (req: Request, res: Respons
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const deleteAllNotifications = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  
-  // Tüm bildirimleri sil
-  await notificationService.deleteAllNotifications(userId);
-  
-  return sendSuccess(res, { message: 'Tüm bildirimler silindi' });
-});
+export const deleteAllNotifications = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+
+    // Tüm bildirimleri sil
+    await notificationService.deleteAllNotifications(userId);
+
+    return sendSuccess(res, { message: 'Tüm bildirimler silindi' });
+  }
+);
 
 export default {
   getNotifications,
@@ -383,5 +391,5 @@ export default {
   markAsRead,
   markAllAsRead,
   deleteNotification,
-  deleteAllNotifications
+  deleteAllNotifications,
 };

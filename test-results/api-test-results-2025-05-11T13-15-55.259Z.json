@@ -1,0 +1,71 @@
+{
+  "total": 8,
+  "success": 0,
+  "failed": 8,
+  "endpoints": [
+    {
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "status": 0,
+      "success": false,
+      "responseTime": 44,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/users",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 4,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/groups",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 3,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/channels",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 2,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/messages",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 2,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/direct-messages",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 2,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/notifications",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 2,
+      "error": ""
+    },
+    {
+      "endpoint": "/api/friends",
+      "method": "GET",
+      "status": 0,
+      "success": false,
+      "responseTime": 2,
+      "error": ""
+    }
+  ]
+}

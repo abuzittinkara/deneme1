@@ -21,19 +21,19 @@ const passwordResetTokenSchema = new Schema<PasswordResetTokenDocument>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     token: {
       type: String,
-      required: true
+      required: true,
     },
     expiresAt: {
       type: Date,
-      required: true
-    }
+      required: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -42,9 +42,7 @@ const passwordResetTokenSchema = new Schema<PasswordResetTokenDocument>(
 passwordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // Model arayüzü
-export interface PasswordResetTokenModel extends mongoose.Model<PasswordResetTokenDocument> {
-  // Özel model metodları buraya eklenebilir
-}
+export type PasswordResetTokenModel = mongoose.Model<PasswordResetTokenDocument>;
 
 // Model oluştur
 let PasswordResetToken: PasswordResetTokenModel;
@@ -63,10 +61,12 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as PasswordResetTokenModel;
 } else {
   // Gerçek model
-  PasswordResetToken = mongoose.model<PasswordResetTokenDocument, PasswordResetTokenModel>(
-    'PasswordResetToken',
-    passwordResetTokenSchema
-  );
+  PasswordResetToken =
+    (mongoose.models['PasswordResetToken'] as PasswordResetTokenModel) ||
+    mongoose.model<PasswordResetTokenDocument, PasswordResetTokenModel>(
+      'PasswordResetToken',
+      passwordResetTokenSchema
+    );
 }
 
 export default PasswordResetToken;

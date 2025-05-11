@@ -11,7 +11,11 @@ export enum UserStatus {
   OFFLINE = 'offline',
   IDLE = 'idle',
   DND = 'dnd',
-  INVISIBLE = 'invisible'
+  INVISIBLE = 'invisible',
+  ACTIVE = 'active',
+  LOCKED = 'locked',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending',
 }
 
 /**
@@ -20,7 +24,7 @@ export enum UserStatus {
 export enum UserRole {
   ADMIN = 'admin',
   MODERATOR = 'moderator',
-  USER = 'user'
+  USER = 'user',
 }
 
 /**
@@ -29,7 +33,7 @@ export enum UserRole {
 export enum ChannelType {
   TEXT = 'text',
   VOICE = 'voice',
-  CATEGORY = 'category'
+  CATEGORY = 'category',
 }
 
 /**
@@ -50,7 +54,7 @@ export enum Permission {
   CONNECT = 'connect',
   SPEAK = 'speak',
   USE_VOICE_ACTIVITY = 'useVoiceActivity',
-  PRIORITY_SPEAKER = 'prioritySpeaker'
+  PRIORITY_SPEAKER = 'prioritySpeaker',
 }
 
 /**
@@ -63,5 +67,5 @@ export enum NotificationType {
   GROUP_INVITES = 'groupInvites',
   CHANNEL_MESSAGES = 'channelMessages',
   SYSTEM = 'system',
-  MESSAGE = 'message'
+  MESSAGE = 'message',
 }

@@ -22,7 +22,7 @@ export interface IRole {
 }
 
 // Rol dokümanı arayüzü
-export interface RoleDocument extends TypedDocument<IRole> {}
+export type RoleDocument = TypedDocument<IRole>;
 
 // Rol modeli arayüzü
 export interface RoleModel extends FullModelType<IRole> {
@@ -52,12 +52,12 @@ const RoleSchema = new Schema<RoleDocument, RoleModel>(
       [Permission.CONNECT]: { type: Boolean, default: true },
       [Permission.SPEAK]: { type: Boolean, default: true },
       [Permission.USE_VOICE_ACTIVITY]: { type: Boolean, default: true },
-      [Permission.PRIORITY_SPEAKER]: { type: Boolean, default: false }
-    }
+      [Permission.PRIORITY_SPEAKER]: { type: Boolean, default: false },
+    },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -66,7 +66,7 @@ RoleSchema.index({ group: 1, name: 1 }, { unique: true });
 RoleSchema.index({ group: 1, position: 1 });
 
 // Statik metodlar
-RoleSchema.statics.findByGroupAndName = function(
+RoleSchema.statics['findByGroupAndName'] = function (
   groupId: ObjectId,
   name: string
 ): Promise<RoleDocument | null> {
@@ -92,7 +92,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as RoleModel;
 } else {
   // Gerçek model
-  Role = (mongoose.models.Role as RoleModel) ||
+  Role =
+    (mongoose.models['Role'] as RoleModel) ||
     mongoose.model<RoleDocument, RoleModel>('Role', RoleSchema);
 }
 

@@ -92,6 +92,7 @@ function openProfileModal(socket: Socket): void {
     profileModal.className = 'modal';
     profileModal.innerHTML = `
       <div class="modal-content profile-modal-content">
+        <span class="close-button" id="closeProfileModalBtn">&times;</span>
         <h2>Profil Ayarları</h2>
         <div class="profile-tabs">
           <button class="profile-tab active" data-tab="general">Genel</button>
@@ -100,7 +101,123 @@ function openProfileModal(socket: Socket): void {
           <button class="profile-tab" data-tab="sessions">Oturumlar</button>
           <button class="profile-tab" data-tab="privacy">Gizlilik</button>
         </div>
-        <!-- Modal içeriği burada devam ediyor -->
+
+        <!-- Genel Sekmesi -->
+        <div id="general-tab" class="profile-tab-content active">
+          <div class="profile-picture-section">
+            <div class="profile-picture-container">
+              <div class="profile-picture" id="profilePicturePreview">
+                <span class="material-icons">account_circle</span>
+              </div>
+              <button class="change-profile-picture-btn">Profil Resmi Değiştir</button>
+              <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+            </div>
+          </div>
+
+          <form class="profile-form" id="generalProfileForm">
+            <div class="form-group">
+              <label for="profileName">Ad</label>
+              <input type="text" id="profileName" placeholder="Adınız">
+            </div>
+            <div class="form-group">
+              <label for="profileSurname">Soyad</label>
+              <input type="text" id="profileSurname" placeholder="Soyadınız">
+            </div>
+            <div class="form-group">
+              <label for="profileEmail">E-posta</label>
+              <input type="email" id="profileEmail" placeholder="E-posta adresiniz">
+            </div>
+            <div class="form-group">
+              <label for="profilePhone">Telefon</label>
+              <input type="tel" id="profilePhone" placeholder="Telefon numaranız">
+            </div>
+            <div class="form-group">
+              <label for="profileBio">Hakkımda</label>
+              <textarea id="profileBio" placeholder="Kendinizi tanıtın"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="profileStatus">Durum</label>
+              <select id="profileStatus">
+                <option value="online">Çevrimiçi</option>
+                <option value="idle">Boşta</option>
+                <option value="dnd">Rahatsız Etmeyin</option>
+                <option value="invisible">Görünmez</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="profileCustomStatus">Özel Durum</label>
+              <input type="text" id="profileCustomStatus" placeholder="Özel durum mesajınız">
+            </div>
+            <button type="submit" class="btn primary" id="saveGeneralProfileBtn">Kaydet</button>
+          </form>
+        </div>
+
+        <!-- Görünüm Sekmesi -->
+        <div id="appearance-tab" class="profile-tab-content">
+          <form class="profile-form" id="appearanceProfileForm">
+            <div class="form-group">
+              <label for="profileTheme">Tema</label>
+              <select id="profileTheme">
+                <option value="dark">Koyu Tema</option>
+                <option value="light">Açık Tema</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="profileLanguage">Dil</label>
+              <select id="profileLanguage">
+                <option value="tr">Türkçe</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="profileNotifications">
+              <label for="profileNotifications">Bildirimleri Etkinleştir</label>
+            </div>
+            <div class="checkbox-group">
+              <input type="checkbox" id="profileSoundEffects">
+              <label for="profileSoundEffects">Ses Efektlerini Etkinleştir</label>
+            </div>
+            <button type="submit" class="btn primary" id="saveAppearanceProfileBtn">Kaydet</button>
+          </form>
+        </div>
+
+        <!-- Güvenlik Sekmesi -->
+        <div id="security-tab" class="profile-tab-content">
+          <div class="security-section">
+            <h3>Şifre Değiştir</h3>
+            <form class="profile-form" id="passwordChangeForm">
+              <div class="form-group">
+                <label for="currentPassword">Mevcut Şifre</label>
+                <input type="password" id="currentPassword" placeholder="Mevcut şifreniz">
+              </div>
+              <div class="form-group">
+                <label for="newPassword">Yeni Şifre</label>
+                <input type="password" id="newPassword" placeholder="Yeni şifreniz">
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Şifre Tekrar</label>
+                <input type="password" id="confirmPassword" placeholder="Yeni şifrenizi tekrar girin">
+              </div>
+              <button type="submit" class="btn primary" id="changePasswordBtn">Şifre Değiştir</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Oturumlar Sekmesi -->
+        <div id="sessions-tab" class="profile-tab-content">
+          <h3>Aktif Oturumlar</h3>
+          <div id="sessionsContainer" class="sessions-container">
+            <div class="loading-sessions">Oturumlar yükleniyor...</div>
+          </div>
+        </div>
+
+        <!-- Gizlilik Sekmesi -->
+        <div id="privacy-tab" class="profile-tab-content">
+          <h3>Engellenen Kullanıcılar</h3>
+          <div id="blockedUsersContainer" class="blocked-users-container">
+            <div class="loading-blocked-users">Engellenen kullanıcılar yükleniyor...</div>
+          </div>
+        </div>
       </div>
     `;
 

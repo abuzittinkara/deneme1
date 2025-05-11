@@ -15,7 +15,7 @@ export enum ReportReason {
   INAPPROPRIATE_CONTENT = 'inappropriate_content',
   HATE_SPEECH = 'hate_speech',
   IMPERSONATION = 'impersonation',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 // Rapor durumları
@@ -23,7 +23,7 @@ export enum ReportStatus {
   PENDING = 'pending',
   REVIEWING = 'reviewing',
   RESOLVED = 'resolved',
-  REJECTED = 'rejected'
+  REJECTED = 'rejected',
 }
 
 // Rapor oluşturma parametreleri
@@ -86,7 +86,7 @@ export async function createReport(params: CreateReportParams): Promise<ReportRe
       reason,
       details: details || '',
       evidence: evidence || [],
-      status: ReportStatus.PENDING
+      status: ReportStatus.PENDING,
     });
 
     // Raporu getir
@@ -98,7 +98,7 @@ export async function createReport(params: CreateReportParams): Promise<ReportRe
       reportId: report._id,
       reporterId,
       reportedUserId,
-      reason
+      reason,
     });
 
     // Rapor sonucunu formatla
@@ -106,24 +106,24 @@ export async function createReport(params: CreateReportParams): Promise<ReportRe
       id: populatedReport!._id.toString(),
       reporter: {
         id: (populatedReport!.reporter as any)._id.toString(),
-        username: (populatedReport!.reporter as any).username
+        username: (populatedReport!.reporter as any).username,
       },
       reportedUser: {
         id: (populatedReport!.reportedUser as any)._id.toString(),
-        username: (populatedReport!.reportedUser as any).username
+        username: (populatedReport!.reportedUser as any).username,
       },
       reason: populatedReport!.reason,
       details: populatedReport!.details,
       evidence: populatedReport!.evidence,
       status: populatedReport!.status,
       createdAt: populatedReport!.createdAt,
-      updatedAt: populatedReport!.updatedAt
+      updatedAt: populatedReport!.updatedAt,
     };
   } catch (error) {
     logger.error('Kullanıcı raporu oluşturma hatası', {
       error: (error as Error).message,
       reporterId: params.reporterId,
-      reportedUserId: params.reportedUserId
+      reportedUserId: params.reportedUserId,
     });
     throw error;
   }
@@ -149,34 +149,34 @@ export async function getUserReports(userId: string): Promise<ReportResult[]> {
       .sort({ createdAt: -1 });
 
     // Raporları formatla
-    const formattedReports = reports.map(report => ({
+    const formattedReports = reports.map((report) => ({
       id: report._id.toString(),
       reporter: {
         id: (report.reporter as any)._id.toString(),
-        username: (report.reporter as any).username
+        username: (report.reporter as any).username,
       },
       reportedUser: {
         id: (report.reportedUser as any)._id.toString(),
-        username: (report.reportedUser as any).username
+        username: (report.reportedUser as any).username,
       },
       reason: report.reason,
       details: report.details,
       evidence: report.evidence,
       status: report.status,
       createdAt: report.createdAt,
-      updatedAt: report.updatedAt
+      updatedAt: report.updatedAt,
     }));
 
     logger.debug('Kullanıcı raporları getirildi', {
       userId,
-      count: formattedReports.length
+      count: formattedReports.length,
     });
 
     return formattedReports;
   } catch (error) {
     logger.error('Kullanıcı raporlarını getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -210,7 +210,7 @@ export async function updateReportStatus(
 
     logger.info('Rapor durumu güncellendi', {
       reportId,
-      status
+      status,
     });
 
     // Rapor sonucunu formatla
@@ -218,24 +218,24 @@ export async function updateReportStatus(
       id: updatedReport!._id.toString(),
       reporter: {
         id: (updatedReport!.reporter as any)._id.toString(),
-        username: (updatedReport!.reporter as any).username
+        username: (updatedReport!.reporter as any).username,
       },
       reportedUser: {
         id: (updatedReport!.reportedUser as any)._id.toString(),
-        username: (updatedReport!.reportedUser as any).username
+        username: (updatedReport!.reportedUser as any).username,
       },
       reason: updatedReport!.reason,
       details: updatedReport!.details,
       evidence: updatedReport!.evidence,
       status: updatedReport!.status,
       createdAt: updatedReport!.createdAt,
-      updatedAt: updatedReport!.updatedAt
+      updatedAt: updatedReport!.updatedAt,
     };
   } catch (error) {
     logger.error('Rapor durumu güncelleme hatası', {
       error: (error as Error).message,
       reportId,
-      status
+      status,
     });
     throw error;
   }
@@ -254,22 +254,25 @@ interface UserReportDocument extends mongoose.Document {
 }
 
 // Kullanıcı raporu şeması
-const UserReportSchema = new mongoose.Schema({
-  reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  reportedUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  reason: { 
-    type: String, 
-    enum: Object.values(ReportReason),
-    required: true 
+const UserReportSchema = new mongoose.Schema(
+  {
+    reporter: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    reportedUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    reason: {
+      type: String,
+      enum: Object.values(ReportReason),
+      required: true,
+    },
+    details: { type: String, default: '' },
+    evidence: [{ type: String }],
+    status: {
+      type: String,
+      enum: Object.values(ReportStatus),
+      default: ReportStatus.PENDING,
+    },
   },
-  details: { type: String, default: '' },
-  evidence: [{ type: String }],
-  status: { 
-    type: String, 
-    enum: Object.values(ReportStatus),
-    default: ReportStatus.PENDING 
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 // İndeksler
 UserReportSchema.index({ reporter: 1, reportedUser: 1 });
@@ -284,5 +287,5 @@ export default {
   ReportStatus,
   createReport,
   getUserReports,
-  updateReportStatus
+  updateReportStatus,
 };

@@ -12,7 +12,9 @@ import { NotFoundError, ValidationError } from '../utils/errors';
 
 // Model yardımcıları
 const UserHelper = createModelHelper<UserDocument, typeof User>(User);
-const PasswordResetHelper = createModelHelper<PasswordResetDocument, typeof PasswordReset>(PasswordReset);
+const PasswordResetHelper = createModelHelper<PasswordResetDocument, typeof PasswordReset>(
+  PasswordReset
+);
 
 // Şifre sıfırlama isteği sonucu arayüzü
 export interface PasswordResetRequestResult {
@@ -32,7 +34,9 @@ export interface PasswordResetResult {
  * @param email - Kullanıcının e-posta adresi
  * @returns İşlem sonucu
  */
-export async function createPasswordResetRequest(email: string): Promise<PasswordResetRequestResult> {
+export async function createPasswordResetRequest(
+  email: string
+): Promise<PasswordResetRequestResult> {
   try {
     const user = await UserHelper.findOne({ email });
     if (!user) {
@@ -51,13 +55,13 @@ export async function createPasswordResetRequest(email: string): Promise<Passwor
     const resetRequest = await PasswordResetHelper.create({
       user: user._id,
       token,
-      expires
+      expires,
     });
 
     logger.info('Şifre sıfırlama isteği oluşturuldu', {
       userId: user._id,
       email,
-      expires
+      expires,
     });
 
     // Gerçek uygulamada burada e-posta gönderme işlemi yapılır
@@ -65,12 +69,12 @@ export async function createPasswordResetRequest(email: string): Promise<Passwor
     return {
       success: true,
       message: 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
-      token // Gerçek uygulamada bu dönmemeli, sadece test için
+      token, // Gerçek uygulamada bu dönmemeli, sadece test için
     };
   } catch (error) {
     logger.error('Şifre sıfırlama isteği oluşturma hatası', {
       error: (error as Error).message,
-      email
+      email,
     });
     throw error;
   }
@@ -82,7 +86,10 @@ export async function createPasswordResetRequest(email: string): Promise<Passwor
  * @param newPassword - Yeni şifre
  * @returns İşlem sonucu
  */
-export async function resetPassword(token: string, newPassword: string): Promise<PasswordResetResult> {
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<PasswordResetResult> {
   try {
     const resetRequest = await PasswordResetHelper.findOne({ token, used: false });
 
@@ -144,5 +151,5 @@ export async function validateResetToken(token: string): Promise<boolean> {
 export default {
   createPasswordResetRequest,
   resetPassword,
-  validateResetToken
+  validateResetToken,
 };

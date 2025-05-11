@@ -17,6 +17,7 @@ import friendRoutes from './friends';
 import exampleRoutes from './example';
 import performanceRoutes from './performance';
 import diagnosticsRoutes from './diagnostics';
+import atlasSQLRoutes from '../atlasSQL';
 
 const router = express.Router();
 
@@ -35,5 +36,6 @@ router.use('/friends', friendRoutes);
 router.use('/example', exampleRoutes);
 router.use('/performance', performanceRoutes);
 router.use('/diagnostics', diagnosticsRoutes);
+router.use('/atlas-sql', atlasSQLRoutes);
 
 export default router;

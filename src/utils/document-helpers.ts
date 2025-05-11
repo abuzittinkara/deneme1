@@ -59,7 +59,7 @@ export function docsToObjects<T>(docs: (Document | T)[] | null | undefined): T[]
     return [];
   }
 
-  return docs.map(doc => {
+  return docs.map((doc) => {
     if (doc instanceof Document) {
       return doc.toObject() as T;
     }
@@ -122,7 +122,9 @@ export async function updateAndSaveDoc<T>(
  * @param doc - Mongoose belgesi
  * @returns ID string veya null
  */
-export function getDocId(doc: Document | { _id?: any; id?: string } | null | undefined): string | null {
+export function getDocId(
+  doc: Document | { _id?: any; id?: string } | null | undefined
+): string | null {
   if (!doc) {
     return null;
   }
@@ -187,14 +189,14 @@ export function getDocRefId<T>(
  * @param docs - Belge dizisi
  * @returns ID dizisi
  */
-export function getDocIds(docs: (Document | { _id?: any; id?: string })[] | null | undefined): string[] {
+export function getDocIds(
+  docs: (Document | { _id?: any; id?: string })[] | null | undefined
+): string[] {
   if (!docs || !Array.isArray(docs)) {
     return [];
   }
 
-  return docs
-    .map(doc => getDocId(doc))
-    .filter((id): id is string => id !== null);
+  return docs.map((doc) => getDocId(doc)).filter((id): id is string => id !== null);
 }
 
 /**
@@ -213,5 +215,5 @@ export function getDocFieldsFromArray<T, K extends keyof T | string>(
     return [];
   }
 
-  return docs.map(doc => getDocField<T, K>(doc, field, defaultValue));
+  return docs.map((doc) => getDocField<T, K>(doc, field, defaultValue));
 }

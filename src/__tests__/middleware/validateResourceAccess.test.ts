@@ -58,7 +58,7 @@ jest.mock('../../middleware/validateResourceAccess', () => ({
   validateDirectMessageAccess: (action) => {
     mockValidateDirectMessageAccess(action);
     return jest.fn();
-  }
+  },
 }));
 
 // Modülü import et
@@ -68,7 +68,7 @@ const {
   validateGroupAccess,
   validateChannelAccess,
   validateMessageAccess,
-  validateDirectMessageAccess
+  validateDirectMessageAccess,
 } = require('../../middleware/validateResourceAccess');
 
 describe('Validate Resource Access Middleware', () => {
@@ -79,11 +79,11 @@ describe('Validate Resource Access Middleware', () => {
   beforeEach(() => {
     req = {
       params: { id: '123456789012345678901234' },
-      user: { _id: '123456789012345678901234', role: 'user' }
+      user: { _id: '123456789012345678901234', role: 'user' },
     };
     res = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
     };
     next = jest.fn();
 
@@ -147,12 +147,7 @@ describe('Validate Resource Access Middleware', () => {
 
       expect(mockValidateResourceAccess).toHaveBeenCalledWith('user', 'view', getResourceId);
       expect(getResourceId).toHaveBeenCalledWith(req);
-      expect(mockHasResourceAccess).toHaveBeenCalledWith(
-        req,
-        'user',
-        'custom-resource-id',
-        'view'
-      );
+      expect(mockHasResourceAccess).toHaveBeenCalledWith(req, 'user', 'custom-resource-id', 'view');
       expect(next).toHaveBeenCalled();
       expect(next.mock.calls[0].length).toBe(0); // next() called with no arguments
     });

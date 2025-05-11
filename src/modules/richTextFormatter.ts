@@ -24,56 +24,56 @@ export interface UrlMetadata {
 
 // Common emojis mapping
 export const EMOJI_MAP: Record<string, string> = {
-  'smile': '😊',
-  'laugh': '😂',
-  'wink': '😉',
-  'heart': '❤️',
-  'thumbsup': '👍',
-  'thumbsdown': '👎',
-  'clap': '👏',
-  'fire': '🔥',
-  'tada': '🎉',
-  'thinking': '🤔',
-  'check': '✅',
-  'x': '❌',
-  'warning': '⚠️',
-  'question': '❓',
-  'exclamation': '❗',
-  'rocket': '🚀',
-  'eyes': '👀',
-  'sob': '😭',
-  'angry': '😠',
-  'cool': '😎',
-  'party': '🥳',
-  'wave': '👋',
-  'pray': '🙏',
-  'ok': '👌',
-  'love': '😍',
-  'confused': '😕',
-  'cry': '😢',
-  'sleep': '😴',
-  'tongue': '😛',
-  'shocked': '😱',
-  'sick': '🤢',
-  'devil': '😈',
-  'angel': '😇',
-  'star': '⭐',
-  'sparkles': '✨',
-  'rainbow': '🌈',
-  'sun': '☀️',
-  'moon': '🌙',
-  'cloud': '☁️',
-  'rain': '🌧️',
-  'snow': '❄️',
-  'music': '🎵',
-  'gift': '🎁',
-  'balloon': '🎈',
-  'cake': '🎂',
-  'coffee': '☕',
-  'pizza': '🍕',
-  'hamburger': '🍔',
-  'beer': '🍺',
-  'wine': '🍷'
+  smile: '😊',
+  laugh: '😂',
+  wink: '😉',
+  heart: '❤️',
+  thumbsup: '👍',
+  thumbsdown: '👎',
+  clap: '👏',
+  fire: '🔥',
+  tada: '🎉',
+  thinking: '🤔',
+  check: '✅',
+  x: '❌',
+  warning: '⚠️',
+  question: '❓',
+  exclamation: '❗',
+  rocket: '🚀',
+  eyes: '👀',
+  sob: '😭',
+  angry: '😠',
+  cool: '😎',
+  party: '🥳',
+  wave: '👋',
+  pray: '🙏',
+  ok: '👌',
+  love: '😍',
+  confused: '😕',
+  cry: '😢',
+  sleep: '😴',
+  tongue: '😛',
+  shocked: '😱',
+  sick: '🤢',
+  devil: '😈',
+  angel: '😇',
+  star: '⭐',
+  sparkles: '✨',
+  rainbow: '🌈',
+  sun: '☀️',
+  moon: '🌙',
+  cloud: '☁️',
+  rain: '🌧️',
+  snow: '❄️',
+  music: '🎵',
+  gift: '🎁',
+  balloon: '🎈',
+  cake: '🎂',
+  coffee: '☕',
+  pizza: '🍕',
+  hamburger: '🍔',
+  beer: '🍺',
+  wine: '🍷',
 };
 
 /**
@@ -83,34 +83,34 @@ export const EMOJI_MAP: Record<string, string> = {
  */
 export function formatText(text: string): string {
   if (!text) return '';
-  
+
   // Replace code blocks first (to avoid formatting inside code blocks)
   let formattedText = text.replace(CODE_BLOCK_REGEX, (match, p1) => {
     return `<pre><code>${p1}</code></pre>`;
   });
-  
+
   // Replace inline code
   formattedText = formattedText.replace(CODE_REGEX, (match, p1) => {
     return `<code>${p1}</code>`;
   });
-  
+
   // Apply other formatting
   formattedText = formattedText
     .replace(BOLD_REGEX, '<strong>$1</strong>')
     .replace(ITALIC_REGEX, '<em>$1</em>')
     .replace(UNDERLINE_REGEX, '<u>$1</u>')
     .replace(STRIKETHROUGH_REGEX, '<del>$1</del>');
-  
+
   // Convert URLs to links
   formattedText = formattedText.replace(URL_REGEX, (url) => {
     return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
   });
-  
+
   // Convert emoji codes to actual emojis
   formattedText = formattedText.replace(EMOJI_REGEX, (match, emojiName) => {
     return EMOJI_MAP[emojiName] || match;
   });
-  
+
   return formattedText;
 }
 
@@ -121,7 +121,7 @@ export function formatText(text: string): string {
  */
 export function sanitizeText(text: string): string {
   if (!text) return '';
-  
+
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -153,7 +153,7 @@ export async function extractUrlMetadata(url: string): Promise<UrlMetadata | nul
       url,
       title: 'Link Preview',
       description: 'Description would be extracted from the page',
-      image: null
+      image: null,
     };
   } catch (error) {
     logger.error('Extract URL metadata error:', { error: (error as Error).message, url });
@@ -166,5 +166,5 @@ export default {
   sanitizeText,
   processText,
   extractUrlMetadata,
-  EMOJI_MAP
+  EMOJI_MAP,
 };

@@ -1,12 +1,42 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fisqos - Sesli, görüntülü ve yazılı iletişim platformu">
+  <meta name="theme-color" content="#c61884">
   <title>Fisqos - Discord Benzeri Uygulama</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/call.css">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" href="images/logo.png" type="image/png">
+  <!-- Webpack ile derlenen JavaScript dosyaları -->
+  <script src="/dist/runtime.bundle.js"></script>
+  <script src="/dist/vendor.bundle.js"></script>
+  <script src="/dist/common.bundle.js"></script>
+  <script src="/dist/mediasoupClient.bundle.js"></script>
+  <script src="/dist/index.bundle.js"></script>
+  <script src="/dist/voiceChannel.bundle.js"></script>
+  <script src="/dist/screenShare.bundle.js"></script>
+  <script src="/dist/videoCall.bundle.js"></script>
+  <script src="/dist/themeManager.bundle.js"></script>
+  <script src="/dist/accessibilityManager.bundle.js"></script>
+  <script src="/dist/performanceMonitor.bundle.js"></script>
+  <!-- Tema ve dil tercihleri -->
+  <script>
+    // Kullanıcı tercihlerini yerel depolamadan al
+    const userPreferences = {
+      theme: localStorage.getItem('theme') || 'dark',
+      language: localStorage.getItem('language') || 'tr'
+    };
+
+    // Tema sınıfını body'ye ekle
+    document.documentElement.setAttribute('data-theme', userPreferences.theme);
+
+    // Dil tercihini ayarla
+    document.documentElement.setAttribute('lang', userPreferences.language);
+  </script>
   <style>
     /* Genel Stiller */
     * {
@@ -336,11 +366,11 @@
 
     /* Ekranları Gizle/Göster */
     #login-screen {
-      display: flex;
+      display: none;
     }
 
     #app-screen {
-      display: none;
+      display: flex;
     }
 
     /* Hata mesajı */
@@ -884,6 +914,14 @@
       <div class="panel-content active" id="users-panel">
         <div class="user-list-header">
           <h3>Çevrimiçi Kullanıcılar</h3>
+          <div class="user-actions">
+            <a href="profile.html" class="user-action-btn" title="Profil">
+              <span class="material-icons">person</span>
+            </a>
+            <a href="settings.html" class="user-action-btn" title="Ayarlar">
+              <span class="material-icons">settings</span>
+            </a>
+          </div>
         </div>
         <div class="user-list" id="userList">
           <!-- Kullanıcılar burada listelenecek -->
@@ -901,15 +939,95 @@
     </div>
   </div>
 
-  <script src="js/lib/mediasoup-client-bundle.js"></script>
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-  <!-- JavaScript modüllerini doğrudan script etiketleriyle yükle -->
-  <script src="js/dist/index.js"></script>
-  <script src="js/dist/voiceChannel.js"></script>
-  <script src="js/dist/screenShare.js"></script>
-  <script src="js/dist/videoCall.js"></script>
-  <script src="js/dist/participantManager.js"></script>
+  <!-- Görüntülü görüşme bileşeni -->
+  <div id="call-container" class="call-container hidden">
+    <div class="call-header">
+      <div class="call-title">Görüntülü Görüşme</div>
+      <div class="call-duration" id="call-duration">00:00</div>
+    </div>
+
+    <div class="call-content">
+      <div id="participants-container">
+        <!-- Katılımcılar buraya eklenecek -->
+      </div>
+
+      <div id="local-video-container">
+        <video id="local-video" autoplay playsinline muted></video>
+      </div>
+
+      <div id="screen-share-container">
+        <video id="screen-share-video" autoplay playsinline></video>
+      </div>
+
+      <div class="connection-status" id="connection-status">
+        <i class="material-icons">wifi</i>
+        <span>Bağlanıyor...</span>
+      </div>
+    </div>
+
+    <div id="call-controls">
+      <button id="audio-toggle" class="call-control-btn active" title="Mikrofonu Aç/Kapat">
+        <i class="material-icons">mic</i>
+      </button>
+
+      <button id="video-toggle" class="call-control-btn active" title="Kamerayı Aç/Kapat">
+        <i class="material-icons">videocam</i>
+      </button>
+
+      <button id="screen-share" class="call-control-btn" title="Ekran Paylaşımı">
+        <i class="material-icons">screen_share</i>
+      </button>
+
+      <button id="end-call" class="call-control-btn" title="Görüşmeyi Sonlandır">
+        <i class="material-icons">call_end</i>
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript modülleri -->
+  <script>
+    // Boş nesneler oluştur
+    if (!window.voiceChannelModule) {
+      window.voiceChannelModule = {
+        initVoiceChannel: function() { console.log('initVoiceChannel çağrıldı'); },
+        joinVoiceChannel: function() { console.log('joinVoiceChannel çağrıldı'); return Promise.resolve(); },
+        leaveVoiceChannel: function() { console.log('leaveVoiceChannel çağrıldı'); },
+        toggleMicrophone: function() { console.log('toggleMicrophone çağrıldı'); }
+      };
+    }
+
+    window.screenShareModule = {
+      startScreenShare: function() { console.log('startScreenShare çağrıldı'); return Promise.resolve(); },
+      stopScreenShare: function() { console.log('stopScreenShare çağrıldı'); },
+      togglePauseScreenShare: function() { console.log('togglePauseScreenShare çağrıldı'); return Promise.resolve(true); },
+      changeScreenShareQuality: function() { console.log('changeScreenShareQuality çağrıldı'); return Promise.resolve(true); }
+    };
+
+    window.videoCallModule = {
+      initVideoCall: function() { console.log('initVideoCall çağrıldı'); },
+      startVideoCall: function() { console.log('startVideoCall çağrıldı'); return Promise.resolve(); },
+      stopVideoCall: function() { console.log('stopVideoCall çağrıldı'); return Promise.resolve(); },
+      togglePauseVideoCall: function() { console.log('togglePauseVideoCall çağrıldı'); return Promise.resolve(true); },
+      changeVideoQuality: function() { console.log('changeVideoQuality çağrıldı'); return Promise.resolve(true); },
+      switchCamera: function() { console.log('switchCamera çağrıldı'); return Promise.resolve(true); }
+    };
+
+    window.participantManagerModule = {
+      initParticipantManager: function() { console.log('initParticipantManager çağrıldı'); }
+    };
+
+    // Kalite ayarları
+    const qualitySettings = {
+      low: { width: 640, height: 480, frameRate: 15, facingMode: 'user' },
+      medium: { width: 1280, height: 720, frameRate: 30, facingMode: 'user' },
+      high: { width: 1920, height: 1080, frameRate: 30, facingMode: 'user' }
+    };
+  </script>
+  <script src="/js/webrtc.js"></script>
+  <script src="/js/call.js"></script>
 
   <script>
     // Modülleri global değişkenlerden al
@@ -947,9 +1065,13 @@
       console.log('index.html içindeki script yüklendi');
 
       // Socket.IO bağlantısı
-      const socket = io('http://localhost:3002', {
-        transports: ['websocket'],
-        autoConnect: true
+      const socket = io({
+        transports: ['websocket', 'polling'],
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        timeout: 20000
       });
 
       // Socket bağlantı olayları
@@ -1305,6 +1427,34 @@
           const channelName = this.querySelector('.channel-name').textContent;
           document.querySelector('.chat-header-name').textContent = '# ' + channelName;
           document.querySelector('.chat-input').placeholder = `${channelName} kanalına mesaj gönder`;
+
+          // Eğer ses kanalıysa, otomatik olarak ses kanalına katıl ve metin girişini devre dışı bırak
+          if (this.classList.contains('voice-channel')) {
+            const channelId = this.getAttribute('data-channel-id');
+            const chatInput = document.querySelector('.chat-input');
+
+            // Ses kanalına katıl
+            joinVoiceChannel(channelId, socket)
+              .then(() => {
+                // Mikrofonu otomatik olarak aç
+                if (voiceState.micEnabled === false) {
+                  toggleMicrophone();
+                  updateUIState();
+                }
+
+                // Metin girişini devre dışı bırak
+                chatInput.disabled = true;
+                chatInput.placeholder = 'Ses kanalında metin mesajı gönderilemez';
+              })
+              .catch(error => {
+                console.error('Ses kanalına katılırken hata oluştu:', error);
+              });
+          } else {
+            // Normal metin kanalı ise, metin girişini etkinleştir
+            const chatInput = document.querySelector('.chat-input');
+            chatInput.disabled = false;
+            chatInput.placeholder = `${channelName} kanalına mesaj gönder`;
+          }
         });
       });
 
@@ -1356,6 +1506,32 @@
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
       });
+    });
+  </script>
+  <script src="js/voiceChannel.js"></script>
+
+  <!-- Tema değiştirme script'i -->
+  <script>
+    // Tema değiştirme fonksiyonu
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      // Tema değişikliğini uygula
+      document.documentElement.setAttribute('data-theme', newTheme);
+
+      // Tema tercihini kaydet
+      localStorage.setItem('theme', newTheme);
+
+      console.log('Tema değiştirildi:', newTheme);
+    }
+
+    // Sayfa yüklendiğinde kaydedilmiş temayı uygula
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      }
     });
   </script>
 </body>

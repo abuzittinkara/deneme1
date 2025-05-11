@@ -1,0 +1,26 @@
+{
+  "vulnerabilities": {
+    "lodash": {
+      "name": "lodash",
+      "severity": "high",
+      "overview": "Prototype Pollution in lodash",
+      "recommendation": "Upgrade to version 4.17.21 or later",
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2021-23337"
+      ],
+      "cwe": "CWE-1321",
+      "cvss": 7.4
+    },
+    "axios": {
+      "name": "axios",
+      "severity": "medium",
+      "overview": "Server-Side Request Forgery in axios",
+      "recommendation": "Upgrade to version 0.21.1 or later",
+      "references": [
+        "https://nvd.nist.gov/vuln/detail/CVE-2020-28168"
+      ],
+      "cwe": "CWE-918",
+      "cvss": 5.9
+    }
+  }
+}

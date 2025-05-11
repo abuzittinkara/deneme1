@@ -25,18 +25,18 @@ router.get('/api/config', requireAuth, requireAdmin, (req: Request, res: Respons
         version: env.APP_VERSION,
         environment: env.NODE_ENV,
         port: env.PORT,
-        host: env.HOST
+        host: env.HOST,
       },
       database: {
         connected: true, // Varsayılan olarak bağlı kabul ediyoruz
         host: env.MONGODB_HOST ? env.MONGODB_HOST.split('@').pop() : 'localhost',
         database: env.MONGODB_DATABASE || 'fisqos_dev',
-        ssl: env.MONGODB_SSL === 'true'
+        ssl: env.MONGODB_SSL === 'true',
       },
       redis: {
         enabled: env.REDIS_ENABLED === 'true',
         host: env.REDIS_HOST,
-        port: env.REDIS_PORT
+        port: env.REDIS_PORT,
       },
       email: {
         enabled: env.FEATURE_EMAIL,
@@ -44,13 +44,13 @@ router.get('/api/config', requireAuth, requireAdmin, (req: Request, res: Respons
         port: env.EMAIL_PORT,
         secure: env.EMAIL_SECURE,
         fromName: env.EMAIL_FROM_NAME,
-        fromAddress: env.EMAIL_FROM_ADDRESS
+        fromAddress: env.EMAIL_FROM_ADDRESS,
       },
       cors: {
         enabled: env.FEATURE_CORS,
         origin: env.CORS_ORIGIN,
         methods: env.CORS_METHODS,
-        credentials: env.CORS_CREDENTIALS
+        credentials: env.CORS_CREDENTIALS,
       },
       features: {
         socketIO: env.FEATURE_SOCKET_IO,
@@ -62,37 +62,37 @@ router.get('/api/config', requireAuth, requireAdmin, (req: Request, res: Respons
         compression: env.FEATURE_COMPRESSION,
         helmet: env.FEATURE_HELMET,
         cors: env.FEATURE_CORS,
-        morgan: env.FEATURE_MORGAN
+        morgan: env.FEATURE_MORGAN,
       },
       i18n: {
         defaultLanguage: env.DEFAULT_LANGUAGE,
-        supportedLanguages: env.SUPPORTED_LANGUAGES.split(',')
+        supportedLanguages: env.SUPPORTED_LANGUAGES.split(','),
       },
       uploads: {
         dir: env.UPLOAD_DIR,
         tempDir: env.TEMP_UPLOAD_DIR,
         maxFileSize: env.MAX_FILE_SIZE,
         allowedFileTypes: env.ALLOWED_FILE_TYPES.split(','),
-        requireAuth: env.REQUIRE_AUTH_FOR_UPLOADS === 'true'
-      }
+        requireAuth: env.REQUIRE_AUTH_FOR_UPLOADS === 'true',
+      },
     };
-    
+
     res.json({
       success: true,
-      data: safeConfig
+      data: safeConfig,
     });
   } catch (error) {
     logger.error('Yapılandırma bilgileri alınırken hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     res.status(500).json({
       success: false,
       error: {
         message: 'Yapılandırma bilgileri alınırken hata oluştu',
-        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      }
+        details: error instanceof Error ? error.message : 'Bilinmeyen hata',
+      },
     });
   }
 });
@@ -107,25 +107,25 @@ router.get('/api/config/status', (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       version: env.APP_VERSION || env.npm_package_version,
-      environment: env.NODE_ENV
+      environment: env.NODE_ENV,
     };
-    
+
     res.json({
       success: true,
-      data: status
+      data: status,
     });
   } catch (error) {
     logger.error('Uygulama durumu alınırken hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     res.status(500).json({
       success: false,
       error: {
         message: 'Uygulama durumu alınırken hata oluştu',
-        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      }
+        details: error instanceof Error ? error.message : 'Bilinmeyen hata',
+      },
     });
   }
 });
@@ -138,7 +138,7 @@ router.get('/api/config/info', (req: Request, res: Response) => {
     // package.json dosyasını oku
     const packageJsonPath = path.join(process.cwd(), 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    
+
     const info = {
       name: packageJson.name,
       version: packageJson.version,
@@ -153,25 +153,25 @@ router.get('/api/config/info', (req: Request, res: Response) => {
       platform: process.platform,
       arch: process.arch,
       memoryUsage: process.memoryUsage().heapUsed,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     };
-    
+
     res.json({
       success: true,
-      data: info
+      data: info,
     });
   } catch (error) {
     logger.error('Uygulama bilgileri alınırken hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     res.status(500).json({
       success: false,
       error: {
         message: 'Uygulama bilgileri alınırken hata oluştu',
-        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      }
+        details: error instanceof Error ? error.message : 'Bilinmeyen hata',
+      },
     });
   }
 });
@@ -191,25 +191,25 @@ router.get('/api/config/features', (req: Request, res: Response) => {
       compression: env.FEATURE_COMPRESSION,
       helmet: env.FEATURE_HELMET,
       cors: env.FEATURE_CORS,
-      morgan: env.FEATURE_MORGAN
+      morgan: env.FEATURE_MORGAN,
     };
-    
+
     res.json({
       success: true,
-      data: features
+      data: features,
     });
   } catch (error) {
     logger.error('Özellik bayrakları alınırken hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     res.status(500).json({
       success: false,
       error: {
         message: 'Özellik bayrakları alınırken hata oluştu',
-        details: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      }
+        details: error instanceof Error ? error.message : 'Bilinmeyen hata',
+      },
     });
   }
 });

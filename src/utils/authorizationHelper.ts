@@ -62,7 +62,7 @@ export async function hasPermission(
       userId,
       resourceId,
       resourceType,
-      requiredPermission
+      requiredPermission,
     });
 
     return false;
@@ -97,18 +97,14 @@ async function hasGroupPermission(
 
   // Grup üyeliğini kontrol et
   const members = group.get('members') || [];
-  const isMember = members.some((member: any) =>
-    member.user && member.user.toString() === userId
-  );
+  const isMember = members.some((member: any) => member.user && member.user.toString() === userId);
 
   if (!isMember) {
     return false;
   }
 
   // Üye rolünü kontrol et
-  const member = members.find((member: any) =>
-    member.user && member.user.toString() === userId
-  );
+  const member = members.find((member: any) => member.user && member.user.toString() === userId);
 
   if (!member) {
     return false;
@@ -171,9 +167,7 @@ async function hasChannelPermission(
   if (isPrivate) {
     // Özel kanala erişim kontrolü
     const allowedUsers = channel.get('allowedUsers') || [];
-    const hasAccess = allowedUsers.some((user: any) =>
-      user && user.toString() === userId
-    );
+    const hasAccess = allowedUsers.some((user: any) => user && user.toString() === userId);
 
     return hasAccess;
   }
@@ -210,11 +204,7 @@ async function hasMessagePermission(
 
   // Kanal izinlerini kontrol et
   const channelId = message.get('channel');
-  return hasChannelPermission(
-    userId,
-    channelId ? channelId.toString() : '',
-    requiredPermission
-  );
+  return hasChannelPermission(userId, channelId ? channelId.toString() : '', requiredPermission);
 }
 
 /**
@@ -296,12 +286,7 @@ export async function authorizeOrFail(
   resourceType: 'group' | 'channel' | 'message' | 'user',
   requiredPermission: 'view' | 'edit' | 'delete' | 'admin' = 'view'
 ): Promise<void> {
-  const hasAccess = await hasPermission(
-    userId,
-    resourceId,
-    resourceType,
-    requiredPermission
-  );
+  const hasAccess = await hasPermission(userId, resourceId, resourceType, requiredPermission);
 
   if (!hasAccess) {
     throw new ForbiddenError(`Bu işlem için yetkiniz yok: ${resourceType} ${requiredPermission}`);
@@ -311,5 +296,5 @@ export async function authorizeOrFail(
 export default {
   hasPermission,
   getUserIdFromRequest,
-  authorizeOrFail
+  authorizeOrFail,
 };

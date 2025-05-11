@@ -69,7 +69,7 @@ export async function setupTwoFactor(userId: string): Promise<TwoFactorSetupResu
     return {
       success: true,
       secret: secret,
-      message: 'İki faktörlü kimlik doğrulama kurulumu başlatıldı.'
+      message: 'İki faktörlü kimlik doğrulama kurulumu başlatıldı.',
     };
   } catch (error) {
     logger.error('2FA kurulum hatası', { error: (error as Error).message, userId });
@@ -95,7 +95,8 @@ export async function verifyAndEnableTwoFactor(
 
     // Gerçek uygulamada token doğrulaması yapılır
     // Bu örnek için basit bir kontrol yapıyoruz
-    if (token !== '123456') { // Örnek doğrulama kodu
+    if (token !== '123456') {
+      // Örnek doğrulama kodu
       throw new ValidationError('Geçersiz doğrulama kodu.');
     }
 
@@ -115,7 +116,7 @@ export async function verifyAndEnableTwoFactor(
     return {
       success: true,
       message: 'İki faktörlü kimlik doğrulama etkinleştirildi.',
-      backupCodes
+      backupCodes,
     };
   } catch (error) {
     logger.error('2FA etkinleştirme hatası', { error: (error as Error).message, userId });
@@ -139,7 +140,7 @@ export async function verifyLogin(userId: string, token: string): Promise<TwoFac
     // Yedek kod kontrolü
     if (user.backupCodes && user.backupCodes.includes(token)) {
       // Yedek kodu kullanıldı olarak işaretle
-      user.backupCodes = user.backupCodes.filter(code => code !== token);
+      user.backupCodes = user.backupCodes.filter((code) => code !== token);
       await user.save();
 
       logger.info('2FA yedek kod ile doğrulandı', { userId });
@@ -149,7 +150,8 @@ export async function verifyLogin(userId: string, token: string): Promise<TwoFac
 
     // Gerçek uygulamada token doğrulaması yapılır
     // Bu örnek için basit bir kontrol yapıyoruz
-    if (token !== '123456') { // Örnek doğrulama kodu
+    if (token !== '123456') {
+      // Örnek doğrulama kodu
       throw new AuthenticationError('Geçersiz doğrulama kodu.');
     }
 
@@ -184,7 +186,8 @@ export async function disableTwoFactor(
 
     // Gerçek uygulamada token doğrulaması yapılır
     // Bu örnek için basit bir kontrol yapıyoruz
-    if (token !== '123456') { // Örnek doğrulama kodu
+    if (token !== '123456') {
+      // Örnek doğrulama kodu
       throw new AuthenticationError('Geçersiz doğrulama kodu.');
     }
 
@@ -227,5 +230,5 @@ export default {
   verifyAndEnableTwoFactor,
   verifyLogin,
   disableTwoFactor,
-  checkTwoFactorStatus
+  checkTwoFactorStatus,
 };

@@ -24,17 +24,17 @@ export function loadTranslations(): void {
     // Dil dosyalarını yükle
     for (const lang of SUPPORTED_LANGUAGES) {
       const filePath = path.join(__dirname, '..', 'locales', `${lang}.json`);
-      
+
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, 'utf8');
         translations[lang] = JSON.parse(content);
-        
+
         logger.info(`${lang} dil dosyası yüklendi`);
       } else {
         logger.warn(`${lang} dil dosyası bulunamadı: ${filePath}`);
       }
     }
-    
+
     // Varsayılan dil dosyasını kontrol et
     if (!translations[DEFAULT_LANGUAGE]) {
       logger.error(`Varsayılan dil dosyası (${DEFAULT_LANGUAGE}) bulunamadı`);
@@ -53,49 +53,53 @@ export function loadTranslations(): void {
  * @param params Çeviri parametreleri
  * @returns Çevrilmiş metin
  */
-export function translate(key: string, lang: string = DEFAULT_LANGUAGE, params: Record<string, any> = {}): string {
+export function translate(
+  key: string,
+  lang: string = DEFAULT_LANGUAGE,
+  params: Record<string, any> = {}
+): string {
   try {
     // Dil kodunu kontrol et
     const language = SUPPORTED_LANGUAGES.includes(lang) ? lang : DEFAULT_LANGUAGE;
-    
+
     // Çeviriyi bul
     const keys = key.split('.');
     let translation: any = translations[language];
-    
+
     for (const k of keys) {
       if (!translation || !translation[k]) {
         // Çeviri bulunamadı, varsayılan dilde dene
         if (language !== DEFAULT_LANGUAGE) {
           return translate(key, DEFAULT_LANGUAGE, params);
         }
-        
+
         // Varsayılan dilde de bulunamadı, anahtarı döndür
         return key;
       }
-      
+
       translation = translation[k];
     }
-    
+
     // Çeviri bir string değilse, anahtarı döndür
     if (typeof translation !== 'string') {
       return key;
     }
-    
+
     // Parametreleri değiştir
     let result = translation;
-    
+
     for (const [paramKey, paramValue] of Object.entries(params)) {
       result = result.replace(new RegExp(`{{${paramKey}}}`, 'g'), paramValue);
     }
-    
+
     return result;
   } catch (error) {
-    logger.error('Çeviri yapılırken hata oluştu', { 
+    logger.error('Çeviri yapılırken hata oluştu', {
       error: (error as Error).message,
       key,
-      lang
+      lang,
     });
-    
+
     return key;
   }
 }
@@ -123,7 +127,7 @@ export function changeLanguage(lang: string): boolean {
     logger.info(`Dil değiştirildi: ${lang}`);
     return true;
   }
-  
+
   logger.warn(`Desteklenmeyen dil: ${lang}`);
   return false;
 }
@@ -154,5 +158,5 @@ export default {
   getCurrentLanguage,
   getSupportedLanguages,
   SUPPORTED_LANGUAGES,
-  DEFAULT_LANGUAGE
+  DEFAULT_LANGUAGE,
 };

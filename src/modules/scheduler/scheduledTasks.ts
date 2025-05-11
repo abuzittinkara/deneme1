@@ -14,7 +14,9 @@ import { createModelHelper } from '../../utils/mongoose-helpers';
 import { UserStatus } from '../../types/enums';
 
 // Model yardımcıları
-const ScheduledMessageHelper = createModelHelper<ScheduledMessageDocument, typeof ScheduledMessage>(ScheduledMessage);
+const ScheduledMessageHelper = createModelHelper<ScheduledMessageDocument, typeof ScheduledMessage>(
+  ScheduledMessage
+);
 const MessageHelper = createModelHelper<MessageDocument, typeof Message>(Message);
 const UserHelper = createModelHelper<UserDocument, typeof User>(User);
 const ChannelHelper = createModelHelper<ChannelDocument, typeof Channel>(Channel);
@@ -30,16 +32,19 @@ const sendScheduledMessages = async (io: Server) => {
     const now = new Date();
 
     // Gönderilme zamanı gelmiş mesajları bul
-    const scheduledMessages = await performance.measureDatabaseQuery('Zamanlanmış mesajları getir', async () => {
-      return await ScheduledMessageHelper.find(
-        {
-          scheduledTime: { $lte: now },
-          sent: false
-        },
-        null,
-        { populate: { path: 'sender', select: 'username avatar status' } }
-      ).exec();
-    });
+    const scheduledMessages = await performance.measureDatabaseQuery(
+      'Zamanlanmış mesajları getir',
+      async () => {
+        return await ScheduledMessageHelper.find(
+          {
+            scheduledTime: { $lte: now },
+            sent: false,
+          },
+          null,
+          { populate: { path: 'sender', select: 'username avatar status' } }
+        ).exec();
+      }
+    );
 
     if (scheduledMessages.length === 0) {
       return;
@@ -54,7 +59,7 @@ const sendScheduledMessages = async (io: Server) => {
         if (!channel) {
           logger.error('Zamanlanmış mesaj için kanal bulunamadı', {
             scheduledMessageId: scheduledMessage._id,
-            channelId: scheduledMessage.channel
+            channelId: scheduledMessage.channel,
           });
           continue;
         }
@@ -68,7 +73,7 @@ const sendScheduledMessages = async (io: Server) => {
           group: scheduledMessage.group,
           mentions: scheduledMessage.mentions,
           attachments: scheduledMessage.attachments,
-          scheduledMessageId: scheduledMessage._id
+          scheduledMessageId: scheduledMessage._id,
         });
 
         await newMessage.save();
@@ -83,19 +88,19 @@ const sendScheduledMessages = async (io: Server) => {
         io.to(scheduledMessage.channel.toString()).emit('message:new', {
           ...newMessage.toObject(),
           sender: scheduledMessage.sender,
-          isScheduled: true
+          isScheduled: true,
         });
 
         logger.info('Zamanlanmış mesaj gönderildi', {
           scheduledMessageId: scheduledMessage._id,
           messageId: newMessage._id,
           channelId: scheduledMessage.channel,
-          groupId: scheduledMessage.group
+          groupId: scheduledMessage.group,
         });
       } catch (error) {
         logger.error('Zamanlanmış mesaj gönderme hatası', {
           error: (error as Error).message,
-          scheduledMessageId: scheduledMessage._id
+          scheduledMessageId: scheduledMessage._id,
         });
       }
     }
@@ -113,12 +118,15 @@ const updateUserStatuses = async (io: Server) => {
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
     // Son aktivite zamanı 5 dakikadan eski olan kullanıcıları bul
-    const users = await performance.measureDatabaseQuery('Kullanıcı durumlarını getir', async () => {
-      return await UserHelper.find({
-        status: UserStatus.ONLINE,
-        lastActivity: { $lt: fiveMinutesAgo }
-      }).exec();
-    });
+    const users = await performance.measureDatabaseQuery(
+      'Kullanıcı durumlarını getir',
+      async () => {
+        return await UserHelper.find({
+          status: UserStatus.ONLINE,
+          lastActivity: { $lt: fiveMinutesAgo },
+        }).exec();
+      }
+    );
 
     if (users.length === 0) {
       return;
@@ -134,7 +142,7 @@ const updateUserStatuses = async (io: Server) => {
       // Kullanıcı durumunu socket üzerinden bildir
       io.emit('user:status:update', {
         userId: user._id,
-        status: UserStatus.IDLE
+        status: UserStatus.IDLE,
       });
     }
   } catch (error) {
@@ -158,15 +166,17 @@ const cleanupDatabase = async () => {
     );
 
     // 30 günden eski şifre sıfırlama kayıtlarını temizle
-    const passwordResetsDeleted = await performance.measureDatabaseQuery('Eski şifre sıfırlama kayıtlarını temizle', () =>
-      // PasswordReset modelini import etmeden önce kontrol et
-      // PasswordReset.deleteMany({ createdAt: { $lt: thirtyDaysAgo } })
-      Promise.resolve({ deletedCount: 0 })
+    const passwordResetsDeleted = await performance.measureDatabaseQuery(
+      'Eski şifre sıfırlama kayıtlarını temizle',
+      () =>
+        // PasswordReset modelini import etmeden önce kontrol et
+        // PasswordReset.deleteMany({ createdAt: { $lt: thirtyDaysAgo } })
+        Promise.resolve({ deletedCount: 0 })
     );
 
     logger.info('Veritabanı temizliği tamamlandı', {
       sessionsDeleted: sessionsDeleted.deletedCount,
-      passwordResetsDeleted: passwordResetsDeleted.deletedCount
+      passwordResetsDeleted: passwordResetsDeleted.deletedCount,
     });
   } catch (error) {
     logger.error('Veritabanı temizliği hatası', { error: (error as Error).message });
@@ -198,7 +208,7 @@ const startScheduledTasks = (io?: Server) => {
     });
 
     // Görevleri başlat
-    Object.values(scheduledJobs).forEach(job => {
+    Object.values(scheduledJobs).forEach((job) => {
       if (!(job as any).running) {
         job.start();
       }
@@ -216,7 +226,7 @@ const startScheduledTasks = (io?: Server) => {
 const stopScheduledTasks = () => {
   try {
     // Tüm görevleri durdur
-    Object.values(scheduledJobs).forEach(job => {
+    Object.values(scheduledJobs).forEach((job) => {
       if ((job as any).running) {
         job.stop();
       }
@@ -241,5 +251,5 @@ export {
   stopScheduledTasks,
   sendScheduledMessages,
   updateUserStatuses,
-  cleanupDatabase
+  cleanupDatabase,
 };

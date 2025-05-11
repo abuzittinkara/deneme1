@@ -3,13 +3,11 @@
  * Kimlik doğrulama middleware'i
  */
 import { Request, Response, NextFunction } from 'express';
-import * as jwt from 'jsonwebtoken';
 import { User, UserDocument } from '../models/User';
 import { logger } from '../utils/logger';
-import { createMiddlewareHelper } from '../utils/express-helpers';
+import { createAuthMiddleware } from '../utils/express-helpers';
 import { AuthRequest } from '../types/express';
 import { createModelHelper } from '../utils/mongoose-helpers';
-import { TokenPayload } from '../config/jwt';
 import * as authManager from '../modules/auth/authManager';
 
 // Model yardımcısı
@@ -21,28 +19,26 @@ const UserHelper = createModelHelper<UserDocument>(User);
  * @param res - Express response nesnesi
  * @param next - Express next fonksiyonu
  */
-const _requireAuth = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const _requireAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // Authorization header'ını kontrol et
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Kimlik doğrulama başarısız'
+        message: 'Kimlik doğrulama başarısız',
       });
+      return;
     }
 
     // Token'ı çıkar
     const token = authHeader.split(' ')[1];
     if (!token) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Kimlik doğrulama başarısız'
+        message: 'Kimlik doğrulama başarısız',
       });
+      return;
     }
 
     try {
@@ -50,10 +46,11 @@ const _requireAuth = async (
       const decoded = authManager.verifyAccessToken(token);
 
       if (!decoded) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
-          message: 'Geçersiz veya süresi dolmuş token'
+          message: 'Geçersiz veya süresi dolmuş token',
         });
+        return;
       }
 
       // GELİŞTİRME MODU: Test kullanıcısı için özel durum
@@ -65,7 +62,7 @@ const _requireAuth = async (
           id: decoded.sub,
           username: decoded.username,
           sub: decoded.sub,
-          role: decoded.role || 'user'
+          role: decoded.role || 'user',
         };
 
         next();
@@ -75,50 +72,54 @@ const _requireAuth = async (
       // Kullanıcıyı kontrol et
       const user = await UserHelper.findById(decoded.sub);
       if (!user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
-          message: 'Kullanıcı bulunamadı'
+          message: 'Kullanıcı bulunamadı',
         });
+        return;
       }
 
       // Kullanıcı aktif mi kontrol et
       if (!user.isActive) {
-        return res.status(403).json({
+        res.status(403).json({
           success: false,
-          message: 'Hesabınız devre dışı bırakılmış'
+          message: 'Hesabınız devre dışı bırakılmış',
         });
+        return;
       }
 
       // Request nesnesine kullanıcı bilgisini ekle
       (req as AuthRequest).user = {
-        id: user._id.toString(),
+        id: user._id ? user._id.toString() : '',
         username: user.username,
-        sub: user._id.toString(),
-        role: user.role || 'user'
+        sub: user._id ? user._id.toString() : '',
+        role: user.role || 'user',
       };
       next();
     } catch (error) {
       logger.error('Token doğrulama hatası', {
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Geçersiz veya süresi dolmuş token'
+        message: 'Geçersiz veya süresi dolmuş token',
       });
+      return;
     }
   } catch (error) {
     logger.error('Kimlik doğrulama hatası', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: 'Kimlik doğrulama sırasında bir hata oluştu'
+      message: 'Kimlik doğrulama sırasında bir hata oluştu',
     });
+    return;
   }
 };
 
 // Tip güvenli middleware
-export const requireAuth = createMiddlewareHelper<AuthRequest>(
+export const requireAuth = createAuthMiddleware(
   async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     await _requireAuth(req, res, next);
   }

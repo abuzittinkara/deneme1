@@ -16,12 +16,14 @@ export function configureSocketServer(io: SocketIOServer): void {
   // Middleware: Kimlik doğrulama
   io.use(async (socket, next) => {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+      const token =
+        (socket.handshake.auth && socket.handshake.auth['token']) ||
+        socket.handshake.headers.authorization?.split(' ')[1];
 
       if (!token) {
         logger.warn('Socket bağlantısı için token bulunamadı', {
           socketId: socket.id,
-          ip: socket.handshake.address
+          ip: socket.handshake.address,
         });
         return next(new Error('Kimlik doğrulama gerekli'));
       }
@@ -30,13 +32,18 @@ export function configureSocketServer(io: SocketIOServer): void {
       const decoded = await verifyToken(token);
 
       // Kullanıcıyı bul
-      const user = await User.findById(decoded.userId);
+      const userId = decoded.sub || decoded.id;
+      if (!userId) {
+        return next(new Error('Geçersiz token: Kullanıcı ID bulunamadı'));
+      }
+
+      const user = await User.findById(userId);
 
       if (!user) {
         logger.warn('Socket bağlantısı için kullanıcı bulunamadı', {
           socketId: socket.id,
-          userId: decoded.userId,
-          ip: socket.handshake.address
+          userId: userId,
+          ip: socket.handshake.address,
         });
         return next(new Error('Kullanıcı bulunamadı'));
       }
@@ -47,7 +54,7 @@ export function configureSocketServer(io: SocketIOServer): void {
       logger.debug('Socket kimlik doğrulama başarılı', {
         socketId: socket.id,
         userId: user.id,
-        username: user.get('username')
+        username: user.get('username'),
       });
 
       next();
@@ -55,7 +62,7 @@ export function configureSocketServer(io: SocketIOServer): void {
       logger.error('Socket kimlik doğrulama hatası', {
         error: (error as Error).message,
         ip: socket.handshake.address,
-        socketId: socket.id
+        socketId: socket.id,
       });
 
       next(new Error('Geçersiz token'));
@@ -69,7 +76,7 @@ export function configureSocketServer(io: SocketIOServer): void {
     if (!user) {
       logger.warn('Kimlik doğrulaması olmadan socket bağlantısı', {
         socketId: socket.id,
-        ip: socket.handshake.address
+        ip: socket.handshake.address,
       });
 
       socket.disconnect();
@@ -87,7 +94,7 @@ export function configureSocketServer(io: SocketIOServer): void {
       userId: user.id,
       username: user.get('username'),
       socketId: socket.id,
-      connectionCount: activeConnections.get(user.id)!.size
+      connectionCount: activeConnections.get(user.id)!.size,
     });
 
     // Kullanıcı durumunu güncelle
@@ -109,7 +116,7 @@ export function configureSocketServer(io: SocketIOServer): void {
         userId: user.id,
         username: user.get('username'),
         socketId: socket.id,
-        remainingConnections: activeConnections.get(user.id)?.size || 0
+        remainingConnections: activeConnections.get(user.id)?.size || 0,
       });
     });
 
@@ -118,35 +125,44 @@ export function configureSocketServer(io: SocketIOServer): void {
       logger.error('Socket hatası', {
         error: error.message,
         userId: user.id,
-        socketId: socket.id
+        socketId: socket.id,
       });
     });
 
     // Ping olayı (bağlantı kontrolü)
-    socket.on('ping', createSocketEventHandler(async (socket, data, callback) => {
-      if (callback) {
-        callback({
-          success: true,
-          data: {
-            time: new Date().toISOString(),
-            message: 'pong'
-          }
-        });
-      }
-    }));
+    socket.on(
+      'ping',
+      createSocketEventHandler(async (socket, data, callback) => {
+        if (callback) {
+          callback({
+            success: true,
+            data: {
+              time: new Date().toISOString(),
+              message: 'pong',
+            },
+          });
+        }
+      })
+    );
   });
 
   // Periyodik olarak bağlantı istatistiklerini logla
-  setInterval(() => {
-    const totalConnections = Array.from(activeConnections.values()).reduce((sum, connections) => sum + connections.size, 0);
-    const totalUsers = activeConnections.size;
+  setInterval(
+    () => {
+      const totalConnections = Array.from(activeConnections.values()).reduce(
+        (sum, connections) => sum + connections.size,
+        0
+      );
+      const totalUsers = activeConnections.size;
 
-    logger.debug('Socket bağlantı istatistikleri', {
-      totalConnections,
-      totalUsers,
-      connectionsPerUser: totalUsers > 0 ? (totalConnections / totalUsers).toFixed(2) : '0'
-    });
-  }, 5 * 60 * 1000); // 5 dakikada bir
+      logger.debug('Socket bağlantı istatistikleri', {
+        totalConnections,
+        totalUsers,
+        connectionsPerUser: totalUsers > 0 ? (totalConnections / totalUsers).toFixed(2) : '0',
+      });
+    },
+    5 * 60 * 1000
+  ); // 5 dakikada bir
 }
 
 /**
@@ -156,22 +172,25 @@ export function configureSocketServer(io: SocketIOServer): void {
  */
 async function updateUserStatus(userId: string, isOnline: boolean): Promise<void> {
   try {
-    await User.findByIdAndUpdate(userId, {
-      $set: {
-        'onlineStatus.isOnline': isOnline,
-        'onlineStatus.lastActiveAt': new Date()
+    await User.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          'onlineStatus.isOnline': isOnline,
+          'onlineStatus.lastActiveAt': new Date(),
+        },
       }
-    });
+    );
 
     logger.debug('Kullanıcı durumu güncellendi', {
       userId,
-      isOnline
+      isOnline,
     });
   } catch (error) {
     logger.error('Kullanıcı durumu güncellenirken hata oluştu', {
       error: (error as Error).message,
       userId,
-      isOnline
+      isOnline,
     });
   }
 }
@@ -206,5 +225,5 @@ export default {
   configureSocketServer,
   getUserConnectionCount,
   isUserOnline,
-  getOnlineUsers
+  getOnlineUsers,
 };

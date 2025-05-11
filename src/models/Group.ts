@@ -55,11 +55,11 @@ const GroupSchema = new Schema<GroupDocument, GroupModel>(
     // Grup türü
     type: { type: String, enum: ['public', 'private', 'secret'], default: 'public' },
     // Grup kuralları
-    rules: { type: String, default: '' }
+    rules: { type: String, default: '' },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -70,31 +70,17 @@ GroupSchema.index({ owner: 1 });
 GroupSchema.index({ name: 'text', description: 'text' });
 
 // Statik metodlar
-GroupSchema.statics.findByGroupId = function(groupId: string): Promise<GroupDocument | null> {
+GroupSchema.statics['findByGroupId'] = function (groupId: string): Promise<GroupDocument | null> {
   return this.findOne({ groupId }) as unknown as Promise<GroupDocument | null>;
 };
 
 // Grup modelini oluştur
 let GroupModel_: GroupModel;
 
-// Geliştirme modunda mock model oluştur
-if (process.env.NODE_ENV === 'development') {
-  // Mock model
-  GroupModel_ = {
-    find: () => Promise.resolve([]),
-    findById: () => Promise.resolve(null),
-    findOne: () => Promise.resolve(null),
-    create: () => Promise.resolve({} as any),
-    updateOne: () => Promise.resolve({ modifiedCount: 0 }),
-    deleteOne: () => Promise.resolve({ deletedCount: 0 }),
-    countDocuments: () => Promise.resolve(0),
-    findByGroupId: () => Promise.resolve(null),
-  } as unknown as GroupModel;
-} else {
-  // Gerçek model
-  GroupModel_ = (mongoose.models.Group as GroupModel) ||
-    mongoose.model<GroupDocument, GroupModel>('Group', GroupSchema);
-}
+// Gerçek model
+GroupModel_ =
+  (mongoose.models['Group'] as GroupModel) ||
+  mongoose.model<GroupDocument, GroupModel>('Group', GroupSchema);
 
 // Hem default export hem de named export sağla
 export const Group = GroupModel_;

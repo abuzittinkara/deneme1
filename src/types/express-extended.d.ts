@@ -39,7 +39,11 @@ export interface AuthRequest extends Request {
 }
 
 // Express middleware fonksiyon tipi
-export type ExpressMiddleware = (req: Request, res: Response, next: NextFunction) => void | Promise<void>;
+export type ExpressMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => void | Promise<void>;
 
 // Express handler fonksiyon tipi
 export type ExpressHandler = (req: Request, res: Response) => void | Promise<void>;
@@ -48,28 +52,36 @@ export type ExpressHandler = (req: Request, res: Response) => void | Promise<voi
 export type ExpressAuthHandler = (req: AuthRequest, res: Response) => void | Promise<void>;
 
 // Express middleware oluşturucu
-export function createMiddlewareHelper<T extends Request>(handler: (req: T, res: Response, next: NextFunction) => void | Promise<void>): ExpressMiddleware {
+export function createMiddlewareHelper<T extends Request>(
+  handler: (req: T, res: Response, next: NextFunction) => void | Promise<void>
+): ExpressMiddleware {
   return (req: Request, res: Response, next: NextFunction) => {
     return handler(req as T, res, next);
   };
 }
 
 // Express auth middleware oluşturucu
-export function createAuthMiddleware(handler: (req: AuthRequest, res: Response, next: NextFunction) => void | Promise<void>): ExpressMiddleware {
+export function createAuthMiddleware(
+  handler: (req: AuthRequest, res: Response, next: NextFunction) => void | Promise<void>
+): ExpressMiddleware {
   return (req: Request, res: Response, next: NextFunction) => {
     return handler(req as AuthRequest, res, next);
   };
 }
 
 // Express route handler oluşturucu
-export function createRouteHandler<T extends Request>(handler: (req: T, res: Response) => void | Promise<void>): ExpressHandler {
+export function createRouteHandler<T extends Request>(
+  handler: (req: T, res: Response) => void | Promise<void>
+): ExpressHandler {
   return (req: Request, res: Response) => {
     return handler(req as T, res);
   };
 }
 
 // Express auth route handler oluşturucu
-export function createAuthRouteHandler(handler: (req: AuthRequest, res: Response) => void | Promise<void>): ExpressHandler {
+export function createAuthRouteHandler(
+  handler: (req: AuthRequest, res: Response) => void | Promise<void>
+): ExpressHandler {
   return (req: Request, res: Response) => {
     return handler(req as AuthRequest, res);
   };

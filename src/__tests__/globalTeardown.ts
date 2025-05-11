@@ -15,10 +15,10 @@ export default async (): Promise<void> => {
     }
 
     // Açık kalan bağlantıları kapat
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Tüm işlemlerin tamamlanması için bekle
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Zorla çıkış yap
     process.exit(0);

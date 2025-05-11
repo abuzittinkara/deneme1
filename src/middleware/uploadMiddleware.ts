@@ -10,58 +10,140 @@ import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
 import { ValidationError } from '../utils/errors';
 import { FILE_SIZE_LIMITS, ALLOWED_EXTENSIONS, UPLOAD_DIRS } from '../utils/fileProcessor';
-import { sanitizeFilename } from '../utils/fileUtils';
+import { sanitizeFilename } from '../utils/sanitizer';
 import crypto from 'crypto';
 import { env } from '../config/env';
 
-// Geçici yükleme dizini
-const TEMP_UPLOAD_DIR = UPLOAD_DIRS.temp;
+// Geçici yükleme dizini - güvenli yol kullanarak
+const TEMP_UPLOAD_DIR = path.resolve(UPLOAD_DIRS.temp);
 
 // Geçici yükleme dizinini oluştur
-if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
-  fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+    fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true, mode: 0o755 });
+    logger.info('Geçici yükleme dizini oluşturuldu', { path: TEMP_UPLOAD_DIR });
+  }
+} catch (error) {
+  logger.error('Geçici yükleme dizini oluşturulamadı', {
+    error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+    path: TEMP_UPLOAD_DIR,
+  });
+  // Kritik hata, uygulama başlatılmamalı
+  throw new Error('Geçici yükleme dizini oluşturulamadı');
 }
 
 // Multer depolama yapılandırması
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Dizinin var olduğundan emin ol
-    if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
-      fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true, mode: 0o755 });
-    }
+    try {
+      // Dizinin var olduğundan emin ol
+      if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+        fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true, mode: 0o755 });
+      }
 
-    cb(null, TEMP_UPLOAD_DIR);
+      // Yol geçişi kontrolü
+      const resolvedPath = path.resolve(TEMP_UPLOAD_DIR);
+      const uploadsBasePath = path.resolve(path.join(__dirname, '..', '..', 'uploads'));
+
+      if (!resolvedPath.startsWith(uploadsBasePath)) {
+        logger.error('Güvenli olmayan yükleme dizini', {
+          path: TEMP_UPLOAD_DIR,
+          resolvedPath,
+          uploadsBasePath,
+        });
+        return cb(new Error('Güvenli olmayan yükleme dizini'), '');
+      }
+
+      cb(null, TEMP_UPLOAD_DIR);
+    } catch (error) {
+      logger.error('Yükleme dizini hatası', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        path: TEMP_UPLOAD_DIR,
+      });
+      cb(error as Error, '');
+    }
   },
   filename: (req, file, cb) => {
     try {
       // Orijinal dosya adını sanitize et
       const sanitizedName = sanitizeFilename(file.originalname);
 
-      // Dosya uzantısını al
+      // Dosya uzantısını al ve güvenli hale getir
       const extension = path.extname(sanitizedName).toLowerCase();
+
+      // İzin verilen uzantıları kontrol et
+      const allowedExtensions = [
+        '.jpg',
+        '.jpeg',
+        '.png',
+        '.gif',
+        '.webp',
+        '.svg',
+        '.mp3',
+        '.wav',
+        '.ogg',
+        '.m4a',
+        '.aac',
+        '.mp4',
+        '.webm',
+        '.mov',
+        '.avi',
+        '.mkv',
+        '.pdf',
+        '.doc',
+        '.docx',
+        '.xls',
+        '.xlsx',
+        '.ppt',
+        '.pptx',
+        '.txt',
+        '.md',
+        '.zip',
+        '.rar',
+        '.7z',
+        '.tar',
+        '.gz',
+      ];
+
+      const safeExtension = allowedExtensions.includes(extension) ? extension : '.bin';
 
       // Benzersiz dosya adı oluştur (UUID + hash + uzantı)
       const uuid = uuidv4();
+
+      // Güvenli hash oluştur - crypto.randomBytes kullanarak
+      const randomBytes = crypto.randomBytes(16).toString('hex');
       const hash = crypto
         .createHash('sha256')
-        .update(file.originalname + Date.now().toString())
+        .update(file.originalname + Date.now().toString() + randomBytes)
         .digest('hex')
         .substring(0, 8);
 
-      const uniqueFileName = `${uuid}-${hash}${extension}`;
+      const uniqueFileName = `${uuid}-${hash}${safeExtension}`;
 
-      cb(null, uniqueFileName);
+      // Dosya adının güvenli olduğundan emin ol
+      const finalFileName = uniqueFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+      cb(null, finalFileName);
     } catch (error) {
       logger.error('Dosya adı oluşturma hatası', {
         error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-        originalname: file.originalname
+        originalname: file.originalname,
       });
 
       // Hata durumunda varsayılan bir ad kullan
-      const fallbackName = `${uuidv4()}.bin`;
-      cb(null, fallbackName);
+      try {
+        // Güvenli bir fallback adı oluştur
+        const fallbackName = `${uuidv4()}-${Date.now()}.bin`;
+        cb(null, fallbackName);
+      } catch (fallbackError) {
+        // Son çare olarak sabit bir ad kullan
+        logger.error('Fallback dosya adı oluşturma hatası', {
+          error: fallbackError instanceof Error ? fallbackError.message : 'Bilinmeyen hata',
+        });
+        cb(null, `unknown-${Date.now()}.bin`);
+      }
     }
-  }
+  },
 });
 
 // Dosya filtreleme
@@ -83,7 +165,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
         fileType,
         originalname: file.originalname,
         mimeType: file.mimetype,
-        ip: (req as any).ip
+        ip: (req as any).ip,
       });
 
       return cb(new ValidationError(`İzin verilmeyen dosya uzantısı: ${extension}`));
@@ -99,10 +181,12 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
         maxSize,
         fileType,
         originalname: file.originalname,
-        ip: (req as any).ip
+        ip: (req as any).ip,
       });
 
-      return cb(new ValidationError(`Dosya boyutu çok büyük. Maksimum: ${formatFileSize(maxSize)}`));
+      return cb(
+        new ValidationError(`Dosya boyutu çok büyük. Maksimum: ${formatFileSize(maxSize)}`)
+      );
     }
 
     // MIME türünü kontrol et
@@ -111,7 +195,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
         mimeType: file.mimetype,
         fileType,
         originalname: file.originalname,
-        ip: (req as any).ip
+        ip: (req as any).ip,
       });
 
       return cb(new ValidationError(`İzin verilmeyen dosya türü: ${file.mimetype}`));
@@ -124,7 +208,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       originalname: file.originalname,
       mimeType: file.mimetype,
-      ip: (req as any).ip
+      ip: (req as any).ip,
     });
 
     cb(error as Error);
@@ -157,12 +241,16 @@ function isAllowedMimeType(mimeType: string, fileType: string): boolean {
       'text/plain',
       'text/markdown',
       'application/json',
-      'application/xml'
+      'application/xml',
     ],
-    other: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream']
+    other: ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'],
   };
 
-  return ALLOWED_MIME_TYPES[fileType as keyof typeof ALLOWED_MIME_TYPES].includes(mimeType);
+  const allowedMimeTypes = ALLOWED_MIME_TYPES[fileType as keyof typeof ALLOWED_MIME_TYPES];
+  if (!allowedMimeTypes) {
+    return false;
+  }
+  return allowedMimeTypes.includes(mimeType);
 }
 
 // MIME türüne göre dosya türünü belirle
@@ -212,8 +300,8 @@ const upload = multer({
     fileSize: Math.max(...Object.values(FILE_SIZE_LIMITS)), // En büyük dosya boyutu limiti
     files: 10, // Maksimum dosya sayısı
     parts: 20, // Maksimum form alanı sayısı
-    fieldSize: 5 * 1024 * 1024 // Maksimum form alanı boyutu (5MB)
-  }
+    fieldSize: 5 * 1024 * 1024, // Maksimum form alanı boyutu (5MB)
+  },
 });
 
 // Hata işleme middleware'i
@@ -224,7 +312,9 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
   }
 
   // İstemci IP'sini al
-  const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;
+  const clientIp = (req.headers['x-forwarded-for'] ||
+    req.socket.remoteAddress ||
+    'unknown') as string;
 
   if (err instanceof multer.MulterError) {
     // Multer hatası
@@ -233,7 +323,7 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
       field: err.field,
       message: err.message,
       ip: clientIp,
-      path: req.path
+      path: req.path,
     });
 
     if (err.code === 'LIMIT_FILE_SIZE') {
@@ -245,9 +335,9 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
           code: 'LIMIT_FILE_SIZE',
           details: {
             maxSize: formatFileSize(Math.max(...Object.values(FILE_SIZE_LIMITS))),
-            field: err.field
-          }
-        }
+            field: err.field,
+          },
+        },
       });
     } else if (err.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({
@@ -257,9 +347,9 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
           statusCode: 400,
           code: 'LIMIT_FILE_COUNT',
           details: {
-            maxFiles: 10
-          }
-        }
+            maxFiles: 10,
+          },
+        },
       });
     } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
       return res.status(400).json({
@@ -269,9 +359,9 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
           statusCode: 400,
           code: 'LIMIT_UNEXPECTED_FILE',
           details: {
-            field: err.field
-          }
-        }
+            field: err.field,
+          },
+        },
       });
     } else if (err.code === 'LIMIT_PART_COUNT') {
       return res.status(400).json({
@@ -279,8 +369,8 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
         error: {
           message: 'Çok fazla form alanı',
           statusCode: 400,
-          code: 'LIMIT_PART_COUNT'
-        }
+          code: 'LIMIT_PART_COUNT',
+        },
       });
     } else if (err.code === 'LIMIT_FIELD_KEY') {
       return res.status(400).json({
@@ -288,8 +378,8 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
         error: {
           message: 'Form alanı adı çok uzun',
           statusCode: 400,
-          code: 'LIMIT_FIELD_KEY'
-        }
+          code: 'LIMIT_FIELD_KEY',
+        },
       });
     } else if (err.code === 'LIMIT_FIELD_VALUE') {
       return res.status(400).json({
@@ -297,8 +387,8 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
         error: {
           message: 'Form alanı değeri çok büyük',
           statusCode: 400,
-          code: 'LIMIT_FIELD_VALUE'
-        }
+          code: 'LIMIT_FIELD_VALUE',
+        },
       });
     } else if (err.code === 'LIMIT_FIELD_COUNT') {
       return res.status(400).json({
@@ -306,8 +396,8 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
         error: {
           message: 'Çok fazla form alanı',
           statusCode: 400,
-          code: 'LIMIT_FIELD_COUNT'
-        }
+          code: 'LIMIT_FIELD_COUNT',
+        },
       });
     }
 
@@ -316,15 +406,15 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
       error: {
         message: `Dosya yükleme hatası: ${err.message}`,
         statusCode: 400,
-        code: err.code
-      }
+        code: err.code,
+      },
     });
   } else if (err instanceof ValidationError) {
     // Doğrulama hatası
     logger.warn('Dosya doğrulama hatası', {
       message: err.message,
       ip: clientIp,
-      path: req.path
+      path: req.path,
     });
 
     return res.status(400).json({
@@ -332,8 +422,8 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
       error: {
         message: err.message,
         statusCode: 400,
-        code: 'VALIDATION_ERROR'
-      }
+        code: 'VALIDATION_ERROR',
+      },
     });
   }
 
@@ -342,7 +432,7 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
     error: err.message,
     stack: err.stack,
     ip: clientIp,
-    path: req.path
+    path: req.path,
   });
 
   return res.status(500).json({
@@ -350,8 +440,8 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
     error: {
       message: 'Dosya yüklenirken bir hata oluştu',
       statusCode: 500,
-      code: 'UPLOAD_ERROR'
-    }
+      code: 'UPLOAD_ERROR',
+    },
   });
 }
 
@@ -361,10 +451,12 @@ export function handleUploadErrors(err: any, req: Request, res: Response, next: 
  * @param res - Express response
  * @param next - Express next function
  */
-export function preUploadCheck(req: Request, res: Response, next: NextFunction) {
+export function preUploadCheck(req: Request, res: Response, next: NextFunction): void {
   try {
     // İstemci IP'sini al
-    const clientIp = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown') as string;
+    const clientIp = (req.headers['x-forwarded-for'] ||
+      req.socket.remoteAddress ||
+      'unknown') as string;
 
     // Content-Type kontrolü
     const contentType = req.headers['content-type'] || '';
@@ -372,56 +464,60 @@ export function preUploadCheck(req: Request, res: Response, next: NextFunction) 
       logger.warn('Geçersiz Content-Type', {
         contentType,
         ip: clientIp,
-        path: req.path
+        path: req.path,
       });
 
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'Geçersiz istek formatı. multipart/form-data olmalı',
           statusCode: 400,
-          code: 'INVALID_CONTENT_TYPE'
-        }
+          code: 'INVALID_CONTENT_TYPE',
+        },
       });
+      return;
     }
 
     // Content-Length kontrolü
     const contentLength = parseInt(req.headers['content-length'] || '0', 10);
     const maxSize = Math.max(...Object.values(FILE_SIZE_LIMITS));
 
-    if (contentLength > maxSize * 1.1) { // %10 tolerans
+    if (contentLength > maxSize * 1.1) {
+      // %10 tolerans
       logger.warn('İstek boyutu çok büyük', {
         contentLength,
         maxSize,
         ip: clientIp,
-        path: req.path
+        path: req.path,
       });
 
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: `İstek boyutu çok büyük. Maksimum: ${formatFileSize(maxSize)}`,
           statusCode: 400,
-          code: 'REQUEST_TOO_LARGE'
-        }
+          code: 'REQUEST_TOO_LARGE',
+        },
       });
+      return;
     }
 
     // Kullanıcı kimlik doğrulama kontrolü (opsiyonel)
     if (env.REQUIRE_AUTH_FOR_UPLOADS === 'true' && !(req as any).user) {
       logger.warn('Kimlik doğrulama olmadan dosya yükleme denemesi', {
         ip: clientIp,
-        path: req.path
+        path: req.path,
       });
 
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: {
           message: 'Dosya yüklemek için giriş yapmalısınız',
           statusCode: 401,
-          code: 'UNAUTHORIZED'
-        }
+          code: 'UNAUTHORIZED',
+        },
       });
+      return;
     }
 
     // Hız sınırlama kontrolü (burada basit bir örnek, gerçek uygulamada daha karmaşık olabilir)
@@ -431,20 +527,21 @@ export function preUploadCheck(req: Request, res: Response, next: NextFunction) 
         ip: clientIp,
         path: req.path,
         remaining: uploadLimiter.remaining,
-        resetTime: new Date(uploadLimiter.resetTime).toISOString()
+        resetTime: new Date(uploadLimiter.resetTime).toISOString(),
       });
 
-      return res.status(429).json({
+      res.status(429).json({
         success: false,
         error: {
           message: 'Çok fazla dosya yükleme denemesi. Lütfen daha sonra tekrar deneyin',
           statusCode: 429,
           code: 'TOO_MANY_REQUESTS',
           details: {
-            resetTime: new Date(uploadLimiter.resetTime).toISOString()
-          }
-        }
+            resetTime: new Date(uploadLimiter.resetTime).toISOString(),
+          },
+        },
       });
+      return;
     }
 
     // Tüm kontroller geçildi, devam et
@@ -453,17 +550,18 @@ export function preUploadCheck(req: Request, res: Response, next: NextFunction) 
     logger.error('Dosya yükleme öncesi kontrol hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       stack: error instanceof Error ? error.stack : undefined,
-      path: req.path
+      path: req.path,
     });
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error: {
         message: 'Dosya yükleme işlemi sırasında bir hata oluştu',
         statusCode: 500,
-        code: 'SERVER_ERROR'
-      }
+        code: 'SERVER_ERROR',
+      },
     });
+    return;
   }
 }
 
@@ -509,7 +607,7 @@ export function postUploadCleanup(req: Request, res: Response, next: NextFunctio
     } catch (error) {
       logger.warn('Geçici dosya temizleme hatası', {
         error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-        path: req.file.path
+        path: req.file.path,
       });
     }
   }
@@ -518,26 +616,26 @@ export function postUploadCleanup(req: Request, res: Response, next: NextFunctio
     try {
       if (Array.isArray(req.files)) {
         // upload.array() kullanıldığında
-        req.files.forEach(file => {
+        req.files.forEach((file) => {
           try {
             fs.unlinkSync(file.path);
           } catch (error) {
             logger.warn('Geçici dosya temizleme hatası', {
               error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-              path: file.path
+              path: file.path,
             });
           }
         });
       } else {
         // upload.fields() kullanıldığında
-        Object.values(req.files).forEach(files => {
-          files.forEach(file => {
+        Object.values(req.files).forEach((files) => {
+          files.forEach((file) => {
             try {
               fs.unlinkSync(file.path);
             } catch (error) {
               logger.warn('Geçici dosya temizleme hatası', {
                 error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-                path: file.path
+                path: file.path,
               });
             }
           });
@@ -545,7 +643,7 @@ export function postUploadCleanup(req: Request, res: Response, next: NextFunctio
       }
     } catch (error) {
       logger.warn('Geçici dosyaları temizleme hatası', {
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       });
     }
   }
@@ -559,5 +657,5 @@ export default {
   uploadFields,
   handleUploadErrors,
   preUploadCheck,
-  postUploadCleanup
+  postUploadCleanup,
 };

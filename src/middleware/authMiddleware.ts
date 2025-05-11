@@ -9,6 +9,7 @@ import { logger } from '../utils/logger';
 import { env } from '../config/env';
 import { User } from '../models/User';
 import mongoose from 'mongoose';
+import { UnauthorizedError } from '../utils/errors';
 
 /**
  * Kullanıcı rolleri
@@ -17,7 +18,7 @@ export enum UserRole {
   ADMIN = 'admin',
   MODERATOR = 'moderator',
   USER = 'user',
-  GUEST = 'guest'
+  GUEST = 'guest',
 }
 
 /**
@@ -27,7 +28,7 @@ export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
-  BANNED = 'banned'
+  BANNED = 'banned',
 }
 
 /**
@@ -115,14 +116,14 @@ function _authMiddleware(req: Request, res: Response, next: NextFunction) {
         username: 'testuser',
         role: UserRole.USER,
         status: UserStatus.ACTIVE,
-        sub: '507f1f77bcf86cd799439011'
+        sub: '507f1f77bcf86cd799439011',
       };
 
       return next();
     }
 
     // Geliştirme modunda kimlik doğrulamayı atla (opsiyonel)
-    if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
+    if (process.env['NODE_ENV'] === 'development' && process.env['SKIP_AUTH'] === 'true') {
       logger.warn('Geliştirme modunda kimlik doğrulama atlandı');
 
       // Geliştirme için kullanıcı bilgisi ekle
@@ -131,7 +132,7 @@ function _authMiddleware(req: Request, res: Response, next: NextFunction) {
         username: 'devuser',
         role: UserRole.ADMIN, // Geliştirme için admin rolü
         status: UserStatus.ACTIVE,
-        sub: '507f1f77bcf86cd799439011'
+        sub: '507f1f77bcf86cd799439011',
       };
 
       return next();
@@ -147,6 +148,9 @@ function _authMiddleware(req: Request, res: Response, next: NextFunction) {
     const token = authHeader.split(' ')[1];
 
     // Token'ı doğrula
+    if (!token) {
+      throw new UnauthorizedError('Token bulunamadı');
+    }
     const decoded = verifyToken(token);
 
     // Request nesnesine kullanıcı bilgisini ekle
@@ -162,8 +166,8 @@ function _authMiddleware(req: Request, res: Response, next: NextFunction) {
         success: false,
         error: {
           message: error.message,
-          code: error.code
-        }
+          code: error.code,
+        },
       });
     }
 
@@ -171,15 +175,15 @@ function _authMiddleware(req: Request, res: Response, next: NextFunction) {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       path: req.path,
       method: req.method,
-      ip: req.ip
+      ip: req.ip,
     });
 
     return res.status(401).json({
       success: false,
       error: {
         message: 'Kimlik doğrulama başarısız',
-        code: 'UNAUTHORIZED'
-      }
+        code: 'UNAUTHORIZED',
+      },
     });
   }
 }
@@ -190,7 +194,7 @@ function _authMiddleware(req: Request, res: Response, next: NextFunction) {
  * @returns Middleware fonksiyonu
  */
 export function requireRole(roles: UserRole | UserRole[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const user = (req as AuthRequest).user;
 
@@ -207,22 +211,24 @@ export function requireRole(roles: UserRole | UserRole[]) {
       next();
     } catch (error) {
       if (error instanceof AuthError) {
-        return res.status(error.statusCode).json({
+        res.status(error.statusCode).json({
           success: false,
           error: {
             message: error.message,
-            code: error.code
-          }
+            code: error.code,
+          },
         });
+        return;
       }
 
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: {
           message: 'Yetkilendirme hatası',
-          code: 'FORBIDDEN'
-        }
+          code: 'FORBIDDEN',
+        },
       });
+      return;
     }
   };
 }
@@ -248,7 +254,7 @@ export function requireModerator() {
  * @returns Middleware fonksiyonu
  */
 export function requireActiveStatus() {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const user = (req as AuthRequest).user;
 
@@ -263,22 +269,24 @@ export function requireActiveStatus() {
       next();
     } catch (error) {
       if (error instanceof AuthError) {
-        return res.status(error.statusCode).json({
+        res.status(error.statusCode).json({
           success: false,
           error: {
             message: error.message,
-            code: error.code
-          }
+            code: error.code,
+          },
         });
+        return;
       }
 
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: {
           message: 'Hesap durumu hatası',
-          code: 'ACCOUNT_STATUS_ERROR'
-        }
+          code: 'ACCOUNT_STATUS_ERROR',
+        },
       });
+      return;
     }
   };
 }
@@ -288,7 +296,7 @@ export function requireActiveStatus() {
  * @returns Middleware fonksiyonu
  */
 export function validateUserFromDatabase() {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const user = (req as AuthRequest).user;
 
@@ -307,41 +315,44 @@ export function validateUserFromDatabase() {
         throw new AuthError('Kullanıcı veritabanında bulunamadı', 401, 'USER_NOT_FOUND');
       }
 
-      if (dbUser.status !== UserStatus.ACTIVE) {
+      const userStatus = dbUser.get('status');
+      if (userStatus !== UserStatus.ACTIVE) {
         throw new AuthError('Hesabınız aktif değil', 403, 'ACCOUNT_INACTIVE');
       }
 
       // Kullanıcı bilgilerini güncelle
       (req as AuthRequest).user = {
         ...user,
-        role: dbUser.role,
-        status: dbUser.status
+        role: dbUser.get('role'),
+        status: dbUser.get('status'),
       };
 
       next();
     } catch (error) {
       if (error instanceof AuthError) {
-        return res.status(error.statusCode).json({
+        res.status(error.statusCode).json({
           success: false,
           error: {
             message: error.message,
-            code: error.code
-          }
+            code: error.code,
+          },
         });
+        return;
       }
 
       logger.error('Kullanıcı doğrulama hatası', {
         error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-        userId: (req as AuthRequest).user?.id
+        userId: (req as AuthRequest).user?.id,
       });
 
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: {
           message: 'Kullanıcı doğrulama hatası',
-          code: 'USER_VALIDATION_ERROR'
-        }
+          code: 'USER_VALIDATION_ERROR',
+        },
       });
+      return;
     }
   };
 }

@@ -47,3 +47,10 @@ Write-Host "Kullanılmayan ağlar temizleniyor..." -ForegroundColor Yellow
 docker network prune -f
 
 Write-Host "Temizleme işlemi tamamlandı!" -ForegroundColor Green
+
+# logs-cleanup.ps1
+# logs klasöründeki 14 günden eski log ve .gz dosyalarını siler
+$logPath = "./logs"
+$days = 14
+Get-ChildItem -Path $logPath -Include *.log,*.gz -Recurse | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$days) } | Remove-Item -Force
+Write-Host "Eski log dosyaları temizlendi."

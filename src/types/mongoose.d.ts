@@ -2,7 +2,7 @@
  * src/types/mongoose.d.ts
  * Mongoose için tip tanımlamaları
  */
-import { Document, Model } from 'mongoose';
+import mongoose, { Document, Model, Schema, Query, HydratedDocument } from 'mongoose';
 
 // Mongoose ObjectId için tip tanımlaması
 declare global {
@@ -14,19 +14,30 @@ declare global {
 }
 
 // Mongoose model için tip tanımlaması
-export type ModelType<T extends Document> = Model<T>;
+export type ModelType<T extends Document> = Model<T> & {
+  new (data: Partial<T>): Document & T;
+};
 
 // Mongoose document için tip tanımlaması
 export type DocumentType<T> = Document & T;
 
 // Mongoose ObjectId için tip tanımlaması
-export type ObjectId = string | import('mongoose').Types.ObjectId;
+export type ObjectId = string | mongoose.Types.ObjectId;
 
 // Mongoose ObjectId oluşturmak için yardımcı fonksiyon
-export function toObjectId(id: any): import('mongoose').Types.ObjectId;
+export function toObjectId(id: any): mongoose.Types.ObjectId {
+  return typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id;
+}
 
 // Mongoose ObjectId referansı için tip tanımlaması
-export type Ref<T> = T | import('mongoose').Types.ObjectId | string;
+export type Ref<T> = T | mongoose.Types.ObjectId | string;
+
+// Mongoose model için constructor tanımlaması
+declare module 'mongoose' {
+  interface Model<T, TQueryHelpers = {}, TMethods = {}, TVirtuals = {}, TStaticMethods = {}> {
+    new (data: Partial<T>): Document & T;
+  }
+}
 
 // Mongoose populate için tip tanımlaması
 export type Populated<T, K extends keyof T> = Omit<T, K> & {

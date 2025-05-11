@@ -2,16 +2,14 @@
  * src/controllers/userController.ts
  * Kullanıcı controller'ı
  */
-import { Request, Response, NextFunction } from 'express';
-import { User, UserDocument } from '../models/User';
-import { asyncHandler, sendSuccess, sendError } from '../utils/controllerUtils';
+import { User } from '../models/User';
+import { sendSuccess } from '../utils/controllerUtils';
+import { createAuthRouteHandler } from '../types/express-types';
 import { logger } from '../utils/logger';
 import { ValidationError, NotFoundError, ForbiddenError } from '../utils/errors';
-import { getPaginationParams } from '../utils/db-helpers';
-import { paginateQuery, optimizeQuery } from '../utils/queryOptimizer';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
-import * as emailVerification from '../services/emailService';
+import mongoose from 'mongoose';
 
 /**
  * @swagger
@@ -79,13 +77,13 @@ import * as emailVerification from '../services/emailService';
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const getUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getUsers = createAuthRouteHandler(async (req, res) => {
   try {
     // Sayfalama parametrelerini al
-    const page = parseInt(req.query.page as string || '1');
-    const limit = parseInt(req.query.limit as string || '20');
-    const search = req.query.search as string;
-    const sort = req.query.sort as string || '-createdAt';
+    const page = parseInt((req.query['page'] as string) || '1');
+    const limit = parseInt((req.query['limit'] as string) || '20');
+    const search = req.query['search'] as string;
+    const sort = (req.query['sort'] as string) || '-createdAt';
 
     if (page < 1 || limit < 1 || limit > 100) {
       throw new ValidationError('Geçersiz sayfalama parametreleri');
@@ -95,11 +93,16 @@ export const getUsers = asyncHandler(async (req: Request, res: Response, next: N
     const query: any = {};
 
     if (search) {
+      // Arama metnini temizle ve güvenli hale getir
+      const sanitizedText = search.trim();
+      const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      // Güvenli regex ile arama sorgusunu oluştur
       query.$or = [
-        { username: { $regex: search, $options: 'i' } },
-        { name: { $regex: search, $options: 'i' } },
-        { surname: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { username: { $regex: new RegExp(escapedText, 'i') } },
+        { name: { $regex: new RegExp(escapedText, 'i') } },
+        { surname: { $regex: new RegExp(escapedText, 'i') } },
+        { email: { $regex: new RegExp(escapedText, 'i') } },
       ];
     }
 
@@ -122,27 +125,36 @@ export const getUsers = asyncHandler(async (req: Request, res: Response, next: N
 
     // Boş sıralama seçenekleri varsa varsayılan sıralamayı kullan
     if (Object.keys(sortOptions).length === 0) {
-      sortOptions.createdAt = -1;
+      sortOptions['createdAt'] = -1;
     }
 
-    // Sayfalama ile sorguyu çalıştır
-    const result = await paginateQuery(User.find(query), {
+    // Mongoose sorgusu oluştur ve çalıştır
+    const users = await User.find(query)
+      .select('-passwordHash -twoFactorSecret -backupCodes')
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    // Toplam sayıyı al
+    const totalCount = await User.countDocuments(query);
+
+    // Sayfalama bilgilerini oluştur
+    const pagination = {
+      total: totalCount,
       page,
       limit,
-      sort: sortOptions,
-      select: '-passwordHash -twoFactorSecret -backupCodes',
-      lean: true
-    });
+      pages: Math.ceil(totalCount / limit),
+    };
 
     // Başarılı yanıt gönder
-    return sendSuccess(res, result.data, 200, {
-      pagination: result.meta.pagination
-    });
+    return sendSuccess(res, users, 200, { pagination });
   } catch (error) {
     // Hata durumunda loglama yap
     logger.error('Kullanıcıları getirirken hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     // Hatayı yeniden fırlat
@@ -185,19 +197,18 @@ export const getUsers = asyncHandler(async (req: Request, res: Response, next: N
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const getUserById = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+export const getUserById = createAuthRouteHandler(async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = req.params['id'];
+    if (!userId) {
+      throw new ValidationError('Kullanıcı ID gerekli');
+    }
 
-    // Kullanıcıyı bul (optimize edilmiş sorgu)
-    const user = await optimizeQuery(
-      User.findById(userId),
-      {
-        select: '-passwordHash -twoFactorSecret -backupCodes',
-        lean: true,
-        timeout: 5000 // 5 saniye zaman aşımı
-      }
-    ).exec();
+    // Kullanıcıyı bul
+    const user = await User.findById(userId)
+      .select('-passwordHash -twoFactorSecret -backupCodes')
+      .lean()
+      .exec();
 
     if (!user) {
       throw new NotFoundError('Kullanıcı bulunamadı');
@@ -205,11 +216,13 @@ export const getUserById = asyncHandler(async (req: Request, res: Response, next
 
     // Kullanıcı son görülme zamanını güncelle (performans için ayrı bir işlem)
     User.findByIdAndUpdate(userId, { lastSeen: new Date() })
-      .exec()
-      .catch(error => {
+      .then(() => {
+        // Başarılı güncelleme
+      })
+      .catch((error: Error) => {
         logger.warn('Kullanıcı son görülme zamanı güncellenirken hata oluştu', {
           error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-          userId
+          userId,
         });
       });
 
@@ -219,7 +232,7 @@ export const getUserById = asyncHandler(async (req: Request, res: Response, next
     logger.error('Kullanıcı detayları getirilirken hata oluştu', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       stack: error instanceof Error ? error.stack : undefined,
-      userId: req.params.id
+      userId: req.params['id'],
     });
 
     // Hatayı yeniden fırlat
@@ -293,12 +306,16 @@ export const getUserById = asyncHandler(async (req: Request, res: Response, next
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const updateUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.params.id;
-  const currentUser = (req as any).user as UserDocument;
+export const updateUser = createAuthRouteHandler(async (req, res) => {
+  const userId = req.params['id'];
+  if (!userId) {
+    throw new ValidationError('Kullanıcı ID gerekli');
+  }
+
+  const currentUser = req.user;
 
   // Yetki kontrolü
-  if (currentUser._id.toString() !== userId && currentUser.role !== 'admin') {
+  if (currentUser._id && currentUser._id.toString() !== userId && currentUser.role !== 'admin') {
     throw new ForbiddenError('Bu işlem için yetkiniz yok');
   }
 
@@ -306,7 +323,7 @@ export const updateUser = asyncHandler(async (req: Request, res: Response, next:
   const { name, surname, email, status } = req.body;
 
   // Kullanıcıyı bul
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).exec();
 
   if (!user) {
     throw new NotFoundError('Kullanıcı bulunamadı');
@@ -326,11 +343,13 @@ export const updateUser = asyncHandler(async (req: Request, res: Response, next:
     try {
       // E-posta doğrulama modülünü içe aktar
       const emailVerificationModule = await import('../modules/emailVerification');
-      await emailVerificationModule.sendVerificationEmail(user._id.toString());
+      if (user._id) {
+        await emailVerificationModule.sendVerificationEmail(user._id.toString());
+      }
     } catch (error) {
       logger.error('E-posta doğrulama e-postası gönderilirken hata oluştu', {
         error: (error as Error).message,
-        userId: user._id
+        userId: user._id,
       });
     }
   }
@@ -341,9 +360,12 @@ export const updateUser = asyncHandler(async (req: Request, res: Response, next:
 
   // Kullanıcı bilgilerini döndür (şifre hariç)
   const userResponse = user.toObject();
-  delete userResponse.passwordHash;
+  const userResponseSafe = { ...userResponse } as any;
+  if (userResponseSafe.passwordHash) {
+    delete userResponseSafe.passwordHash;
+  }
 
-  return sendSuccess(res, userResponse);
+  return sendSuccess(res, userResponseSafe);
 });
 
 /**
@@ -411,12 +433,16 @@ export const updateUser = asyncHandler(async (req: Request, res: Response, next:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const changePassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = req.params.id;
-  const currentUser = (req as any).user as UserDocument;
+export const changePassword = createAuthRouteHandler(async (req, res) => {
+  const userId = req.params['id'];
+  if (!userId) {
+    throw new ValidationError('Kullanıcı ID gerekli');
+  }
+
+  const currentUser = req.user;
 
   // Yetki kontrolü
-  if (currentUser._id.toString() !== userId && currentUser.role !== 'admin') {
+  if (currentUser._id && currentUser._id.toString() !== userId && currentUser.role !== 'admin') {
     throw new ForbiddenError('Bu işlem için yetkiniz yok');
   }
 
@@ -427,7 +453,7 @@ export const changePassword = asyncHandler(async (req: Request, res: Response, n
   }
 
   // Kullanıcıyı bul
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).exec();
 
   if (!user) {
     throw new NotFoundError('Kullanıcı bulunamadı');
@@ -450,7 +476,7 @@ export const changePassword = asyncHandler(async (req: Request, res: Response, n
   await user.save();
 
   return sendSuccess(res, {
-    message: 'Şifre başarıyla değiştirildi'
+    message: 'Şifre başarıyla değiştirildi',
   });
 });
 
@@ -458,5 +484,5 @@ export default {
   getUsers,
   getUserById,
   updateUser,
-  changePassword
+  changePassword,
 };

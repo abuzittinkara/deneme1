@@ -21,19 +21,19 @@ const emailVerificationTokenSchema = new Schema<EmailVerificationTokenDocument>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     token: {
       type: String,
-      required: true
+      required: true,
     },
     expiresAt: {
       type: Date,
-      required: true
-    }
+      required: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -42,9 +42,7 @@ const emailVerificationTokenSchema = new Schema<EmailVerificationTokenDocument>(
 emailVerificationTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // Model arayüzü
-export interface EmailVerificationTokenModel extends mongoose.Model<EmailVerificationTokenDocument> {
-  // Özel model metodları buraya eklenebilir
-}
+export type EmailVerificationTokenModel = mongoose.Model<EmailVerificationTokenDocument>;
 
 // Model oluştur
 let EmailVerificationToken: EmailVerificationTokenModel;
@@ -63,10 +61,12 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as EmailVerificationTokenModel;
 } else {
   // Gerçek model
-  EmailVerificationToken = mongoose.model<EmailVerificationTokenDocument, EmailVerificationTokenModel>(
-    'EmailVerificationToken',
-    emailVerificationTokenSchema
-  );
+  EmailVerificationToken =
+    (mongoose.models['EmailVerificationToken'] as EmailVerificationTokenModel) ||
+    mongoose.model<EmailVerificationTokenDocument, EmailVerificationTokenModel>(
+      'EmailVerificationToken',
+      emailVerificationTokenSchema
+    );
 }
 
 export default EmailVerificationToken;

@@ -3,7 +3,13 @@
  * Kullanıcı aktivitesi yönetimi işlemleri
  */
 import mongoose from 'mongoose';
-import { UserActivity, UserActivityDocument, ActivityType, ActivityTarget, UserActivityModel } from '../models/UserActivity';
+import UserActivity from '../models/UserActivity';
+import {
+  UserActivityDocument,
+  ActivityType,
+  ActivityTarget,
+  UserActivityModel,
+} from '../models/UserActivity';
 import { User, UserDocument } from '../models/User';
 import { createModelHelper } from '../utils/mongoose-helpers';
 import { logger } from '../utils/logger';
@@ -11,7 +17,9 @@ import { NotFoundError } from '../utils/errors';
 import { toObjectId } from '../utils/mongoose-helpers';
 
 // Model yardımcıları
-const UserActivityHelper = createModelHelper<UserActivityDocument, typeof UserActivity>(UserActivity);
+const UserActivityHelper = createModelHelper<UserActivityDocument, typeof UserActivity>(
+  UserActivity
+);
 const UserHelper = createModelHelper<UserDocument, typeof User>(User);
 
 // Aktivite kaydetme parametreleri
@@ -47,9 +55,7 @@ export interface ActivityResult {
  * @param params - Aktivite parametreleri
  * @returns Kaydedilen aktivite
  */
-export async function logActivity(
-  params: LogActivityParams
-): Promise<UserActivityDocument> {
+export async function logActivity(params: LogActivityParams): Promise<UserActivityDocument> {
   try {
     // Kullanıcıyı kontrol et
     const user = await UserHelper.findById(params.userId);
@@ -62,7 +68,7 @@ export async function logActivity(
     if (params.target) {
       target = {
         type: params.target.type,
-        id: toObjectId(params.target.id)
+        id: toObjectId(params.target.id),
       };
     }
 
@@ -73,13 +79,13 @@ export async function logActivity(
       ipAddress: params.ipAddress,
       userAgent: params.userAgent,
       target,
-      metadata: params.metadata
+      metadata: params.metadata,
     });
 
     logger.debug('Kullanıcı aktivitesi kaydedildi', {
       activityId: activity._id,
       userId: params.userId,
-      type: params.type
+      type: params.type,
     });
 
     return activity;
@@ -87,7 +93,7 @@ export async function logActivity(
     logger.error('Kullanıcı aktivitesi kaydetme hatası', {
       error: (error as Error).message,
       userId: params.userId,
-      type: params.type
+      type: params.type,
     });
     throw error;
   }
@@ -111,18 +117,21 @@ export async function getUserActivities(
     }
 
     // Aktiviteleri getir
-    const activities = await (UserActivity as UserActivityModel).findByUser(toObjectId(userId), limit);
+    const activities = await (UserActivity as UserActivityModel).findByUser(
+      toObjectId(userId),
+      limit
+    );
 
     logger.debug('Kullanıcı aktiviteleri getirildi', {
       userId,
-      count: activities.length
+      count: activities.length,
     });
 
     return activities;
   } catch (error) {
     logger.error('Kullanıcı aktivitelerini getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -144,14 +153,14 @@ export async function getActivitiesByType(
 
     logger.debug('Aktiviteler türe göre getirildi', {
       type,
-      count: activities.length
+      count: activities.length,
     });
 
     return activities;
   } catch (error) {
     logger.error('Aktiviteleri türe göre getirme hatası', {
       error: (error as Error).message,
-      type
+      type,
     });
     throw error;
   }
@@ -180,7 +189,7 @@ export async function getActivitiesByTarget(
     logger.debug('Aktiviteler hedefe göre getirildi', {
       targetType,
       targetId,
-      count: activities.length
+      count: activities.length,
     });
 
     return activities;
@@ -188,7 +197,7 @@ export async function getActivitiesByTarget(
     logger.error('Aktiviteleri hedefe göre getirme hatası', {
       error: (error as Error).message,
       targetType,
-      targetId
+      targetId,
     });
     throw error;
   }
@@ -201,13 +210,13 @@ export async function getActivitiesByTarget(
  */
 export function formatActivity(activity: UserActivityDocument): ActivityResult {
   const result: ActivityResult = {
-    id: activity._id.toString(),
+    id: activity._id ? activity._id.toString() : '',
     user: {
       id: activity.user.toString(),
-      username: (activity.user as any)?.username || 'Unknown'
+      username: (activity.user as any)?.username || 'Unknown',
     },
     type: activity.type,
-    timestamp: activity.timestamp
+    timestamp: activity.timestamp,
   };
 
   // IP adresi ekle (varsa)
@@ -238,5 +247,5 @@ export default {
   getUserActivities,
   getActivitiesByType,
   getActivitiesByTarget,
-  formatActivity
+  formatActivity,
 };

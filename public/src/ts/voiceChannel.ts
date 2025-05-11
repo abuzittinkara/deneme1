@@ -23,6 +23,13 @@ interface VoiceChannelState {
   currentRoom: string | null;
   micEnabled: boolean;
   deafened: boolean;
+  mediasoup: {
+    device: any | null;
+    sendTransport: any | null;
+    recvTransport: any | null;
+    producers: Map<string, any>;
+    consumers: Map<string, any>;
+  };
 }
 
 // Ses kanalı durumunu tutan global değişken
@@ -32,6 +39,13 @@ const voiceState: VoiceChannelState = {
   currentRoom: null,
   micEnabled: true,
   deafened: false,
+  mediasoup: {
+    device: null,
+    sendTransport: null,
+    recvTransport: null,
+    producers: new Map(),
+    consumers: new Map()
+  }
 };
 
 /**
@@ -49,6 +63,12 @@ export function initVoiceChannel(socket: Socket): void {
   socket.on('userLeftVoice', (data: { userId: string; username: string }) => {
     console.log(`${data.username} ses kanalından ayrıldı`);
     closePeerConnection(data.userId);
+  });
+
+  // Mikrofon durumu değişikliği olayını dinle
+  socket.on('micStateChanged', (data: { userId: string; enabled: boolean }) => {
+    console.log(`${data.userId} mikrofon durumu değişti: ${data.enabled ? 'açık' : 'kapalı'}`);
+    updateRemoteAudioState(data.userId, data.enabled);
   });
 
   // Offer olayını dinle
@@ -105,10 +125,142 @@ export async function joinVoiceChannel(
       await leaveVoiceChannel(socket);
     }
 
+    // Mikrofon izinlerini kontrol et
+    const micPermission = await import('./microphoneHelper').then(module =>
+      module.requestMicrophonePermission()
+    );
+
+    if (!micPermission) {
+      throw new Error('Mikrofon izni alınamadı');
+    }
+
     // Kullanıcıdan mikrofon erişimi isteyelim
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
     voiceState.localStream = stream;
     voiceState.currentRoom = channelId;
+
+    // MediaSoup entegrasyonu
+    try {
+      // MediaSoup modülünü yükle
+      const mediasoupClient = await import('./mediasoupClient');
+
+      // Router yeteneklerini al
+      const { routerRtpCapabilities } = await socket.emitWithAck('mediasoup:get-router-capabilities', {
+        roomId: channelId
+      });
+
+      // MediaSoup cihazını yükle
+      const deviceLoaded = await mediasoupClient.loadDevice(routerRtpCapabilities);
+      if (!deviceLoaded) {
+        console.error('MediaSoup cihazı yüklenemedi');
+        throw new Error('MediaSoup cihazı yüklenemedi');
+      }
+
+      // MediaSoup durumunu güncelle
+      voiceState.mediasoup.device = mediasoupClient.getMediasoupState().device;
+
+      // Gönderme transportu oluştur
+      const { id, iceParameters, iceCandidates, dtlsParameters } = await socket.emitWithAck('mediasoup:create-transport', {
+        roomId: channelId,
+        producing: true
+      });
+
+      // Gönderme transportunu oluştur
+      const sendTransportId = await mediasoupClient.createSendTransport({
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters,
+        appData: { roomId: channelId }
+      });
+
+      if (sendTransportId) {
+        // Transport'u kaydet
+        voiceState.mediasoup.sendTransport = mediasoupClient.getMediasoupState().sendTransport;
+
+        // Alma transportu oluştur
+        const recvTransportData = await socket.emitWithAck('mediasoup:create-transport', {
+          roomId: channelId,
+          producing: false,
+          consuming: true
+        });
+
+        // Alma transportunu oluştur
+        const recvTransportId = await mediasoupClient.createRecvTransport({
+          id: recvTransportData.id,
+          iceParameters: recvTransportData.iceParameters,
+          iceCandidates: recvTransportData.iceCandidates,
+          dtlsParameters: recvTransportData.dtlsParameters,
+          appData: { roomId: channelId }
+        });
+
+        if (recvTransportId) {
+          // Transport'u kaydet
+          voiceState.mediasoup.recvTransport = mediasoupClient.getMediasoupState().recvTransport;
+
+          // Ses parçasını üret
+          if (voiceState.localStream) {
+            const audioTrack = voiceState.localStream.getAudioTracks()[0];
+            if (audioTrack) {
+              // Ses parçasını üret
+              const producerId = await mediasoupClient.produce(audioTrack, {
+                codecOptions: {
+                  opusStereo: false,
+                  opusDtx: true,
+                  opusFec: true,
+                  opusNack: true
+                }
+              });
+
+              if (producerId) {
+                console.log('Ses üreticisi oluşturuldu:', producerId);
+
+                // Odadaki diğer kullanıcıların üreticilerini tüket
+                const { producers } = await socket.emitWithAck('mediasoup:get-producers', {
+                  roomId: channelId
+                });
+
+                if (producers && producers.length > 0) {
+                  for (const producerId of producers) {
+                    // Kendi üreticimizi tüketme
+                    if (mediasoupClient.getMediasoupState().producers.has(producerId)) {
+                      continue;
+                    }
+
+                    // Üreticiyi tüket
+                    const { consumerId, track } = await mediasoupClient.consume(
+                      producerId,
+                      mediasoupClient.getMediasoupState().device?.rtpCapabilities
+                    ) || {};
+
+                    if (consumerId && track) {
+                      console.log('Üretici tüketildi:', consumerId);
+
+                      // Ses parçasını oynat
+                      const remoteStream = new MediaStream([track]);
+                      const audioElement = document.createElement('audio');
+                      audioElement.srcObject = remoteStream;
+                      audioElement.autoplay = true;
+                      audioElement.id = `remote-audio-${consumerId}`;
+                      document.body.appendChild(audioElement);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (mediasoupError) {
+      console.error('MediaSoup entegrasyonu sırasında hata oluştu:', mediasoupError);
+      // MediaSoup hatası olsa bile devam et, eski WebRTC yöntemi kullanılacak
+    }
 
     // Ses kanalına katıldığımızı sunucuya bildirelim
     socket.emit(
@@ -135,7 +287,45 @@ export async function joinVoiceChannel(
     );
   } catch (error) {
     console.error('Mikrofon erişimi alınamadı:', error);
-    alert('Mikrofon erişimi alınamadı. Lütfen tarayıcı izinlerini kontrol edin.');
+
+    // Mikrofon yardım modalını göster
+    import('./microphoneHelper').then(module => {
+      module.showMicrophoneHelp();
+    });
+
+    // Salt dinleme modunu etkinleştirme seçeneği sun
+    const enableListenOnly = confirm(
+      'Mikrofon erişimi alınamadı. Salt dinleme modunda devam etmek ister misiniz? ' +
+      '(Sizi duyamayacaklar ama siz diğerlerini duyabileceksiniz)'
+    );
+
+    if (enableListenOnly) {
+      // Salt dinleme modunda devam et
+      voiceState.micEnabled = false;
+
+      // Ses kanalına katıldığımızı sunucuya bildirelim (mikrofon kapalı olarak)
+      socket.emit(
+        'joinVoiceChannel',
+        { groupId, channelId, listenOnly: true },
+        (response: { success: boolean; users?: string[] }) => {
+          if (response.success) {
+            console.log('Ses kanalına salt dinleme modunda katıldınız');
+            voiceState.currentRoom = channelId;
+
+            // Kanalda bulunan diğer kullanıcılarla bağlantı kuralım
+            if (response.users && response.users.length > 0) {
+              response.users.forEach(userId => {
+                createPeerConnection(userId, socket, true);
+              });
+            }
+
+            // Ses kanalı durumunu göster
+            showVoiceChannelStatus();
+            updateUIState();
+          }
+        }
+      );
+    }
   }
 }
 
@@ -146,6 +336,14 @@ export async function joinVoiceChannel(
 export async function leaveVoiceChannel(socket: Socket): Promise<void> {
   if (!voiceState.currentRoom) {
     return;
+  }
+
+  // MediaSoup bağlantısını kapat
+  try {
+    const mediasoupClient = await import('./mediasoupClient');
+    mediasoupClient.closeConnection();
+  } catch (mediasoupError) {
+    console.error('MediaSoup bağlantısı kapatılırken hata oluştu:', mediasoupError);
   }
 
   // Tüm peer bağlantılarını kapat
@@ -184,8 +382,9 @@ export async function leaveVoiceChannel(socket: Socket): Promise<void> {
  * Peer bağlantısı oluşturur
  * @param userId - Kullanıcı ID'si
  * @param socket - Socket.io socket
+ * @param listenOnly - Salt dinleme modu
  */
-async function createPeerConnection(userId: string, socket: Socket): Promise<void> {
+async function createPeerConnection(userId: string, socket: Socket, listenOnly: boolean = false): Promise<void> {
   // Eğer zaten bir bağlantı varsa, önce onu kapatalım
   if (voiceState.peerConnections[userId]) {
     closePeerConnection(userId);
@@ -208,8 +407,8 @@ async function createPeerConnection(userId: string, socket: Socket): Promise<voi
     iceCandidates: [],
   };
 
-  // Yerel ses akışını ekle
-  if (voiceState.localStream) {
+  // Yerel ses akışını ekle (salt dinleme modunda değilse)
+  if (voiceState.localStream && !listenOnly) {
     voiceState.localStream.getTracks().forEach(track => {
       if (voiceState.localStream) {
         pc.addTrack(track, voiceState.localStream);
@@ -448,6 +647,39 @@ function toggleMicrophone(): void {
   voiceState.localStream.getAudioTracks().forEach(track => {
     track.enabled = voiceState.micEnabled;
   });
+
+  // Mikrofon durumunu sunucuya bildir
+  if (voiceState.currentRoom) {
+    socket.emit('updateMicState', {
+      enabled: voiceState.micEnabled,
+      channelId: voiceState.currentRoom
+    });
+  }
+}
+
+/**
+ * Uzak kullanıcının ses durumunu günceller
+ * @param userId - Kullanıcı ID'si
+ * @param enabled - Mikrofon durumu
+ */
+function updateRemoteAudioState(userId: string, enabled: boolean): void {
+  const audioElement = document.getElementById(`remote-audio-${userId}`) as HTMLAudioElement;
+  if (audioElement) {
+    // Ses seviyesini ayarla (mikrofon kapalıysa ses yok)
+    audioElement.volume = enabled ? 1.0 : 0.0;
+
+    // Ses durumunu görsel olarak güncelle
+    const userElement = document.querySelector(`[data-user-id="${userId}"]`);
+    if (userElement) {
+      if (enabled) {
+        userElement.classList.remove('mic-muted');
+        userElement.classList.add('mic-active');
+      } else {
+        userElement.classList.remove('mic-active');
+        userElement.classList.add('mic-muted');
+      }
+    }
+  }
 }
 
 /**

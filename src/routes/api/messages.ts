@@ -24,23 +24,18 @@ router.get(
   '/channel/:channelId',
   requireAuth,
   [
-    param('channelId')
-      .isString()
-      .withMessage('Geçersiz kanal ID'),
+    param('channelId').isString().withMessage('Geçersiz kanal ID'),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
       .withMessage('Limit 1-100 arasında olmalıdır')
       .toInt(),
-    query('before')
-      .optional()
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID')
+    query('before').optional().isMongoId().withMessage('Geçersiz mesaj ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
       const { limit = 50, before } = req.query;
       const userId = req.user!.id;
 
@@ -48,17 +43,17 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: messages
+        data: messages,
       });
     } catch (error) {
       logger.error('Kanal mesajlarını getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId
+        channelId: req.params['channelId'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Mesajlar getirilirken bir hata oluştu'
+        message: 'Mesajlar getirilirken bir hata oluştu',
       });
     }
   })
@@ -73,45 +68,32 @@ router.post(
   '/channel/:channelId',
   requireAuth,
   [
-    param('channelId')
-      .isString()
-      .withMessage('Geçersiz kanal ID'),
-    body('content')
-      .isString()
-      .notEmpty()
-      .withMessage('Mesaj içeriği gereklidir')
-      .trim(),
-    body('quotedMessageId')
-      .optional()
-      .isMongoId()
-      .withMessage('Geçersiz alıntılanan mesaj ID')
+    param('channelId').isString().withMessage('Geçersiz kanal ID'),
+    body('content').isString().notEmpty().withMessage('Mesaj içeriği gereklidir').trim(),
+    body('quotedMessageId').optional().isMongoId().withMessage('Geçersiz alıntılanan mesaj ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
       const { content, quotedMessageId } = req.body;
       const userId = req.user!.id;
 
-      const message = await messageManager.sendChannelMessage(
-        channelId,
-        userId,
-        content
-      );
+      const message = await messageManager.sendChannelMessage(channelId, userId, content);
 
       return res.status(201).json({
         success: true,
-        data: message
+        data: message,
       });
     } catch (error) {
       logger.error('Mesaj gönderme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId
+        channelId: req.params['channelId'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Mesaj gönderilirken bir hata oluştu'
+        message: 'Mesaj gönderilirken bir hata oluştu',
       });
     }
   })
@@ -126,19 +108,13 @@ router.put(
   '/:messageId',
   requireAuth,
   [
-    param('messageId')
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID'),
-    body('content')
-      .isString()
-      .notEmpty()
-      .withMessage('Mesaj içeriği gereklidir')
-      .trim()
+    param('messageId').isMongoId().withMessage('Geçersiz mesaj ID'),
+    body('content').isString().notEmpty().withMessage('Mesaj içeriği gereklidir').trim(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params['messageId'] || '';
       const { content } = req.body;
       const userId = req.user!.id;
 
@@ -146,13 +122,13 @@ router.put(
 
       return res.status(200).json({
         success: true,
-        data: message
+        data: message,
       });
     } catch (error) {
       logger.error('Mesaj düzenleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        messageId: req.params.messageId
+        messageId: req.params['messageId'],
       });
 
       // Hata mesajını belirle
@@ -169,7 +145,7 @@ router.put(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -183,28 +159,24 @@ router.put(
 router.delete(
   '/:messageId',
   requireAuth,
-  [
-    param('messageId')
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID')
-  ],
+  [param('messageId').isMongoId().withMessage('Geçersiz mesaj ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params['messageId'] || '';
       const userId = req.user!.id;
 
       const message = await messageManager.deleteChannelMessage(messageId, userId);
 
       return res.status(200).json({
         success: true,
-        data: message
+        data: message,
       });
     } catch (error) {
       logger.error('Mesaj silme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        messageId: req.params.messageId
+        messageId: req.params['messageId'],
       });
 
       // Hata mesajını belirle
@@ -221,7 +193,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -235,28 +207,24 @@ router.delete(
 router.post(
   '/:messageId/pin',
   requireAuth,
-  [
-    param('messageId')
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID')
-  ],
+  [param('messageId').isMongoId().withMessage('Geçersiz mesaj ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params['messageId'] || '';
       const userId = req.user!.id;
 
       const message = await messageManager.pinMessage(messageId, userId);
 
       return res.status(200).json({
         success: true,
-        data: message
+        data: message,
       });
     } catch (error) {
       logger.error('Mesaj sabitleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        messageId: req.params.messageId
+        messageId: req.params['messageId'],
       });
 
       // Hata mesajını belirle
@@ -273,7 +241,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -287,28 +255,24 @@ router.post(
 router.delete(
   '/:messageId/pin',
   requireAuth,
-  [
-    param('messageId')
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID')
-  ],
+  [param('messageId').isMongoId().withMessage('Geçersiz mesaj ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params['messageId'] || '';
       const userId = req.user!.id;
 
       const message = await messageManager.unpinMessage(messageId, userId);
 
       return res.status(200).json({
         success: true,
-        data: message
+        data: message,
       });
     } catch (error) {
       logger.error('Mesaj sabitleme kaldırma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        messageId: req.params.messageId
+        messageId: req.params['messageId'],
       });
 
       // Hata mesajını belirle
@@ -325,7 +289,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -347,16 +311,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: unreadCount
+        data: unreadCount,
       });
     } catch (error) {
       logger.error('Okunmamış mesaj sayısı getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Okunmamış mesaj sayısı getirilirken bir hata oluştu'
+        message: 'Okunmamış mesaj sayısı getirilirken bir hata oluştu',
       });
     }
   })
@@ -375,7 +339,7 @@ router.get(
       .optional()
       .isInt({ min: 1, max: 100 })
       .withMessage('Limit 1-100 arasında olmalıdır')
-      .toInt()
+      .toInt(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -387,16 +351,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: unreadMessages
+        data: unreadMessages,
       });
     } catch (error) {
       logger.error('Okunmamış mesajları getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Okunmamış mesajlar getirilirken bir hata oluştu'
+        message: 'Okunmamış mesajlar getirilirken bir hata oluştu',
       });
     }
   })
@@ -411,17 +375,13 @@ router.post(
   '/:messageId/read',
   requireAuth,
   [
-    param('messageId')
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID'),
-    body('type')
-      .isIn(['channel', 'direct'])
-      .withMessage('Geçersiz mesaj türü')
+    param('messageId').isMongoId().withMessage('Geçersiz mesaj ID'),
+    body('type').isIn(['channel', 'direct']).withMessage('Geçersiz mesaj türü'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { messageId } = req.params;
+      const messageId = req.params['messageId'] || '';
       const { type } = req.body;
       const userId = req.user!.id;
 
@@ -433,17 +393,17 @@ router.post(
 
       return res.status(200).json({
         success: true,
-        message: 'Mesaj okundu olarak işaretlendi'
+        message: 'Mesaj okundu olarak işaretlendi',
       });
     } catch (error) {
       logger.error('Mesajı okundu olarak işaretleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        messageId: req.params.messageId
+        messageId: req.params['messageId'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Mesaj okundu olarak işaretlenirken bir hata oluştu'
+        message: 'Mesaj okundu olarak işaretlenirken bir hata oluştu',
       });
     }
   })
@@ -457,32 +417,28 @@ router.post(
 router.post(
   '/channel/:channelId/read-all',
   requireAuth,
-  [
-    param('channelId')
-      .isString()
-      .withMessage('Geçersiz kanal ID')
-  ],
+  [param('channelId').isString().withMessage('Geçersiz kanal ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
       const userId = req.user!.id;
 
       const count = await unreadManager.markAllChannelMessagesAsRead(channelId, userId);
 
       return res.status(200).json({
         success: true,
-        message: `${count} mesaj okundu olarak işaretlendi`
+        message: `${count} mesaj okundu olarak işaretlendi`,
       });
     } catch (error) {
       logger.error('Kanaldaki tüm mesajları okundu olarak işaretleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId
+        channelId: req.params['channelId'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Mesajlar okundu olarak işaretlenirken bir hata oluştu'
+        message: 'Mesajlar okundu olarak işaretlenirken bir hata oluştu',
       });
     }
   })

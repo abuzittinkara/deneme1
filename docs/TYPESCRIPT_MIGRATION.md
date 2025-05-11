@@ -12,6 +12,7 @@ Bu dokümantasyon, JavaScript'ten TypeScript'e geçiş sürecini ve bu süreçte
 6. [Socket.IO Entegrasyonu](#socketio-entegrasyonu)
 7. [Birim Testleri](#birim-testleri)
 8. [Bilinen Sorunlar](#bilinen-sorunlar)
+9. [Çoklu tsconfig Dosyaları](#çoklu-tsconfig-dosyaları)
 
 ## Giriş
 
@@ -381,3 +382,11 @@ TypeScript geçişi sırasında karşılaşılan bilinen sorunlar:
 4. **Eski JavaScript Kodları**: Bazı eski JavaScript kodları hala TypeScript'e dönüştürülmemiştir ve bunlar uyumsuzluklara neden olabilir.
 
 Bu sorunlar, geçiş süreci ilerledikçe çözülecektir.
+
+## Çoklu tsconfig Dosyaları
+
+- `tsconfig.json`: Ana TypeScript derleyici ayarları, uygulamanın tamamı için kullanılır.
+- `tsconfig.build.json`: Sadece production build için optimize edilmiş ayarlar içerir.
+- `tsconfig.scripts.json`: Script ve yardımcı araçların (ör. migration, otomasyon) ayrı derlenmesi için kullanılır.
+
+Her birinin amacı, farklı derleme hedefleri ve çıktı dizinleri için esneklik sağlamaktır.

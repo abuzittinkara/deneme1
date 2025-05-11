@@ -12,10 +12,7 @@ import { UserRole, UserStatus } from '../../types/common';
  * @param socket - Socket.IO soketi
  * @param dependencies - Bağımlılıklar
  */
-export function registerGroupHandlers(
-  socket: TypedSocket,
-  dependencies: any
-): void {
+export function registerGroupHandlers(socket: TypedSocket, dependencies: any): void {
   const { groupManager, channelManager, notificationManager, userManager } = dependencies;
   const userId = socket.data.userId;
   const username = socket.data.username;
@@ -28,12 +25,9 @@ export function registerGroupHandlers(
 
     try {
       // Kullanıcıyı gruba ekle
-      const group = await measurePerformanceAsync(
-        async () => {
-          return await groupManager.joinGroup(groupId, userId);
-        },
-        'Gruba katılma'
-      );
+      const group = await measurePerformanceAsync(async () => {
+        return await groupManager.joinGroup(groupId, userId);
+      }, 'Gruba katılma');
 
       if (!group) {
         throw new Error('Gruba katılınamadı');
@@ -66,26 +60,26 @@ export function registerGroupHandlers(
           status: UserStatus.ONLINE,
           role: UserRole.MEMBER,
           createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString()
-        }
+          updatedAt: user.updatedAt.toISOString(),
+        },
       });
 
       logger.debug('Kullanıcı gruba katıldı', {
         userId,
         username,
-        groupId
+        groupId,
       });
     } catch (error) {
       logger.error('Gruba katılma hatası', {
         error: (error as Error).message,
         userId,
         username,
-        groupId
+        groupId,
       });
 
       socket.emit('error', {
         message: 'Gruba katılınamadı',
-        code: 'GROUP_JOIN_ERROR'
+        code: 'GROUP_JOIN_ERROR',
       });
     }
   });
@@ -98,12 +92,9 @@ export function registerGroupHandlers(
 
     try {
       // Kullanıcıyı gruptan çıkar
-      const success = await measurePerformanceAsync(
-        async () => {
-          return await groupManager.leaveGroup(groupId, userId);
-        },
-        'Gruptan ayrılma'
-      );
+      const success = await measurePerformanceAsync(async () => {
+        return await groupManager.leaveGroup(groupId, userId);
+      }, 'Gruptan ayrılma');
 
       if (!success) {
         throw new Error('Gruptan ayrılınamadı');
@@ -121,25 +112,25 @@ export function registerGroupHandlers(
       // Gruptaki diğer kullanıcılara ayrılma bilgisini gönder
       socket.to(groupId).emit('member:leave', {
         groupId,
-        userId
+        userId,
       });
 
       logger.debug('Kullanıcı gruptan ayrıldı', {
         userId,
         username,
-        groupId
+        groupId,
       });
     } catch (error) {
       logger.error('Gruptan ayrılma hatası', {
         error: (error as Error).message,
         userId,
         username,
-        groupId
+        groupId,
       });
 
       socket.emit('error', {
         message: 'Gruptan ayrılınamadı',
-        code: 'GROUP_LEAVE_ERROR'
+        code: 'GROUP_LEAVE_ERROR',
       });
     }
   });
@@ -152,12 +143,9 @@ export function registerGroupHandlers(
 
     try {
       // Kullanıcıyı kanala ekle
-      const channel = await measurePerformanceAsync(
-        async () => {
-          return await channelManager.joinChannel(channelId, userId);
-        },
-        'Kanala katılma'
-      );
+      const channel = await measurePerformanceAsync(async () => {
+        return await channelManager.joinChannel(channelId, userId);
+      }, 'Kanala katılma');
 
       if (!channel) {
         throw new Error('Kanala katılınamadı');
@@ -185,26 +173,26 @@ export function registerGroupHandlers(
           status: UserStatus.ONLINE,
           role: UserRole.MEMBER,
           createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString()
-        }
+          updatedAt: user.updatedAt.toISOString(),
+        },
       });
 
       logger.debug('Kullanıcı kanala katıldı', {
         userId,
         username,
-        channelId
+        channelId,
       });
     } catch (error) {
       logger.error('Kanala katılma hatası', {
         error: (error as Error).message,
         userId,
         username,
-        channelId
+        channelId,
       });
 
       socket.emit('error', {
         message: 'Kanala katılınamadı',
-        code: 'CHANNEL_JOIN_ERROR'
+        code: 'CHANNEL_JOIN_ERROR',
       });
     }
   });
@@ -217,12 +205,9 @@ export function registerGroupHandlers(
 
     try {
       // Kullanıcıyı kanaldan çıkar
-      const channel = await measurePerformanceAsync(
-        async () => {
-          return await channelManager.leaveChannel(channelId, userId);
-        },
-        'Kanaldan ayrılma'
-      );
+      const channel = await measurePerformanceAsync(async () => {
+        return await channelManager.leaveChannel(channelId, userId);
+      }, 'Kanaldan ayrılma');
 
       if (!channel) {
         throw new Error('Kanaldan ayrılınamadı');
@@ -234,25 +219,25 @@ export function registerGroupHandlers(
       // Kanaldaki diğer kullanıcılara ayrılma bilgisini gönder
       socket.to(channelId).emit('member:leave', {
         groupId: channel.group.toString(),
-        userId
+        userId,
       });
 
       logger.debug('Kullanıcı kanaldan ayrıldı', {
         userId,
         username,
-        channelId
+        channelId,
       });
     } catch (error) {
       logger.error('Kanaldan ayrılma hatası', {
         error: (error as Error).message,
         userId,
         username,
-        channelId
+        channelId,
       });
 
       socket.emit('error', {
         message: 'Kanaldan ayrılınamadı',
-        code: 'CHANNEL_LEAVE_ERROR'
+        code: 'CHANNEL_LEAVE_ERROR',
       });
     }
   });

@@ -30,6 +30,10 @@ export enum ErrorCodes {
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   INVALID_REFRESH_TOKEN = 'INVALID_REFRESH_TOKEN',
   INVALID_REQUEST = 'INVALID_REQUEST',
+  DATABASE_ERROR = 'DATABASE_ERROR',
+  DATABASE_CONNECTION_ERROR = 'DATABASE_CONNECTION_ERROR',
+  DATABASE_TIMEOUT = 'DATABASE_TIMEOUT',
+  DATABASE_QUERY_ERROR = 'DATABASE_QUERY_ERROR',
   INVALID_PARAMETERS = 'INVALID_PARAMETERS',
   INVALID_OPERATION = 'INVALID_OPERATION',
   OPERATION_FAILED = 'OPERATION_FAILED',
@@ -39,7 +43,7 @@ export enum ErrorCodes {
   UNKNOWN_ERROR = 'UNKNOWN_ERROR',
   CONFLICT = 'CONFLICT',
   FRIENDSHIP_ERROR = 'FRIENDSHIP_ERROR',
-  SERVER_ERROR = 'SERVER_ERROR'
+  SERVER_ERROR = 'SERVER_ERROR',
 }
 
 /**
@@ -51,7 +55,13 @@ export class AppError extends Error {
   isOperational: boolean;
   details?: any;
 
-  constructor(message: string, statusCode = 500, code = ErrorCodes.INTERNAL_SERVER_ERROR, isOperational = true, details?: any) {
+  constructor(
+    message: string,
+    statusCode = 500,
+    code = ErrorCodes.INTERNAL_SERVER_ERROR,
+    isOperational = true,
+    details?: any
+  ) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
@@ -177,7 +187,12 @@ export const notFoundHandler = createMiddlewareHelper(_notFoundHandler);
  * @param code - Hata kodu
  * @param details - Ek hata detayları
  */
-export const throwError = (message: string, statusCode = 500, code = ErrorCodes.INTERNAL_SERVER_ERROR, details?: any) => {
+export const throwError = (
+  message: string,
+  statusCode = 500,
+  code = ErrorCodes.INTERNAL_SERVER_ERROR,
+  details?: any
+) => {
   throw new AppError(message, statusCode, code, true, details);
 };
 
@@ -189,7 +204,13 @@ export const throwError = (message: string, statusCode = 500, code = ErrorCodes.
  * @param code - Hata kodu
  * @param details - Ek hata detayları
  */
-export const throwIf = (condition: boolean, message: string, statusCode = 500, code = ErrorCodes.INTERNAL_SERVER_ERROR, details?: any) => {
+export const throwIf = (
+  condition: boolean,
+  message: string,
+  statusCode = 500,
+  code = ErrorCodes.INTERNAL_SERVER_ERROR,
+  details?: any
+) => {
   if (condition) {
     throwError(message, statusCode, code, details);
   }
@@ -203,7 +224,13 @@ export const throwIf = (condition: boolean, message: string, statusCode = 500, c
  * @param code - Hata kodu
  * @param details - Ek hata detayları
  */
-export const throwUnless = (condition: boolean, message: string, statusCode = 500, code = ErrorCodes.INTERNAL_SERVER_ERROR, details?: any) => {
+export const throwUnless = (
+  condition: boolean,
+  message: string,
+  statusCode = 500,
+  code = ErrorCodes.INTERNAL_SERVER_ERROR,
+  details?: any
+) => {
   if (!condition) {
     throwError(message, statusCode, code, details);
   }
@@ -281,6 +308,42 @@ export class ServerError extends AppError {
   }
 }
 
+/**
+ * Veritabanı hatası
+ */
+export class DatabaseError extends AppError {
+  constructor(message: string = 'Veritabanı hatası', details?: any) {
+    super(message, 500, ErrorCodes.DATABASE_ERROR, true, details);
+  }
+}
+
+/**
+ * Veritabanı bağlantı hatası
+ */
+export class DatabaseConnectionError extends AppError {
+  constructor(message: string = 'Veritabanı bağlantı hatası', details?: any) {
+    super(message, 503, ErrorCodes.DATABASE_CONNECTION_ERROR, true, details);
+  }
+}
+
+/**
+ * Veritabanı zaman aşımı hatası
+ */
+export class DatabaseTimeoutError extends AppError {
+  constructor(message: string = 'Veritabanı zaman aşımı', details?: any) {
+    super(message, 504, ErrorCodes.DATABASE_TIMEOUT, true, details);
+  }
+}
+
+/**
+ * Veritabanı sorgu hatası
+ */
+export class DatabaseQueryError extends AppError {
+  constructor(message: string = 'Veritabanı sorgu hatası', details?: any) {
+    super(message, 500, ErrorCodes.DATABASE_QUERY_ERROR, true, details);
+  }
+}
+
 export default {
   AppError,
   NotFoundError,
@@ -291,11 +354,15 @@ export default {
   ConflictError,
   FriendshipError,
   ServerError,
+  DatabaseError,
+  DatabaseConnectionError,
+  DatabaseTimeoutError,
+  DatabaseQueryError,
   asyncHandler,
   createErrorResponse,
   errorHandler,
   notFoundHandler,
   throwError,
   throwIf,
-  throwUnless
+  throwUnless,
 };

@@ -12,7 +12,7 @@ export enum UserStatus {
   OFFLINE = 'offline',
   AWAY = 'away',
   DND = 'busy',
-  INVISIBLE = 'invisible'
+  INVISIBLE = 'invisible',
 }
 
 // Kullanıcı rolü
@@ -22,7 +22,7 @@ export enum UserRole {
   MODERATOR = 'moderator',
   GUEST = 'guest',
   MEMBER = 'member',
-  OWNER = 'owner'
+  OWNER = 'owner',
 }
 
 // Kanal tipi
@@ -39,14 +39,14 @@ export enum NotificationTypes {
   FRIEND_ACCEPT = 'friend_accept',
   GROUP_INVITE = 'group_invite',
   GROUP_JOIN = 'group_join',
-  SYSTEM = 'system'
+  SYSTEM = 'system',
 }
 
 // Arkadaşlık durumu
 export enum FriendshipStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
-  BLOCKED = 'blocked'
+  BLOCKED = 'blocked',
 }
 
 // Bildirim önceliği

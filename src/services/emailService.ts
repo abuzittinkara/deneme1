@@ -13,8 +13,8 @@ const transporter = nodemailer.createTransport({
   secure: env.EMAIL_SECURE,
   auth: {
     user: env.EMAIL_USER,
-    pass: env.EMAIL_PASSWORD
-  }
+    pass: env.EMAIL_PASSWORD,
+  },
 });
 
 /**
@@ -30,14 +30,14 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       from: `"${env.EMAIL_FROM_NAME}" <${env.EMAIL_FROM_ADDRESS}>`,
       to,
       subject,
-      html
+      html,
     };
 
     const info = await transporter.sendMail(mailOptions);
 
     logger.info('E-posta gönderildi', {
       messageId: info.messageId,
-      to
+      to,
     });
 
     return true;
@@ -45,7 +45,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     logger.error('E-posta gönderme hatası', {
       error: (error as Error).message,
       to,
-      subject
+      subject,
     });
     throw error;
   }
@@ -165,5 +165,5 @@ export default {
   sendWelcomeEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
-  sendPasswordChangeNotification
+  sendPasswordChangeNotification,
 };

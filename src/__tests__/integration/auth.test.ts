@@ -17,7 +17,7 @@ jest.mock('../../modules/auth/authManager', () => {
     registerUser: jest.fn().mockImplementation(mockModule.registerUser),
     loginUser: jest.fn().mockImplementation(mockModule.loginUser),
     refreshToken: jest.fn().mockImplementation(mockModule.refreshToken),
-    logoutUser: jest.fn().mockImplementation(mockModule.logoutUser)
+    logoutUser: jest.fn().mockImplementation(mockModule.logoutUser),
   };
 });
 
@@ -30,7 +30,7 @@ describe('Auth API', () => {
 
   afterAll(async () => {
     // Açık kalan bağlantıları kapat
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Sunucuyu kapat
     if (app.listening) {
@@ -64,7 +64,7 @@ describe('Auth API', () => {
     }
 
     // Tüm işlemlerin tamamlanması için bekle
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   describe('POST /api/auth/register', () => {
@@ -74,13 +74,13 @@ describe('Auth API', () => {
         success: true,
         userId: '123456789',
         username: 'testuser',
-        message: 'Kullanıcı başarıyla kaydedildi'
+        message: 'Kullanıcı başarıyla kaydedildi',
       });
 
       const userData = {
         username: 'testuser',
         email: 'test@example.com',
-        password: 'Password123!'
+        password: 'Password123!',
       };
 
       const response = await request(app)
@@ -94,8 +94,8 @@ describe('Auth API', () => {
         message: 'Kullanıcı başarıyla kaydedildi',
         data: {
           userId: '123456789',
-          username: 'testuser'
-        }
+          username: 'testuser',
+        },
       });
 
       // Mock çağrıları test ortamında çalışmıyor, bu beklentiyi atlıyoruz
@@ -106,7 +106,7 @@ describe('Auth API', () => {
       const userData = {
         username: 'te', // Çok kısa
         email: 'invalid-email',
-        password: '123' // Çok kısa
+        password: '123', // Çok kısa
       };
 
       const response = await request(app)
@@ -119,7 +119,7 @@ describe('Auth API', () => {
         success: false,
         message: 'Doğrulama hatası',
         code: 'VALIDATION_ERROR',
-        errors: expect.any(Array)
+        errors: expect.any(Array),
       });
 
       expect(authManager.registerUser).not.toHaveBeenCalled();
@@ -132,7 +132,7 @@ describe('Auth API', () => {
       const userData = {
         username: 'testuser',
         email: 'error@example.com', // Bu e-posta sunucu hatası tetikleyecek
-        password: 'Password123!'
+        password: 'Password123!',
       };
 
       const response = await request(app)
@@ -144,7 +144,7 @@ describe('Auth API', () => {
       expect(response.body).toEqual({
         success: false,
         message: 'Sunucu hatası',
-        code: 'SERVER_ERROR'
+        code: 'SERVER_ERROR',
       });
     });
   });
@@ -162,12 +162,12 @@ describe('Auth API', () => {
         role: 'user',
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
-        expiresIn: 3600
+        expiresIn: 3600,
       });
 
       const loginData = {
         usernameOrEmail: 'testuser',
-        password: 'Password123!'
+        password: 'Password123!',
       };
 
       const response = await request(app)
@@ -188,8 +188,8 @@ describe('Auth API', () => {
           role: 'user',
           accessToken: 'access-token',
           refreshToken: 'refresh-token',
-          expiresIn: 3600
-        }
+          expiresIn: 3600,
+        },
       });
 
       // Mock çağrıları test ortamında çalışmıyor, bu beklentiyi atlıyoruz
@@ -202,7 +202,7 @@ describe('Auth API', () => {
     it('should return validation error for invalid data', async () => {
       const loginData = {
         usernameOrEmail: '',
-        password: ''
+        password: '',
       };
 
       const response = await request(app)
@@ -215,7 +215,7 @@ describe('Auth API', () => {
         success: false,
         message: 'Doğrulama hatası',
         code: 'VALIDATION_ERROR',
-        errors: expect.any(Array)
+        errors: expect.any(Array),
       });
 
       expect(authManager.loginUser).not.toHaveBeenCalled();
@@ -229,7 +229,7 @@ describe('Auth API', () => {
 
       const loginData = {
         usernameOrEmail: 'testuser',
-        password: 'WrongPassword'
+        password: 'WrongPassword',
       };
 
       const response = await request(app)
@@ -241,7 +241,7 @@ describe('Auth API', () => {
       expect(response.body).toEqual({
         success: false,
         message: 'Geçersiz kullanıcı adı/e-posta veya şifre',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
     });
   });
@@ -253,11 +253,11 @@ describe('Auth API', () => {
         success: true,
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
-        expiresIn: 3600
+        expiresIn: 3600,
       });
 
       const refreshData = {
-        refreshToken: 'refresh-token'
+        refreshToken: 'refresh-token',
       };
 
       const response = await request(app)
@@ -272,8 +272,8 @@ describe('Auth API', () => {
         data: {
           accessToken: 'new-access-token',
           refreshToken: 'new-refresh-token',
-          expiresIn: 3600
-        }
+          expiresIn: 3600,
+        },
       });
 
       // Mock çağrıları test ortamında çalışmıyor, bu beklentiyi atlıyoruz
@@ -287,7 +287,7 @@ describe('Auth API', () => {
       );
 
       const refreshData = {
-        refreshToken: 'invalid-refresh-token'
+        refreshToken: 'invalid-refresh-token',
       };
 
       const response = await request(app)
@@ -299,7 +299,7 @@ describe('Auth API', () => {
       expect(response.body).toEqual({
         success: false,
         message: 'Geçersiz refresh token',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
     });
   });
@@ -309,11 +309,11 @@ describe('Auth API', () => {
       // Mock logoutUser fonksiyonu
       (authManager.logoutUser as jest.Mock).mockResolvedValue({
         success: true,
-        message: 'Çıkış başarılı'
+        message: 'Çıkış başarılı',
       });
 
       const logoutData = {
-        refreshToken: 'refresh-token'
+        refreshToken: 'refresh-token',
       };
 
       const response = await request(app)
@@ -325,13 +325,13 @@ describe('Auth API', () => {
 
       expect(response.body).toEqual({
         success: true,
-        message: 'Çıkış başarılı'
+        message: 'Çıkış başarılı',
       });
     });
 
     it('should return error for unauthenticated user', async () => {
       const logoutData = {
-        refreshToken: 'refresh-token'
+        refreshToken: 'refresh-token',
       };
 
       const response = await request(app)
@@ -343,7 +343,7 @@ describe('Auth API', () => {
       expect(response.body).toEqual({
         success: false,
         message: 'Kimlik doğrulama başarısız: Token bulunamadı',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
 
       expect(authManager.logoutUser).not.toHaveBeenCalled();

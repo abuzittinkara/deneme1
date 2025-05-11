@@ -60,7 +60,7 @@ export async function executeWithRetry<T>(
 
       // Yeniden denemeden önce bekle (üstel geri çekilme)
       const waitTime = delay * Math.pow(backoff, attempt - 1);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
   }
 
@@ -74,8 +74,8 @@ export async function executeWithRetry<T>(
  * @returns Sayfalama parametreleri
  */
 export function getPaginationParams(query: Record<string, any>) {
-  const page = Math.max(1, parseInt(query.page as string) || 1);
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 20));
+  const page = Math.max(1, parseInt(query['page'] as string) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query['limit'] as string) || 20));
   const skip = (page - 1) * limit;
 
   return { page, limit, skip };
@@ -123,7 +123,12 @@ export function buildQueryFilters(
         filters[baseKey] = { $nin: values };
       } else if (key.endsWith('_regex')) {
         const baseKey = key.replace('_regex', '');
-        filters[baseKey] = { $regex: query[key], $options: 'i' };
+        // Güvenli regex oluştur
+        const sanitizedText = typeof query[key] === 'string' ? query[key].trim() : '';
+        if (sanitizedText) {
+          const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          filters[baseKey] = { $regex: new RegExp(escapedText, 'i') };
+        }
       } else if (key.endsWith('_exists')) {
         const baseKey = key.replace('_exists', '');
         filters[baseKey] = { $exists: query[key] === 'true' };
@@ -142,7 +147,7 @@ export function buildQueryFilters(
  *
  * @param model - Mongoose modeli
  */
-export function monitorQueryPerformance(model: mongoose.Model<any>) {
+export function monitorQueryPerformance(model: any) {
   // Orijinal fonksiyonları kaydet
   const originalFind = model.find;
   const originalFindOne = model.findOne;
@@ -153,13 +158,13 @@ export function monitorQueryPerformance(model: mongoose.Model<any>) {
   const originalDeleteMany = model.deleteMany;
 
   // find metodunu izle
-  model.find = function(...args: any[]) {
+  model.find = function (...args: any[]) {
     const startTime = Date.now();
     const result = originalFind.apply(this, args);
 
     // Sorgu çalıştırıldığında süreyi ölç
     const originalExec = result.exec;
-    result.exec = async function() {
+    result.exec = async function () {
       try {
         const data = await originalExec.apply(this, arguments);
         const duration = Date.now() - startTime;
@@ -170,7 +175,7 @@ export function monitorQueryPerformance(model: mongoose.Model<any>) {
             model: model.modelName,
             method: 'find',
             filter: JSON.stringify(args[0] || {}),
-            duration: `${duration}ms`
+            duration: `${duration}ms`,
           });
         }
 
@@ -180,7 +185,7 @@ export function monitorQueryPerformance(model: mongoose.Model<any>) {
           model: model.modelName,
           method: 'find',
           filter: JSON.stringify(args[0] || {}),
-          error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+          error: error instanceof Error ? error.message : 'Bilinmeyen hata',
         });
         throw error;
       }
@@ -207,7 +212,7 @@ export function monitorDatabaseConnection() {
   mongoose.connection.on('error', (err) => {
     logger.error('MongoDB bağlantı hatası', {
       error: err.message,
-      stack: err.stack
+      stack: err.stack,
     });
   });
 
@@ -226,7 +231,7 @@ export function logConnectionStats() {
       models: Object.keys(mongoose.models).length,
       readyState: mongoose.connection.readyState,
       host: mongoose.connection.host,
-      name: mongoose.connection.name
+      name: mongoose.connection.name,
     };
 
     logger.info('MongoDB bağlantı istatistikleri', { stats });
@@ -248,6 +253,7 @@ export async function logCollectionStats(collectionName: string) {
     }
 
     const db = mongoose.connection.db;
+    // @ts-ignore - stats metodu TypeScript tanımlarında yok ama MongoDB'de var
     const stats = await db.collection(collectionName).stats();
 
     logger.info(`${collectionName} koleksiyon istatistikleri`, {
@@ -256,11 +262,11 @@ export async function logCollectionStats(collectionName: string) {
       avgObjSize: stats.avgObjSize,
       storageSize: stats.storageSize,
       indexes: stats.nindexes,
-      indexSize: stats.totalIndexSize
+      indexSize: stats.totalIndexSize,
     });
   } catch (error) {
     logger.error(`${collectionName} koleksiyon istatistikleri alınamadı`, {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
   }
 }
@@ -270,7 +276,7 @@ export async function logCollectionStats(collectionName: string) {
  *
  * @param models - Mongoose modelleri
  */
-export async function createIndexes(models: mongoose.Model<any>[]) {
+export async function createIndexes(models: any[]) {
   try {
     for (const model of models) {
       await model.createIndexes();
@@ -278,7 +284,7 @@ export async function createIndexes(models: mongoose.Model<any>[]) {
     }
   } catch (error) {
     logger.error('İndeksler oluşturulurken hata oluştu', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
   }
 }
@@ -293,13 +299,17 @@ export function optimizeDatabaseConnection() {
   // Sorgu izleme
   mongoose.set('debug', (collectionName: string, methodName: string, ...methodArgs: any[]) => {
     // Geliştirme modunda veya düşük olasılıkla sorguları logla
-    if (process.env.NODE_ENV === 'development' || Math.random() < 0.01) {
+    if (
+      process.env['NODE_ENV'] === 'development' ||
+      process.env['LOG_QUERIES'] === 'true' ||
+      (process.env['SAMPLE_QUERIES'] === 'true' && require('crypto').randomInt(0, 100) < 1)
+    ) {
       logger.debug(`MongoDB Sorgu: ${collectionName}.${methodName}`, {
         metadata: {
           collection: collectionName,
           method: methodName,
-          args: methodArgs.map(arg => (typeof arg === 'object' ? JSON.stringify(arg) : arg))
-        }
+          args: methodArgs.map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : arg)),
+        },
       });
     }
   });
@@ -368,8 +378,8 @@ export async function paginateQuery<T>(
     // İlişkili belgeleri getir
     if (options.populate) {
       if (Array.isArray(options.populate)) {
-        options.populate.forEach(field => {
-          paginatedQuery = paginatedQuery.populate(field) as any;
+        options.populate.forEach((field) => {
+          paginatedQuery = paginatedQuery.populate(field as any) as any;
         });
       } else {
         paginatedQuery = paginatedQuery.populate(options.populate) as any;
@@ -397,14 +407,14 @@ export async function paginateQuery<T>(
           limit,
           pages,
           hasNextPage: page < pages,
-          hasPrevPage: page > 1
-        }
-      }
+          hasPrevPage: page > 1,
+        },
+      },
     };
   } catch (error) {
     logger.error('Sayfalama sorgusu hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      filter: query.getFilter()
+      filter: query.getFilter(),
     });
 
     throw error;
@@ -435,8 +445,8 @@ export function optimizeQuery<T>(
   // İlişkili belgeleri getir
   if (options.populate) {
     if (Array.isArray(options.populate)) {
-      options.populate.forEach(field => {
-        query = query.populate(field);
+      options.populate.forEach((field) => {
+        query = query.populate(field as any);
       });
     } else {
       query = query.populate(options.populate);
@@ -511,5 +521,5 @@ export default {
   paginateQuery,
   optimizeQuery,
   batchItems,
-  processBatch
+  processBatch,
 };

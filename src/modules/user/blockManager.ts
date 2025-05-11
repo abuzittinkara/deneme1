@@ -30,26 +30,30 @@ export interface OperationResult {
  */
 export async function getUserBlocked(username: string): Promise<BlockedUserInfo[]> {
   try {
-    const user = await UserHelper.findOne(
-      { username },
-      null,
-      { populate: { path: 'blocked', select: 'username' } }
-    );
+    const user = await UserHelper.findOne({ username }, null, {
+      populate: { path: 'blocked', select: 'username' },
+    });
     if (!user) {
       throw new NotFoundError('Kullanıcı bulunamadı.');
     }
 
-    logger.info('Engellenen kullanıcılar listesi getirildi', { username, count: user.blocked.length });
+    logger.info('Engellenen kullanıcılar listesi getirildi', {
+      username,
+      count: user.blocked.length,
+    });
 
-    return user.blocked.map(blocked => ({
-      username: (blocked as any).username
+    return user.blocked.map((blocked) => ({
+      username: (blocked as any).username,
     }));
   } catch (error) {
     if (error instanceof NotFoundError) {
       throw error;
     }
 
-    logger.error('Engellenen kullanıcılar listesi getirme hatası', { error: (error as Error).message, username });
+    logger.error('Engellenen kullanıcılar listesi getirme hatası', {
+      error: (error as Error).message,
+      username,
+    });
     throw new Error('Engellenen kullanıcılar listesi getirilirken bir hata oluştu.');
   }
 }
@@ -60,7 +64,10 @@ export async function getUserBlocked(username: string): Promise<BlockedUserInfo[
  * @param blockedUsername - Engellenecek kullanıcı adı
  * @returns İşlem sonucu
  */
-export async function blockUser(username: string, blockedUsername: string): Promise<OperationResult> {
+export async function blockUser(
+  username: string,
+  blockedUsername: string
+): Promise<OperationResult> {
   try {
     // Kendini engelleme kontrolü
     if (username === blockedUsername) {
@@ -75,7 +82,7 @@ export async function blockUser(username: string, blockedUsername: string): Prom
     }
 
     // Zaten engellenmiş mi kontrolü
-    if (user.blocked.some(blockedId => objectIdEquals(blockedId, blockedUser._id))) {
+    if (user.blocked.some((blockedId) => objectIdEquals(blockedId, blockedUser._id))) {
       return { success: true, message: 'Kullanıcı zaten engellenmiş.' };
     }
 
@@ -83,8 +90,10 @@ export async function blockUser(username: string, blockedUsername: string): Prom
     user.blocked.push(toObjectId(blockedUser._id));
 
     // Arkadaşlıktan çıkar (karşılıklı)
-    user.friends = user.friends.filter(friendId => !objectIdEquals(friendId, blockedUser._id));
-    blockedUser.friends = blockedUser.friends.filter(friendId => !objectIdEquals(friendId, user._id));
+    user.friends = user.friends.filter((friendId) => !objectIdEquals(friendId, blockedUser._id));
+    blockedUser.friends = blockedUser.friends.filter(
+      (friendId) => !objectIdEquals(friendId, user._id)
+    );
 
     await user.save();
     await blockedUser.save();
@@ -97,7 +106,11 @@ export async function blockUser(username: string, blockedUsername: string): Prom
       throw error;
     }
 
-    logger.error('Kullanıcı engelleme hatası', { error: (error as Error).message, username, blockedUsername });
+    logger.error('Kullanıcı engelleme hatası', {
+      error: (error as Error).message,
+      username,
+      blockedUsername,
+    });
     throw new Error('Kullanıcı engellenirken bir hata oluştu.');
   }
 }
@@ -108,7 +121,10 @@ export async function blockUser(username: string, blockedUsername: string): Prom
  * @param unblockedUsername - Engeli kaldırılacak kullanıcı adı
  * @returns İşlem sonucu
  */
-export async function unblockUser(username: string, unblockedUsername: string): Promise<OperationResult> {
+export async function unblockUser(
+  username: string,
+  unblockedUsername: string
+): Promise<OperationResult> {
   try {
     const user = await UserHelper.findOne({ username });
     const unblockedUser = await UserHelper.findOne({ username: unblockedUsername });
@@ -118,7 +134,9 @@ export async function unblockUser(username: string, unblockedUsername: string): 
     }
 
     // Engellenen kullanıcıyı listeden çıkar
-    user.blocked = user.blocked.filter(blockedId => !objectIdEquals(blockedId, unblockedUser._id));
+    user.blocked = user.blocked.filter(
+      (blockedId) => !objectIdEquals(blockedId, unblockedUser._id)
+    );
     await user.save();
 
     logger.info('Kullanıcı engeli kaldırıldı', { username, unblockedUsername });
@@ -129,7 +147,11 @@ export async function unblockUser(username: string, unblockedUsername: string): 
       throw error;
     }
 
-    logger.error('Kullanıcı engeli kaldırma hatası', { error: (error as Error).message, username, unblockedUsername });
+    logger.error('Kullanıcı engeli kaldırma hatası', {
+      error: (error as Error).message,
+      username,
+      unblockedUsername,
+    });
     throw new Error('Kullanıcı engeli kaldırılırken bir hata oluştu.');
   }
 }
@@ -137,5 +159,5 @@ export async function unblockUser(username: string, unblockedUsername: string): 
 export default {
   getUserBlocked,
   blockUser,
-  unblockUser
+  unblockUser,
 };

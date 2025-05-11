@@ -10,10 +10,11 @@ import { JwtPayload } from '../utils/jwt';
 declare global {
   namespace Express {
     interface Request {
-      user?: TokenPayload & JwtPayload & {
-        id: string; // sub alanının takma adı
-        username?: string;
-      };
+      user?: TokenPayload &
+        JwtPayload & {
+          id: string; // sub alanının takma adı
+          username?: string;
+        };
       token?: string;
       refreshToken?: string;
       pagination?: {
@@ -29,9 +30,10 @@ declare global {
 
 // Kimlik doğrulama ile genişletilmiş istek arayüzü
 export interface AuthenticatedRequest extends Request {
-  user: TokenPayload & JwtPayload & {
-    id: string; // sub alanının takma adı
-  }; // Burada opsiyonel değil, zorunlu
+  user: TokenPayload &
+    JwtPayload & {
+      id: string; // sub alanının takma adı
+    }; // Burada opsiyonel değil, zorunlu
 }
 
 // Sayfalama ile genişletilmiş istek arayüzü
@@ -54,4 +56,8 @@ export interface SortedRequest extends Request {
 }
 
 // Tüm özellikleri içeren istek arayüzü
-export interface FullRequest extends AuthenticatedRequest, PaginatedRequest, FilteredRequest, SortedRequest {}
+export interface FullRequest
+  extends AuthenticatedRequest,
+    PaginatedRequest,
+    FilteredRequest,
+    SortedRequest {}

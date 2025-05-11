@@ -23,8 +23,8 @@ app.get('/health', (req: Request, res: Response) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
+    version: process.env['npm_package_version'] || '1.0.0',
+    environment: process.env['NODE_ENV'] || 'development'
   });
 });
 
@@ -65,7 +65,7 @@ app.get('/', (req: Request, res: Response) => {
           <p>Sunucu Durumu: <span class="success">Çalışıyor</span></p>
           <p>Sunucu Zamanı: ${new Date().toLocaleString()}</p>
           <p>Çalışma Süresi: ${process.uptime().toFixed(2)} saniye</p>
-          <p>Ortam: ${process.env.NODE_ENV || 'development'}</p>
+          <p>Ortam: ${process.env['NODE_ENV'] || 'development'}</p>
         </div>
         <h2>Render.com Dağıtımı</h2>
         <p>Bu sayfa, uygulamanın Render.com'da başarıyla dağıtıldığını göstermektedir.</p>
@@ -95,7 +95,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // Sunucuyu başlat
-const PORT = process.env.PORT || 3000;
+const PORT = process.env['PORT'] || 3000;
 server.listen(PORT, () => {
   console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
 });

@@ -4,7 +4,7 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import { User, UserDocument, IUser } from '../models/User';
-import { UserRole } from '../types/enums';
+import { UserRole, UserStatus } from '../types/enums';
 import { asyncHandler, sendSuccess, sendError } from '../utils/controllerUtils';
 import { generateToken, generateRefreshToken, generateTokenPair, JwtPayload } from '../utils/jwt';
 import { logger } from '../utils/logger';
@@ -92,7 +92,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
 
   // Kullanıcı adı ve e-posta kontrolü
   const existingUser = await User.findOne({
-    $or: [{ username }, { email }]
+    $or: [{ username }, { email }],
   });
 
   if (existingUser) {
@@ -118,7 +118,7 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
     name,
     surname,
     emailVerificationToken: uuidv4(),
-    emailVerified: false
+    emailVerified: false,
   });
 
   await user.save();
@@ -127,19 +127,28 @@ export const register = asyncHandler(async (req: Request, res: Response, next: N
   try {
     // E-posta doğrulama modülünü içe aktar
     const emailVerificationModule = await import('../modules/emailVerification');
-    await emailVerificationModule.sendVerificationEmail(user._id.toString());
+    const userId = user._id ? user._id.toString() : '';
+    if (userId) {
+      await emailVerificationModule.sendVerificationEmail(userId);
+    } else {
+      logger.error('Kullanıcı ID bulunamadı');
+    }
   } catch (error) {
     logger.error('E-posta doğrulama e-postası gönderilirken hata oluştu', {
       error: (error as Error).message,
-      userId: user._id
+      userId: user._id,
     });
   }
 
   // Kullanıcı bilgilerini döndür (şifre hariç)
   const userResponse = user.toObject();
-  delete userResponse.passwordHash;
+  // Güvenli bir şekilde hassas alanları kaldır
+  const sanitizedResponse = { ...userResponse } as Partial<typeof userResponse>;
+  if ('passwordHash' in sanitizedResponse) {
+    delete sanitizedResponse['passwordHash'];
+  }
 
-  return sendSuccess(res, userResponse, 201);
+  return sendSuccess(res, sanitizedResponse, 201);
 });
 
 /**
@@ -208,8 +217,8 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   const user = await User.findOne({
     $or: [
       { username },
-      { email: username } // Email ile de giriş yapılabilir
-    ]
+      { email: username }, // Email ile de giriş yapılabilir
+    ],
   });
 
   if (!user) {
@@ -228,14 +237,19 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
 
   if (!isPasswordValid) {
     // Başarısız giriş denemesini kaydet
-    user.loginAttempts = (user.loginAttempts || 0) + 1;
+    const loginAttempts = getDocField<IUser, 'loginAttempts'>(user, 'loginAttempts', 0);
+
+    // Kullanıcı belgesini güncelle
+    user.set('loginAttempts', loginAttempts + 1);
 
     // Çok fazla başarısız deneme varsa hesabı kilitle
-    if (user.loginAttempts >= 5) {
-      user.status = 'locked';
-      user.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 dakika
+    if (loginAttempts + 1 >= 5) {
+      user.set('status', UserStatus.LOCKED);
+      user.set('lockUntil', new Date(Date.now() + 30 * 60 * 1000)); // 30 dakika
       await user.save();
-      throw new UnauthorizedError('Çok fazla başarısız giriş denemesi. Hesabınız 30 dakika kilitlendi.');
+      throw new UnauthorizedError(
+        'Çok fazla başarısız giriş denemesi. Hesabınız 30 dakika kilitlendi.'
+      );
     }
 
     await user.save();
@@ -243,12 +257,12 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
   }
 
   // Başarılı giriş - login bilgilerini sıfırla
-  user.loginAttempts = 0;
-  user.lastLogin = new Date();
-  user.lastSeen = new Date();
+  user.set('loginAttempts', 0);
+  user.set('lastLogin', new Date());
+  user.set('lastSeen', new Date());
   await user.save();
 
-  const userId = user._id.toString();
+  const userId = user._id ? user._id.toString() : '';
   const userUsername = getDocField<IUser, 'username'>(user, 'username', '');
   const userRole = getDocField<IUser, 'role'>(user, 'role', UserRole.USER);
   const userEmail = getDocField<IUser, 'email'>(user, 'email', '');
@@ -260,20 +274,31 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
     role: userRole,
     status: userStatus,
     email: userEmail,
-    sub: userId
+    sub: userId,
   });
 
   // Kullanıcı bilgilerini döndür (şifre hariç)
   const userResponse = user.toObject();
-  delete userResponse.passwordHash;
-  delete userResponse.passwordResetToken;
-  delete userResponse.passwordResetExpires;
-  delete userResponse.emailVerificationToken;
+  // Güvenli bir şekilde hassas alanları kaldır
+  const sanitizedResponse = { ...userResponse } as Partial<typeof userResponse>;
+
+  // Hassas alanları sil
+  const sensitiveFields = [
+    'passwordHash',
+    'passwordResetToken',
+    'passwordResetExpires',
+    'emailVerificationToken',
+  ];
+  sensitiveFields.forEach((field) => {
+    if (field in sanitizedResponse) {
+      delete (sanitizedResponse as any)[field];
+    }
+  });
 
   // Oturum bilgilerini döndür
   return sendSuccess(res, {
     ...tokenPair,
-    user: userResponse
+    user: sanitizedResponse,
   });
 });
 
@@ -322,59 +347,63 @@ export const login = asyncHandler(async (req: Request, res: Response, next: Next
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const refreshToken = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const { refreshToken } = req.body;
+export const refreshToken = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { refreshToken } = req.body;
 
-  if (!refreshToken) {
-    throw new ValidationError('Yenileme token\'ı zorunludur');
-  }
+    if (!refreshToken) {
+      throw new ValidationError('Yenileme token\'ı zorunludur');
+    }
 
-  try {
-    // Yenileme token'ını doğrula
-    const decoded = await import('../utils/jwt').then(jwt => jwt.verifyRefreshToken(refreshToken));
+    try {
+      // Yenileme token'ını doğrula
+      const decoded = await import('../utils/jwt').then((jwt) =>
+        jwt.verifyRefreshToken(refreshToken)
+      );
 
-    // Kullanıcıyı bul
-    const user = await User.findById(decoded.id);
+      // Kullanıcıyı bul
+      const user = await User.findById(decoded.id);
 
-    if (!user) {
+      if (!user) {
+        throw new UnauthorizedError('Geçersiz yenileme token\'ı');
+      }
+
+      // Kullanıcı durumunu kontrol et
+      const userStatus = getDocField<IUser, 'status'>(user, 'status', 'active');
+      if (userStatus !== 'active') {
+        throw new UnauthorizedError('Hesabınız aktif değil');
+      }
+
+      // Son görülme zamanını güncelle
+      user.set('lastSeen', new Date());
+      await user.save();
+
+      const userId = user._id ? user._id.toString() : '';
+      const username = getDocField<IUser, 'username'>(user, 'username', '');
+      const role = getDocField<IUser, 'role'>(user, 'role', UserRole.USER);
+      const email = getDocField<IUser, 'email'>(user, 'email', '');
+
+      // Yeni token çifti oluştur
+      const tokenPair = generateTokenPair({
+        id: userId,
+        username,
+        role,
+        status: userStatus,
+        email,
+        sub: userId,
+      });
+
+      return sendSuccess(res, tokenPair);
+    } catch (error) {
+      logger.warn('Token yenileme hatası', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
       throw new UnauthorizedError('Geçersiz yenileme token\'ı');
     }
-
-    // Kullanıcı durumunu kontrol et
-    const userStatus = getDocField<IUser, 'status'>(user, 'status', 'active');
-    if (userStatus !== 'active') {
-      throw new UnauthorizedError('Hesabınız aktif değil');
-    }
-
-    // Son görülme zamanını güncelle
-    user.lastSeen = new Date();
-    await user.save();
-
-    const userId = user._id.toString();
-    const username = getDocField<IUser, 'username'>(user, 'username', '');
-    const role = getDocField<IUser, 'role'>(user, 'role', UserRole.USER);
-    const email = getDocField<IUser, 'email'>(user, 'email', '');
-
-    // Yeni token çifti oluştur
-    const tokenPair = generateTokenPair({
-      id: userId,
-      username,
-      role,
-      status: userStatus,
-      email,
-      sub: userId
-    });
-
-    return sendSuccess(res, tokenPair);
-  } catch (error) {
-    logger.warn('Token yenileme hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-
-    throw new UnauthorizedError('Geçersiz yenileme token\'ı');
   }
-});
+);
 
 /**
  * @swagger
@@ -414,9 +443,14 @@ export const getMe = asyncHandler(async (req: Request, res: Response, next: Next
 
   // Kullanıcı bilgilerini döndür (şifre hariç)
   const userResponse = user.toObject();
-  delete userResponse.passwordHash;
+  // Güvenli bir şekilde hassas alanları kaldır
+  const sanitizedResponse = { ...userResponse } as Partial<typeof userResponse>;
 
-  return sendSuccess(res, userResponse);
+  if ('passwordHash' in sanitizedResponse) {
+    delete sanitizedResponse['passwordHash'];
+  }
+
+  return sendSuccess(res, sanitizedResponse);
 });
 
 /**
@@ -463,60 +497,62 @@ export const getMe = asyncHandler(async (req: Request, res: Response, next: Next
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const forgotPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const { email } = req.body;
+export const forgotPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
 
-  if (!email) {
-    throw new ValidationError('E-posta adresi zorunludur');
-  }
+    if (!email) {
+      throw new ValidationError('E-posta adresi zorunludur');
+    }
 
-  // Kullanıcıyı bul
-  const user = await User.findOne({ email });
+    // Kullanıcıyı bul
+    const user = await User.findOne({ email });
 
-  if (!user) {
-    throw new NotFoundError('Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı');
-  }
+    if (!user) {
+      throw new NotFoundError('Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı');
+    }
 
-  // Şifre sıfırlama token'ı oluştur
-  const resetToken = crypto.randomBytes(32).toString('hex');
+    // Şifre sıfırlama token'ı oluştur
+    const resetToken = crypto.randomBytes(32).toString('hex');
 
-  // Token'ı kullanıcıya kaydet
-  const updatedUser = updateDocFields<IUser>(user, {
-    passwordResetToken: resetToken,
-    passwordResetExpires: new Date(Date.now() + 3600000) // 1 saat
-  });
-
-  if (!updatedUser) {
-    throw new Error('Kullanıcı güncellenemedi');
-  }
-
-  await updatedUser.save();
-
-  // Şifre sıfırlama e-postası gönder
-  try {
-    // Şifre sıfırlama URL'si oluştur
-    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
-
-    // Kullanıcı bilgilerini al
-    const email = getDocField<IUser, 'email'>(user, 'email', '');
-    const username = getDocField<IUser, 'username'>(user, 'username', '');
-
-    // E-posta gönder
-    await emailService.sendPasswordResetEmail(email, {
-      username,
-      resetUrl
+    // Token'ı kullanıcıya kaydet
+    const updatedUser = updateDocFields<IUser>(user, {
+      passwordResetToken: resetToken,
+      passwordResetExpires: new Date(Date.now() + 3600000), // 1 saat
     });
-  } catch (error) {
-    logger.error('Şifre sıfırlama e-postası gönderilirken hata oluştu', {
-      error: (error as Error).message,
-      userId: user._id
+
+    if (!updatedUser) {
+      throw new Error('Kullanıcı güncellenemedi');
+    }
+
+    await updatedUser.save();
+
+    // Şifre sıfırlama e-postası gönder
+    try {
+      // Şifre sıfırlama URL'si oluştur
+      const resetUrl = `${process.env['CLIENT_URL']}/reset-password?token=${resetToken}`;
+
+      // Kullanıcı bilgilerini al
+      const email = getDocField<IUser, 'email'>(user, 'email', '');
+      const username = getDocField<IUser, 'username'>(user, 'username', '');
+
+      // E-posta gönder
+      await emailService.sendPasswordResetEmail(email, {
+        username,
+        resetUrl,
+      });
+    } catch (error) {
+      logger.error('Şifre sıfırlama e-postası gönderilirken hata oluştu', {
+        error: (error as Error).message,
+        userId: user._id ? user._id.toString() : 'unknown',
+      });
+    }
+
+    return sendSuccess(res, {
+      message: 'Şifre sıfırlama e-postası gönderildi',
     });
   }
-
-  return sendSuccess(res, {
-    message: 'Şifre sıfırlama e-postası gönderildi'
-  });
-});
+);
 
 /**
  * @swagger
@@ -566,43 +602,45 @@ export const forgotPassword = asyncHandler(async (req: Request, res: Response, n
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const resetPassword = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const { token, password } = req.body;
+export const resetPassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { token, password } = req.body;
 
-  if (!token || !password) {
-    throw new ValidationError('Token ve şifre zorunludur');
+    if (!token || !password) {
+      throw new ValidationError('Token ve şifre zorunludur');
+    }
+
+    // Token'a sahip kullanıcıyı bul
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new ValidationError('Geçersiz veya süresi dolmuş token');
+    }
+
+    // Şifreyi hashle
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Kullanıcı bilgilerini güncelle
+    const updatedUser = updateDocFields<IUser>(user, {
+      passwordHash,
+      passwordResetToken: undefined,
+      passwordResetExpires: undefined,
+    });
+
+    if (!updatedUser) {
+      throw new Error('Kullanıcı güncellenemedi');
+    }
+
+    await updatedUser.save();
+
+    return sendSuccess(res, {
+      message: 'Şifre başarıyla sıfırlandı',
+    });
   }
-
-  // Token'a sahip kullanıcıyı bul
-  const user = await User.findOne({
-    passwordResetToken: token,
-    passwordResetExpires: { $gt: Date.now() }
-  });
-
-  if (!user) {
-    throw new ValidationError('Geçersiz veya süresi dolmuş token');
-  }
-
-  // Şifreyi hashle
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  // Kullanıcı bilgilerini güncelle
-  const updatedUser = updateDocFields<IUser>(user, {
-    passwordHash,
-    passwordResetToken: undefined,
-    passwordResetExpires: undefined
-  });
-
-  if (!updatedUser) {
-    throw new Error('Kullanıcı güncellenemedi');
-  }
-
-  await updatedUser.save();
-
-  return sendSuccess(res, {
-    message: 'Şifre başarıyla sıfırlandı'
-  });
-});
+);
 
 export default {
   register,
@@ -610,5 +648,5 @@ export default {
   refreshToken,
   getMe,
   forgotPassword,
-  resetPassword
+  resetPassword,
 };

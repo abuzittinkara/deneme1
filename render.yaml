@@ -1,14 +1,14 @@
 services:
   - type: web
     name: sesli-sohbet
-    env: node
-    buildCommand: bash ./build.sh
-    startCommand: node render-app.js
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: node dist/render-app.js --port=9092
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: 9092
     healthCheckPath: /health
     autoDeploy: true
     disk:

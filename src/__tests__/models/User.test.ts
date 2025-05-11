@@ -19,10 +19,10 @@ jest.mock('mongoose', () => {
           find: jest.fn(),
           insertOne: jest.fn(),
           updateOne: jest.fn(),
-          deleteOne: jest.fn()
-        })
-      }
-    }
+          deleteOne: jest.fn(),
+        }),
+      },
+    },
   };
 });
 
@@ -42,7 +42,7 @@ describe('User Model', () => {
       lastSeen: new Date(),
       emailVerified: true,
       isActive: true,
-      role: 'user'
+      role: 'user',
     });
   });
 
@@ -66,7 +66,7 @@ describe('User Model', () => {
   it('should have default values for optional fields', () => {
     const minimalUser = new User({
       username: 'minimal',
-      passwordHash: 'hashedpassword'
+      passwordHash: 'hashedpassword',
     });
 
     expect(minimalUser).toBeDefined();
@@ -88,7 +88,7 @@ describe('User Model', () => {
     // Username olmadan kullanıcı oluşturmayı dene
     const invalidUser = new User({
       email: 'invalid@example.com',
-      passwordHash: 'hashedpassword'
+      passwordHash: 'hashedpassword',
     });
 
     // validateSync metodu, validasyon hatalarını döndürür

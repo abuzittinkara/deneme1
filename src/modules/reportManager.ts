@@ -59,8 +59,8 @@ export async function createUserReport(
       reportedUser: reportedUser._id,
       reason,
       description,
-      relatedMessages: relatedMessageIds.map(id => new mongoose.Types.ObjectId(id)),
-      relatedDMMessages: relatedDMMessageIds.map(id => new mongoose.Types.ObjectId(id))
+      relatedMessages: relatedMessageIds.map((id) => new mongoose.Types.ObjectId(id)),
+      relatedDMMessages: relatedDMMessageIds.map((id) => new mongoose.Types.ObjectId(id)),
     });
 
     await report.save();
@@ -77,7 +77,7 @@ export async function createUserReport(
     logger.info('Kullanıcı raporu oluşturuldu', {
       reportId: report._id,
       reporter: reporterId,
-      reportedUser: reportedUser._id
+      reportedUser: reportedUser._id,
     });
 
     return populatedReport as ReportDocument;
@@ -85,7 +85,7 @@ export async function createUserReport(
     logger.error('Kullanıcı raporu oluşturma hatası', {
       error: (error as Error).message,
       reporterId,
-      reportedUsername
+      reportedUsername,
     });
     throw error;
   }
@@ -108,7 +108,7 @@ export async function getUserReports(userId: string): Promise<ReportDocument[]> 
   } catch (error) {
     logger.error('Kullanıcı raporlarını getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -162,7 +162,7 @@ export async function updateReportStatus(
     logger.info('Rapor durumu güncellendi', {
       reportId,
       status,
-      adminId
+      adminId,
     });
 
     return populatedReport as ReportDocument;
@@ -171,7 +171,7 @@ export async function updateReportStatus(
       error: (error as Error).message,
       reportId,
       status,
-      adminId
+      adminId,
     });
     throw error;
   }
@@ -200,7 +200,7 @@ export async function archiveReport(reportId: string): Promise<ReportDocument> {
   } catch (error) {
     logger.error('Rapor arşivleme hatası', {
       error: (error as Error).message,
-      reportId
+      reportId,
     });
     throw error;
   }
@@ -225,7 +225,7 @@ export async function getPendingReports(limit: number = 10): Promise<ReportDocum
   } catch (error) {
     logger.error('Bekleyen raporları getirme hatası', {
       error: (error as Error).message,
-      limit
+      limit,
     });
     throw error;
   }
@@ -259,17 +259,17 @@ export async function getReportMessages(reportId: string): Promise<ReportMessage
     logger.info('Rapor mesajları getirildi', {
       reportId,
       messageCount: messages.length,
-      dmMessageCount: dmMessages.length
+      dmMessageCount: dmMessages.length,
     });
 
     return {
       messages,
-      dmMessages
+      dmMessages,
     };
   } catch (error) {
     logger.error('Rapor mesajlarını getirme hatası', {
       error: (error as Error).message,
-      reportId
+      reportId,
     });
     throw error;
   }
@@ -288,14 +288,14 @@ export async function getReportsAgainstUser(userId: string): Promise<ReportDocum
 
     logger.info('Kullanıcıya karşı yapılan raporlar getirildi', {
       userId,
-      count: reports.length
+      count: reports.length,
     });
 
     return reports as ReportDocument[];
   } catch (error) {
     logger.error('Kullanıcıya karşı yapılan raporları getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -308,5 +308,5 @@ export default {
   archiveReport,
   getPendingReports,
   getReportMessages,
-  getReportsAgainstUser
+  getReportsAgainstUser,
 };

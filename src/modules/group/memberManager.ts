@@ -63,15 +63,15 @@ export async function getGroupMembers(groupId: string): Promise<GroupMemberInfo[
       username: (member.user as any).username,
       name: (member.user as any).name,
       profilePicture: (member.user as any).profilePicture?.toString(),
-      roles: (member.roles as any[]).map(role => role.name),
+      roles: (member.roles as any[]).map((role) => role.name),
       joinedAt: member.joinedAt,
       isOnline: (member.user as any).onlineStatus?.isOnline || false,
-      lastActiveAt: (member.user as any).onlineStatus?.lastActiveAt
+      lastActiveAt: (member.user as any).onlineStatus?.lastActiveAt,
     }));
   } catch (error) {
     logger.error('Grup üyelerini getirme hatası', {
       error: (error as Error).message,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -102,14 +102,16 @@ export async function addGroupMember(
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('MANAGE_MEMBERS')
       );
 
@@ -127,7 +129,7 @@ export async function addGroupMember(
     // Kullanıcının zaten grupta olup olmadığını kontrol et
     const existingMembership = await GroupMemberHelper.findOne({
       group: group._id,
-      user: memberUser._id
+      user: memberUser._id,
     }).exec();
 
     if (existingMembership) {
@@ -145,7 +147,7 @@ export async function addGroupMember(
       group: group._id,
       user: memberUser._id,
       roles: defaultRoles,
-      joinedAt: new Date()
+      joinedAt: new Date(),
     });
 
     // Kullanıcının gruplar listesini güncelle
@@ -169,7 +171,7 @@ export async function addGroupMember(
     logger.info('Grup üyesi eklendi', {
       groupId,
       userId,
-      memberUsername
+      memberUsername,
     });
 
     // Üye bilgisini formatla
@@ -178,17 +180,17 @@ export async function addGroupMember(
       username: (populatedMembership!.user as any).username,
       name: (populatedMembership!.user as any).name,
       profilePicture: (populatedMembership!.user as any).profilePicture?.toString(),
-      roles: (populatedMembership!.roles as any[]).map(role => role.name),
+      roles: (populatedMembership!.roles as any[]).map((role) => role.name),
       joinedAt: populatedMembership!.joinedAt,
       isOnline: (populatedMembership!.user as any).onlineStatus?.isOnline || false,
-      lastActiveAt: (populatedMembership!.user as any).onlineStatus?.lastActiveAt
+      lastActiveAt: (populatedMembership!.user as any).onlineStatus?.lastActiveAt,
     };
   } catch (error) {
     logger.error('Grup üyesi ekleme hatası', {
       error: (error as Error).message,
       groupId,
       userId,
-      memberUsername
+      memberUsername,
     });
     throw error;
   }
@@ -226,14 +228,16 @@ export async function removeGroupMember(
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('MANAGE_MEMBERS')
       );
 
@@ -245,7 +249,7 @@ export async function removeGroupMember(
     // Çıkarılacak üyeliği bul
     const membershipToRemove = await GroupMemberHelper.findOne({
       group: group._id,
-      user: toObjectId(memberId)
+      user: toObjectId(memberId),
     }).exec();
 
     if (!membershipToRemove) {
@@ -256,21 +260,15 @@ export async function removeGroupMember(
     await membershipToRemove.deleteOne();
 
     // Kullanıcının gruplar listesini güncelle
-    await User.updateOne(
-      { _id: toObjectId(memberId) },
-      { $pull: { groups: group._id } }
-    );
+    await User.updateOne({ _id: toObjectId(memberId) }, { $pull: { groups: group._id } });
 
     // Grup üyeleri listesini güncelle
-    await Group.updateOne(
-      { _id: group._id },
-      { $pull: { users: toObjectId(memberId) } }
-    );
+    await Group.updateOne({ _id: group._id }, { $pull: { users: toObjectId(memberId) } });
 
     logger.info('Grup üyesi çıkarıldı', {
       groupId,
       userId,
-      memberId
+      memberId,
     });
 
     return { success: true };
@@ -279,7 +277,7 @@ export async function removeGroupMember(
       error: (error as Error).message,
       groupId,
       userId,
-      memberId
+      memberId,
     });
     throw error;
   }
@@ -306,14 +304,16 @@ export async function assignRole(params: AssignRoleParams): Promise<{ success: b
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('MANAGE_ROLES')
       );
 
@@ -331,7 +331,7 @@ export async function assignRole(params: AssignRoleParams): Promise<{ success: b
     // Üyeliği bul
     const membership = await GroupMemberHelper.findOne({
       group: group._id,
-      user: toObjectId(memberId)
+      user: toObjectId(memberId),
     }).exec();
 
     if (!membership) {
@@ -339,7 +339,7 @@ export async function assignRole(params: AssignRoleParams): Promise<{ success: b
     }
 
     // Rolü ekle
-    if (!membership.roles.some(r => r.toString() === roleId)) {
+    if (!membership.roles.some((r) => r.toString() === roleId)) {
       membership.roles.push(toObjectId(roleId));
       await membership.save();
     }
@@ -348,7 +348,7 @@ export async function assignRole(params: AssignRoleParams): Promise<{ success: b
       groupId,
       userId,
       memberId,
-      roleId
+      roleId,
     });
 
     return { success: true };
@@ -358,7 +358,7 @@ export async function assignRole(params: AssignRoleParams): Promise<{ success: b
       groupId: params.groupId,
       userId: params.userId,
       memberId: params.memberId,
-      roleId: params.roleId
+      roleId: params.roleId,
     });
     throw error;
   }
@@ -391,14 +391,16 @@ export async function removeRole(
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('MANAGE_ROLES')
       );
 
@@ -416,7 +418,7 @@ export async function removeRole(
     // Üyeliği bul
     const membership = await GroupMemberHelper.findOne({
       group: group._id,
-      user: toObjectId(memberId)
+      user: toObjectId(memberId),
     }).exec();
 
     if (!membership) {
@@ -424,14 +426,14 @@ export async function removeRole(
     }
 
     // Rolü kaldır
-    membership.roles = membership.roles.filter(r => r.toString() !== roleId);
+    membership.roles = membership.roles.filter((r) => r.toString() !== roleId);
     await membership.save();
 
     logger.info('Rol kaldırıldı', {
       groupId,
       userId,
       memberId,
-      roleId
+      roleId,
     });
 
     return { success: true };
@@ -441,7 +443,7 @@ export async function removeRole(
       groupId,
       userId,
       memberId,
-      roleId
+      roleId,
     });
     throw error;
   }
@@ -479,14 +481,16 @@ export async function banGroupMember(
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('BAN_MEMBERS')
       );
 
@@ -504,14 +508,14 @@ export async function banGroupMember(
       user: toObjectId(memberId),
       bannedBy: toObjectId(userId),
       reason: reason || 'Neden belirtilmedi',
-      bannedAt: new Date()
+      bannedAt: new Date(),
     });
 
     logger.info('Grup üyesi yasaklandı', {
       groupId,
       userId,
       memberId,
-      reason
+      reason,
     });
 
     return { success: true };
@@ -520,7 +524,7 @@ export async function banGroupMember(
       error: (error as Error).message,
       groupId,
       userId,
-      memberId
+      memberId,
     });
     throw error;
   }
@@ -551,14 +555,16 @@ export async function unbanGroupMember(
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('BAN_MEMBERS')
       );
 
@@ -570,7 +576,7 @@ export async function unbanGroupMember(
     // Yasaklama kaydını bul ve sil
     const result = await GroupBan.deleteOne({
       group: group._id,
-      user: toObjectId(bannedUserId)
+      user: toObjectId(bannedUserId),
     });
 
     if (result.deletedCount === 0) {
@@ -580,7 +586,7 @@ export async function unbanGroupMember(
     logger.info('Grup üyesi yasağı kaldırıldı', {
       groupId,
       userId,
-      bannedUserId
+      bannedUserId,
     });
 
     return { success: true };
@@ -589,7 +595,7 @@ export async function unbanGroupMember(
       error: (error as Error).message,
       groupId,
       userId,
-      bannedUserId
+      bannedUserId,
     });
     throw error;
   }
@@ -609,7 +615,7 @@ const GroupBanSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   bannedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   reason: { type: String, default: 'Neden belirtilmedi' },
-  bannedAt: { type: Date, default: Date.now }
+  bannedAt: { type: Date, default: Date.now },
 });
 
 // İndeksler
@@ -625,5 +631,5 @@ export default {
   assignRole,
   removeRole,
   banGroupMember,
-  unbanGroupMember
+  unbanGroupMember,
 };

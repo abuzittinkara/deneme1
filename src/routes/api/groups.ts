@@ -32,16 +32,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        data: groups
+        data: groups,
       });
     } catch (error) {
       logger.error('Grupları getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Gruplar getirilirken bir hata oluştu'
+        message: 'Gruplar getirilirken bir hata oluştu',
       });
     }
   })
@@ -55,28 +55,24 @@ router.get(
 router.get(
   '/:groupId',
   requireAuth,
-  [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID')
-  ],
+  [param('groupId').isString().withMessage('Geçersiz grup ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
+      const groupId = req.params['groupId'] || '';
       const userId = req.user!.id;
 
       const group = await groupManager.getGroupDetails(groupId, userId);
 
       return res.status(200).json({
         success: true,
-        data: group
+        data: group,
       });
     } catch (error) {
       logger.error('Grup detaylarını getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId
+        groupId: req.params['groupId'],
       });
 
       // Hata mesajını belirle
@@ -93,7 +89,7 @@ router.get(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -108,19 +104,9 @@ router.post(
   '/',
   requireAuth,
   [
-    body('name')
-      .isString()
-      .notEmpty()
-      .withMessage('Grup adı gereklidir')
-      .trim(),
-    body('description')
-      .isString()
-      .withMessage('Geçersiz açıklama formatı')
-      .trim(),
-    body('type')
-      .optional()
-      .isIn(['public', 'private', 'secret'])
-      .withMessage('Geçersiz grup türü')
+    body('name').isString().notEmpty().withMessage('Grup adı gereklidir').trim(),
+    body('description').isString().withMessage('Geçersiz açıklama formatı').trim(),
+    body('type').optional().isIn(['public', 'private', 'secret']).withMessage('Geçersiz grup türü'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -132,22 +118,22 @@ router.post(
         name,
         description,
         type,
-        ownerId: userId
+        ownerId: userId,
       });
 
       return res.status(201).json({
         success: true,
-        data: group
+        data: group,
       });
     } catch (error) {
       logger.error('Grup oluşturma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        body: req.body
+        body: req.body,
       });
       return res.status(500).json({
         success: false,
-        message: 'Grup oluşturulurken bir hata oluştu'
+        message: 'Grup oluşturulurken bir hata oluştu',
       });
     }
   })
@@ -161,27 +147,23 @@ router.post(
 router.get(
   '/:groupId/settings',
   requireAuth,
-  [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID')
-  ],
+  [param('groupId').isString().withMessage('Geçersiz grup ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
+      const groupId = req.params['groupId'] || '';
 
       const settings = await settingsManager.getGroupSettings(groupId);
 
       return res.status(200).json({
         success: true,
-        data: settings
+        data: settings,
       });
     } catch (error) {
       logger.error('Grup ayarlarını getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId
+        groupId: req.params['groupId'],
       });
 
       // Hata mesajını belirle
@@ -195,7 +177,7 @@ router.get(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -210,57 +192,36 @@ router.patch(
   '/:groupId/settings',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    body('name')
-      .optional()
-      .isString()
-      .notEmpty()
-      .withMessage('Grup adı boş olamaz')
-      .trim(),
-    body('description')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz açıklama formatı')
-      .trim(),
-    body('type')
-      .optional()
-      .isIn(['public', 'private', 'secret'])
-      .withMessage('Geçersiz grup türü'),
-    body('rules')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz kurallar formatı')
-      .trim(),
-    body('defaultRole')
-      .optional()
-      .isMongoId()
-      .withMessage('Geçersiz rol ID')
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    body('name').optional().isString().notEmpty().withMessage('Grup adı boş olamaz').trim(),
+    body('description').optional().isString().withMessage('Geçersiz açıklama formatı').trim(),
+    body('type').optional().isIn(['public', 'private', 'secret']).withMessage('Geçersiz grup türü'),
+    body('rules').optional().isString().withMessage('Geçersiz kurallar formatı').trim(),
+    body('defaultRole').optional().isMongoId().withMessage('Geçersiz rol ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
+      const groupId = req.params['groupId'] || '';
       const userId = req.user!.id;
       const settings = req.body;
 
       const updatedSettings = await settingsManager.updateGroupSettings({
         groupId,
         userId,
-        settings
+        settings,
       });
 
       return res.status(200).json({
         success: true,
-        data: updatedSettings
+        data: updatedSettings,
       });
     } catch (error) {
       logger.error('Grup ayarlarını güncelleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        body: req.body
+        groupId: req.params['groupId'],
+        body: req.body,
       });
 
       // Hata mesajını belirle
@@ -280,7 +241,7 @@ router.patch(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -294,27 +255,23 @@ router.patch(
 router.get(
   '/:groupId/members',
   requireAuth,
-  [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID')
-  ],
+  [param('groupId').isString().withMessage('Geçersiz grup ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
+      const groupId = req.params['groupId'] || '';
 
       const members = await memberManager.getGroupMembers(groupId);
 
       return res.status(200).json({
         success: true,
-        data: members
+        data: members,
       });
     } catch (error) {
       logger.error('Grup üyelerini getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId
+        groupId: req.params['groupId'],
       });
 
       // Hata mesajını belirle
@@ -328,7 +285,7 @@ router.get(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -343,19 +300,13 @@ router.post(
   '/:groupId/members',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    body('username')
-      .isString()
-      .notEmpty()
-      .withMessage('Kullanıcı adı gereklidir')
-      .trim()
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    body('username').isString().notEmpty().withMessage('Kullanıcı adı gereklidir').trim(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
+      const groupId = req.params['groupId'] || '';
       const { username } = req.body;
       const userId = req.user!.id;
 
@@ -363,14 +314,14 @@ router.post(
 
       return res.status(201).json({
         success: true,
-        data: member
+        data: member,
       });
     } catch (error) {
       logger.error('Grup üyesi ekleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        body: req.body
+        groupId: req.params['groupId'],
+        body: req.body,
       });
 
       // Hata mesajını belirle
@@ -390,7 +341,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -405,31 +356,28 @@ router.delete(
   '/:groupId/members/:memberId',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    param('memberId')
-      .isMongoId()
-      .withMessage('Geçersiz üye ID')
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    param('memberId').isMongoId().withMessage('Geçersiz üye ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId, memberId } = req.params;
+      const groupId = req.params['groupId'] || '';
+      const memberId = req.params['memberId'] || '';
       const userId = req.user!.id;
 
       await memberManager.removeGroupMember(groupId, userId, memberId);
 
       return res.status(200).json({
         success: true,
-        message: 'Üye gruptan çıkarıldı'
+        message: 'Üye gruptan çıkarıldı',
       });
     } catch (error) {
       logger.error('Grup üyesi çıkarma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        memberId: req.params.memberId
+        groupId: req.params['groupId'],
+        memberId: req.params['memberId'],
       });
 
       // Hata mesajını belirle
@@ -449,7 +397,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -464,40 +412,36 @@ router.post(
   '/:groupId/members/:memberId/roles/:roleId',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    param('memberId')
-      .isMongoId()
-      .withMessage('Geçersiz üye ID'),
-    param('roleId')
-      .isMongoId()
-      .withMessage('Geçersiz rol ID')
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    param('memberId').isMongoId().withMessage('Geçersiz üye ID'),
+    param('roleId').isMongoId().withMessage('Geçersiz rol ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId, memberId, roleId } = req.params;
+      const groupId = req.params['groupId'] || '';
+      const memberId = req.params['memberId'] || '';
+      const roleId = req.params['roleId'] || '';
       const userId = req.user!.id;
 
       await memberManager.assignRole({
         groupId,
         userId,
         memberId,
-        roleId
+        roleId,
       });
 
       return res.status(200).json({
         success: true,
-        message: 'Rol atandı'
+        message: 'Rol atandı',
       });
     } catch (error) {
       logger.error('Rol atama hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        memberId: req.params.memberId,
-        roleId: req.params.roleId
+        groupId: req.params['groupId'],
+        memberId: req.params['memberId'],
+        roleId: req.params['roleId'],
       });
 
       // Hata mesajını belirle
@@ -514,7 +458,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -529,35 +473,31 @@ router.delete(
   '/:groupId/members/:memberId/roles/:roleId',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    param('memberId')
-      .isMongoId()
-      .withMessage('Geçersiz üye ID'),
-    param('roleId')
-      .isMongoId()
-      .withMessage('Geçersiz rol ID')
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    param('memberId').isMongoId().withMessage('Geçersiz üye ID'),
+    param('roleId').isMongoId().withMessage('Geçersiz rol ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId, memberId, roleId } = req.params;
+      const groupId = req.params['groupId'] || '';
+      const memberId = req.params['memberId'] || '';
+      const roleId = req.params['roleId'] || '';
       const userId = req.user!.id;
 
       await memberManager.removeRole(groupId, userId, memberId, roleId);
 
       return res.status(200).json({
         success: true,
-        message: 'Rol kaldırıldı'
+        message: 'Rol kaldırıldı',
       });
     } catch (error) {
       logger.error('Rol kaldırma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        memberId: req.params.memberId,
-        roleId: req.params.roleId
+        groupId: req.params['groupId'],
+        memberId: req.params['memberId'],
+        roleId: req.params['roleId'],
       });
 
       // Hata mesajını belirle
@@ -574,7 +514,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -588,27 +528,23 @@ router.delete(
 router.get(
   '/:groupId/stats',
   requireAuth,
-  [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID')
-  ],
+  [param('groupId').isString().withMessage('Geçersiz grup ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
+      const groupId = req.params['groupId'] || '';
 
       const stats = await statsManager.getGroupStats(groupId);
 
       return res.status(200).json({
         success: true,
-        data: stats
+        data: stats,
       });
     } catch (error) {
       logger.error('Grup istatistiklerini getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId
+        groupId: req.params['groupId'],
       });
 
       // Hata mesajını belirle
@@ -622,7 +558,7 @@ router.get(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -637,22 +573,15 @@ router.post(
   '/:groupId/ban/:memberId',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    param('memberId')
-      .isMongoId()
-      .withMessage('Geçersiz üye ID'),
-    body('reason')
-      .optional()
-      .isString()
-      .withMessage('Geçersiz neden formatı')
-      .trim()
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    param('memberId').isMongoId().withMessage('Geçersiz üye ID'),
+    body('reason').optional().isString().withMessage('Geçersiz neden formatı').trim(),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId, memberId } = req.params;
+      const groupId = req.params['groupId'] || '';
+      const memberId = req.params['memberId'] || '';
       const { reason } = req.body;
       const userId = req.user!.id;
 
@@ -660,14 +589,14 @@ router.post(
 
       return res.status(200).json({
         success: true,
-        message: 'Kullanıcı gruptan yasaklandı'
+        message: 'Kullanıcı gruptan yasaklandı',
       });
     } catch (error) {
       logger.error('Kullanıcı yasaklama hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        memberId: req.params.memberId
+        groupId: req.params['groupId'],
+        memberId: req.params['memberId'],
       });
 
       // Hata mesajını belirle
@@ -687,7 +616,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -702,31 +631,28 @@ router.delete(
   '/:groupId/ban/:userId',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    param('userId')
-      .isMongoId()
-      .withMessage('Geçersiz kullanıcı ID')
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    param('userId').isMongoId().withMessage('Geçersiz kullanıcı ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId, userId: bannedUserId } = req.params;
+      const groupId = req.params['groupId'] || '';
+      const bannedUserId = req.params['userId'] || '';
       const userId = req.user!.id;
 
       await memberManager.unbanGroupMember(groupId, userId, bannedUserId);
 
       return res.status(200).json({
         success: true,
-        message: 'Kullanıcının yasağı kaldırıldı'
+        message: 'Kullanıcının yasağı kaldırıldı',
       });
     } catch (error) {
       logger.error('Kullanıcı yasağını kaldırma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        bannedUserId: req.params.userId
+        groupId: req.params['groupId'],
+        bannedUserId: req.params['userId'],
       });
 
       // Hata mesajını belirle
@@ -743,7 +669,7 @@ router.delete(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })
@@ -758,32 +684,28 @@ router.post(
   '/:groupId/transfer-ownership',
   requireAuth,
   [
-    param('groupId')
-      .isString()
-      .withMessage('Geçersiz grup ID'),
-    body('newOwnerId')
-      .isMongoId()
-      .withMessage('Geçersiz yeni sahip ID')
+    param('groupId').isString().withMessage('Geçersiz grup ID'),
+    body('newOwnerId').isMongoId().withMessage('Geçersiz yeni sahip ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const { groupId } = req.params;
-      const { newOwnerId } = req.body;
+      const groupId = req.params['groupId'] || '';
+      const newOwnerId = req.body.newOwnerId || '';
       const userId = req.user!.id;
 
       await settingsManager.transferGroupOwnership(groupId, userId, newOwnerId);
 
       return res.status(200).json({
         success: true,
-        message: 'Grup sahipliği transfer edildi'
+        message: 'Grup sahipliği transfer edildi',
       });
     } catch (error) {
       logger.error('Grup sahipliği transfer hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        groupId: req.params.groupId,
-        newOwnerId: req.body.newOwnerId
+        groupId: req.params['groupId'],
+        newOwnerId: req.body.newOwnerId,
       });
 
       // Hata mesajını belirle
@@ -803,7 +725,7 @@ router.post(
 
       return res.status(statusCode).json({
         success: false,
-        message
+        message,
       });
     }
   })

@@ -4,13 +4,13 @@
  */
 import express from 'express';
 import notificationController from '../controllers/notificationController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { requireAuth } from '../middleware/auth';
 
 const router = express.Router();
 
 // Tüm rotalar için kimlik doğrulama gerekli
 // TypeScript ile Express 4.x'te router.use() ile middleware kullanımı için düzeltme
-router.use(authMiddleware);
+router.use(requireAuth);
 
 // Bildirim rotaları
 router.get('/', notificationController.getNotifications);

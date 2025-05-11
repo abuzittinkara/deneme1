@@ -1,15 +1,5 @@
-# Node.js temel imajı
-FROM node:16
-
-# Gerekli paketleri yükle
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    python3 \
-    python3-pip \
-    libssl-dev \
-    wget \
-    net-tools \
-    && rm -rf /var/lib/apt/lists/*
+# Mediasoup için Dockerfile
+FROM cgr.dev/chainguard/node:latest-dev AS builder
 
 # Çalışma dizini oluştur
 WORKDIR /app
@@ -18,21 +8,39 @@ WORKDIR /app
 COPY package*.json ./
 
 # Bağımlılıkları yükle
-RUN npm ci --only=production
+USER root
+RUN npm ci
 
 # Uygulama kodunu kopyala
 COPY . .
 
-# Gereksiz dosyaları temizle
-RUN rm -rf .git .github .vscode tests
+# TypeScript derleme
+RUN npm run build
+
+# Üretim aşaması
+FROM cgr.dev/chainguard/node:latest
+
+# Çalışma dizini oluştur
+WORKDIR /app
+
+# Derlenen dosyaları kopyala
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+# Ortam değişkenleri
+ENV NODE_ENV=production
+ENV PORT=3002
+ENV MEDIASOUP_MIN_PORT=10000
+ENV MEDIASOUP_MAX_PORT=10999
 
 # Uygulama portunu aç
 EXPOSE 3002
 EXPOSE 10000-10999/udp
 
 # Sağlık kontrolü
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget -q --spider http://localhost:3002/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/health || exit 1
 
 # Uygulamayı başlat
-CMD ["node", "mediasoup-server.js"]
+CMD ["node", "dist/src/mediasoup/server.js"]

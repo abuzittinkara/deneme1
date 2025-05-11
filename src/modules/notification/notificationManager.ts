@@ -32,14 +32,14 @@ export async function getUserNotifications(
 
     logger.debug('Kullanıcı bildirimleri getirildi', {
       userId,
-      count: notifications.length
+      count: notifications.length,
     });
 
     return notifications;
   } catch (error) {
     logger.error('Kullanıcı bildirimleri getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -54,19 +54,19 @@ export async function getUnreadNotificationCount(userId: string): Promise<number
   try {
     const count = await Notification.countDocuments({
       recipient: userId,
-      read: false
+      read: false,
     });
 
     logger.debug('Okunmamış bildirim sayısı getirildi', {
       userId,
-      count
+      count,
     });
 
     return count;
   } catch (error) {
     logger.error('Okunmamış bildirim sayısı getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -92,14 +92,14 @@ export async function markNotificationAsRead(
     if (!notification) {
       logger.warn('Bildirim bulunamadı veya kullanıcıya ait değil', {
         notificationId,
-        userId
+        userId,
       });
       return false;
     }
 
     logger.debug('Bildirim okundu olarak işaretlendi', {
       notificationId,
-      userId
+      userId,
     });
 
     return true;
@@ -107,7 +107,7 @@ export async function markNotificationAsRead(
     logger.error('Bildirim okundu olarak işaretleme hatası', {
       error: (error as Error).message,
       notificationId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -127,14 +127,14 @@ export async function markAllNotificationsAsRead(userId: string): Promise<number
 
     logger.debug('Tüm bildirimler okundu olarak işaretlendi', {
       userId,
-      count: result.modifiedCount
+      count: result.modifiedCount,
     });
 
     return result.modifiedCount;
   } catch (error) {
     logger.error('Tüm bildirimleri okundu olarak işaretleme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -155,7 +155,7 @@ export async function createFriendRequestNotification(
       type: NotificationTypes.FRIEND_REQUEST,
       recipient: recipientId,
       sender: senderId,
-      read: false
+      read: false,
     });
 
     await notification.save();
@@ -163,7 +163,7 @@ export async function createFriendRequestNotification(
     logger.debug('Arkadaşlık isteği bildirimi oluşturuldu', {
       recipientId,
       senderId,
-      notificationId: notification._id
+      notificationId: notification._id,
     });
 
     return notification;
@@ -171,7 +171,7 @@ export async function createFriendRequestNotification(
     logger.error('Arkadaşlık isteği bildirimi oluşturma hatası', {
       error: (error as Error).message,
       recipientId,
-      senderId
+      senderId,
     });
     throw error;
   }
@@ -192,7 +192,7 @@ export async function createFriendAcceptNotification(
       type: NotificationTypes.FRIEND_ACCEPT,
       recipient: recipientId,
       sender: senderId,
-      read: false
+      read: false,
     });
 
     await notification.save();
@@ -200,7 +200,7 @@ export async function createFriendAcceptNotification(
     logger.debug('Arkadaşlık isteği kabul bildirimi oluşturuldu', {
       recipientId,
       senderId,
-      notificationId: notification._id
+      notificationId: notification._id,
     });
 
     return notification;
@@ -208,7 +208,7 @@ export async function createFriendAcceptNotification(
     logger.error('Arkadaşlık isteği kabul bildirimi oluşturma hatası', {
       error: (error as Error).message,
       recipientId,
-      senderId
+      senderId,
     });
     throw error;
   }
@@ -240,7 +240,7 @@ export async function createMentionNotification(
       sender: senderId,
       channel: channelId,
       message: messageId,
-      read: false
+      read: false,
     });
 
     await notification.save();
@@ -250,7 +250,7 @@ export async function createMentionNotification(
       senderId,
       channelId,
       messageId,
-      notificationId: notification._id
+      notificationId: notification._id,
     });
 
     return notification;
@@ -260,7 +260,7 @@ export async function createMentionNotification(
       recipientId,
       senderId,
       channelId,
-      messageId
+      messageId,
     });
     throw error;
   }
@@ -284,7 +284,7 @@ export async function createGroupInviteNotification(
       recipient: recipientId,
       sender: senderId,
       group: groupId,
-      read: false
+      read: false,
     });
 
     await notification.save();
@@ -293,7 +293,7 @@ export async function createGroupInviteNotification(
       recipientId,
       senderId,
       groupId,
-      notificationId: notification._id
+      notificationId: notification._id,
     });
 
     return notification;
@@ -302,7 +302,7 @@ export async function createGroupInviteNotification(
       error: (error as Error).message,
       recipientId,
       senderId,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -316,5 +316,5 @@ export default {
   createFriendRequestNotification,
   createFriendAcceptNotification,
   createMentionNotification,
-  createGroupInviteNotification
+  createGroupInviteNotification,
 };

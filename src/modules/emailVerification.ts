@@ -46,7 +46,7 @@ export async function sendVerificationEmail(userId: string, email?: string): Pro
     const verificationToken = new EmailVerificationToken({
       userId,
       token: hashedToken,
-      expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_EXPIRY)
+      expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_EXPIRY),
     });
 
     await verificationToken.save();
@@ -58,7 +58,7 @@ export async function sendVerificationEmail(userId: string, email?: string): Pro
     const username = user.get('username');
     await emailService.sendVerificationEmail(userEmail, {
       username,
-      verificationUrl
+      verificationUrl,
     });
 
     logger.info('E-posta doğrulama bağlantısı gönderildi', { userId, email: userEmail });
@@ -68,7 +68,7 @@ export async function sendVerificationEmail(userId: string, email?: string): Pro
     logger.error('E-posta doğrulama bağlantısı gönderme hatası', {
       error: (error as Error).message,
       userId,
-      email: email || 'unknown'
+      email: email || 'unknown',
     });
     throw error;
   }
@@ -87,7 +87,7 @@ export async function verifyEmail(token: string): Promise<boolean> {
     // Token'ı bul
     const verificationToken = await EmailVerificationToken.findOne({
       token: hashedToken,
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
     });
 
     if (!verificationToken) {
@@ -114,7 +114,7 @@ export async function verifyEmail(token: string): Promise<boolean> {
     return true;
   } catch (error) {
     logger.error('E-posta doğrulama hatası', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
     throw error;
   }
@@ -153,7 +153,7 @@ export async function resendVerificationEmail(email: string): Promise<boolean> {
   } catch (error) {
     logger.error('E-posta doğrulama bağlantısı yeniden gönderme hatası', {
       error: (error as Error).message,
-      email
+      email,
     });
     throw error;
   }
@@ -176,7 +176,7 @@ export async function isEmailVerified(userId: string): Promise<boolean> {
   } catch (error) {
     logger.error('E-posta doğrulama durumu kontrol hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -186,5 +186,5 @@ export default {
   sendVerificationEmail,
   resendVerificationEmail,
   verifyEmail,
-  isEmailVerified
+  isEmailVerified,
 };

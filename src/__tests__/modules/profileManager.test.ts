@@ -17,7 +17,7 @@ describe('Profile Manager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  
+
   describe('updateUserProfile', () => {
     it('should update user profile successfully', async () => {
       // Mock User.findById
@@ -34,7 +34,7 @@ describe('Profile Manager', () => {
           theme: 'dark',
           notifications: true,
           soundEffects: true,
-          language: 'tr'
+          language: 'tr',
         },
         save: jest.fn().mockResolvedValue(true),
         toObject: jest.fn().mockReturnValue({
@@ -50,13 +50,13 @@ describe('Profile Manager', () => {
             theme: 'light',
             notifications: false,
             soundEffects: false,
-            language: 'en'
-          }
-        })
+            language: 'en',
+          },
+        }),
       };
-      
+
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
-      
+
       const profileData = {
         name: 'New Name',
         surname: 'New Surname',
@@ -69,15 +69,15 @@ describe('Profile Manager', () => {
           theme: 'light',
           notifications: false,
           soundEffects: false,
-          language: 'en'
-        }
+          language: 'en',
+        },
       };
-      
+
       const result = await profileManager.updateUserProfile('user-id', profileData);
-      
+
       expect(User.findById).toHaveBeenCalledWith('user-id');
       expect(mockUser.save).toHaveBeenCalled();
-      
+
       expect(mockUser.name).toBe('New Name');
       expect(mockUser.surname).toBe('New Surname');
       expect(mockUser.email).toBe('new@example.com');
@@ -89,7 +89,7 @@ describe('Profile Manager', () => {
       expect(mockUser.preferences.notifications).toBe(false);
       expect(mockUser.preferences.soundEffects).toBe(false);
       expect(mockUser.preferences.language).toBe('en');
-      
+
       expect(result).toEqual({
         _id: 'user-id',
         name: 'New Name',
@@ -103,104 +103,101 @@ describe('Profile Manager', () => {
           theme: 'light',
           notifications: false,
           soundEffects: false,
-          language: 'en'
-        }
+          language: 'en',
+        },
       });
     });
-    
+
     it('should throw error if user not found', async () => {
       (User.findById as jest.Mock).mockResolvedValue(null);
-      
-      await expect(profileManager.updateUserProfile('user-id', {}))
-        .rejects.toThrow('Kullanıcı bulunamadı');
+
+      await expect(profileManager.updateUserProfile('user-id', {})).rejects.toThrow(
+        'Kullanıcı bulunamadı'
+      );
     });
   });
-  
+
   describe('changeUserPassword', () => {
     it('should change password successfully', async () => {
       // Mock User.findById
       const mockUser = {
         _id: 'user-id',
         passwordHash: 'old-hash',
-        save: jest.fn().mockResolvedValue(true)
+        save: jest.fn().mockResolvedValue(true),
       };
-      
+
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hash');
-      
+
       const result = await profileManager.changeUserPassword(
         'user-id',
         'current-password',
         'new-password'
       );
-      
+
       expect(User.findById).toHaveBeenCalledWith('user-id');
       expect(bcrypt.compare).toHaveBeenCalledWith('current-password', 'old-hash');
       expect(bcrypt.hash).toHaveBeenCalledWith('new-password', 10);
       expect(mockUser.save).toHaveBeenCalled();
       expect(mockUser.passwordHash).toBe('new-hash');
-      
+
       expect(result).toEqual({
         success: true,
-        message: 'Şifre başarıyla güncellendi'
+        message: 'Şifre başarıyla güncellendi',
       });
     });
-    
+
     it('should throw error if user not found', async () => {
       (User.findById as jest.Mock).mockResolvedValue(null);
-      
-      await expect(profileManager.changeUserPassword(
-        'user-id',
-        'current-password',
-        'new-password'
-      )).rejects.toThrow('Kullanıcı bulunamadı');
+
+      await expect(
+        profileManager.changeUserPassword('user-id', 'current-password', 'new-password')
+      ).rejects.toThrow('Kullanıcı bulunamadı');
     });
-    
+
     it('should throw error if current password is incorrect', async () => {
       // Mock User.findById
       const mockUser = {
         _id: 'user-id',
-        passwordHash: 'old-hash'
+        passwordHash: 'old-hash',
       };
-      
+
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
-      
-      await expect(profileManager.changeUserPassword(
-        'user-id',
-        'wrong-password',
-        'new-password'
-      )).rejects.toThrow('Mevcut şifre hatalı');
+
+      await expect(
+        profileManager.changeUserPassword('user-id', 'wrong-password', 'new-password')
+      ).rejects.toThrow('Mevcut şifre hatalı');
     });
   });
-  
+
   describe('updateProfilePicture', () => {
     it('should update profile picture successfully', async () => {
       // Mock User.findById
       const mockUser = {
         _id: 'user-id',
         profilePicture: 'old-picture-id',
-        save: jest.fn().mockResolvedValue(true)
+        save: jest.fn().mockResolvedValue(true),
       };
-      
+
       const mockFileAttachment = {
         _id: 'new-picture-id',
         originalName: 'profile.jpg',
-        path: '/uploads/profile.jpg'
+        path: '/uploads/profile.jpg',
       };
-      
+
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
       (fileUpload.deleteFile as jest.Mock).mockResolvedValue(true);
       (fileUpload.handleFileUpload as jest.Mock).mockResolvedValue(mockFileAttachment);
-      
+
       const result = await profileManager.updateProfilePicture(
         'user-id',
         'base64-data',
         'profile.jpg',
         'image/jpeg'
       );
-      
+
       expect(User.findById).toHaveBeenCalledWith('user-id');
       expect(fileUpload.deleteFile).toHaveBeenCalledWith('old-picture-id');
       expect(fileUpload.handleFileUpload).toHaveBeenCalledWith(
@@ -211,25 +208,22 @@ describe('Profile Manager', () => {
       );
       expect(mockUser.save).toHaveBeenCalled();
       expect(mockUser.profilePicture).toBe('new-picture-id');
-      
+
       expect(result).toEqual({
         success: true,
-        profilePicture: mockFileAttachment
+        profilePicture: mockFileAttachment,
       });
     });
-    
+
     it('should throw error if user not found', async () => {
       (User.findById as jest.Mock).mockResolvedValue(null);
-      
-      await expect(profileManager.updateProfilePicture(
-        'user-id',
-        'base64-data',
-        'profile.jpg',
-        'image/jpeg'
-      )).rejects.toThrow('Kullanıcı bulunamadı');
+
+      await expect(
+        profileManager.updateProfilePicture('user-id', 'base64-data', 'profile.jpg', 'image/jpeg')
+      ).rejects.toThrow('Kullanıcı bulunamadı');
     });
   });
-  
+
   describe('getUserProfile', () => {
     it('should get user profile successfully', async () => {
       // Mock User.findById
@@ -240,41 +234,42 @@ describe('Profile Manager', () => {
         surname: 'User',
         email: 'test@example.com',
         passwordHash: 'hashed-password',
-        profilePicture: 'picture-id'
+        profilePicture: 'picture-id',
       };
-      
+
       (User.findById as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(mockUser)
-        })
+          lean: jest.fn().mockResolvedValue(mockUser),
+        }),
       });
-      
+
       const result = await profileManager.getUserProfile('user-id');
-      
+
       expect(User.findById).toHaveBeenCalledWith('user-id');
-      
+
       expect(result).toEqual({
         _id: 'user-id',
         username: 'testuser',
         name: 'Test',
         surname: 'User',
         email: 'test@example.com',
-        profilePicture: 'picture-id'
+        profilePicture: 'picture-id',
       });
-      
+
       // passwordHash should be removed
       expect(result).not.toHaveProperty('passwordHash');
     });
-    
+
     it('should throw error if user not found', async () => {
       (User.findById as jest.Mock).mockReturnValue({
         populate: jest.fn().mockReturnValue({
-          lean: jest.fn().mockResolvedValue(null)
-        })
+          lean: jest.fn().mockResolvedValue(null),
+        }),
       });
-      
-      await expect(profileManager.getUserProfile('user-id'))
-        .rejects.toThrow('Kullanıcı bulunamadı');
+
+      await expect(profileManager.getUserProfile('user-id')).rejects.toThrow(
+        'Kullanıcı bulunamadı'
+      );
     });
   });
 });

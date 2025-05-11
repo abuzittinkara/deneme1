@@ -60,6 +60,8 @@ export async function closeDB(): Promise<void> {
     await mongoose.connection.close();
     logger.info('MongoDB bağlantısı kapatıldı');
   } catch (error) {
-    logger.error('MongoDB bağlantısı kapatılırken hata oluştu', { error: (error as Error).message });
+    logger.error('MongoDB bağlantısı kapatılırken hata oluştu', {
+      error: (error as Error).message,
+    });
   }
 }

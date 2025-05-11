@@ -1,0 +1,173 @@
+/* Erişilebilirlik Stilleri */
+
+/* Klavye odağı için görsel gösterge */
+:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Ekran okuyucular için gizli içerik */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Erişilebilirlik ayarları */
+.accessibility-settings {
+  padding: var(--spacing-md);
+  background-color: var(--color-bg-dark);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.accessibility-settings h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text-bright);
+}
+
+.accessibility-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.accessibility-option label {
+  margin-left: var(--spacing-sm);
+  color: var(--color-text-normal);
+}
+
+/* Yüksek kontrast modu */
+[data-high-contrast="true"] {
+  --color-text-brightest: #ffffff;
+  --color-text-bright: #ffffff;
+  --color-text-normal: #f0f0f0;
+  --color-text-muted: #e0e0e0;
+  
+  --color-primary: #ff00aa;
+  --color-primary-dark: #cc0088;
+  --color-primary-light: #ff33bb;
+  
+  --color-success: #00ff00;
+  --color-warning: #ffff00;
+  --color-danger: #ff0000;
+  --color-info: #00ffff;
+  
+  --color-border: #ffffff;
+  --color-divider: #ffffff;
+}
+
+/* Büyük yazı tipi modu */
+[data-large-text="true"] {
+  --font-size-xs: 0.875rem; /* 14px */
+  --font-size-sm: 1rem; /* 16px */
+  --font-size-md: 1.25rem; /* 20px */
+  --font-size-lg: 1.5rem; /* 24px */
+  --font-size-xl: 1.75rem; /* 28px */
+}
+
+/* Animasyon azaltma modu */
+[data-reduced-motion="true"] * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Ekran okuyucu için ek açıklamalar */
+.screen-reader-description {
+  display: none;
+}
+
+[data-screen-reader="true"] .screen-reader-description {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-xs);
+}
+
+/* Erişilebilirlik menüsü */
+.accessibility-menu {
+  position: fixed;
+  bottom: var(--spacing-md);
+  right: var(--spacing-md);
+  background-color: var(--color-bg-dark);
+  border-radius: var(--radius-circle);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  z-index: var(--z-index-dropdown);
+}
+
+.accessibility-menu-icon {
+  color: var(--color-text-bright);
+  font-size: 24px;
+}
+
+.accessibility-panel {
+  position: fixed;
+  bottom: calc(var(--spacing-md) + 56px);
+  right: var(--spacing-md);
+  background-color: var(--color-bg-dark);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-index-dropdown);
+  width: 300px;
+  max-width: 90vw;
+  display: none;
+}
+
+.accessibility-panel.active {
+  display: block;
+}
+
+.accessibility-panel h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-bright);
+  font-size: var(--font-size-md);
+}
+
+.accessibility-panel-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.accessibility-panel-option label {
+  margin-left: var(--spacing-sm);
+  color: var(--color-text-normal);
+  flex: 1;
+}
+
+/* Erişilebilirlik düğmeleri */
+.accessibility-button {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-bright);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.accessibility-button:hover {
+  background-color: var(--color-bg-lighter);
+}
+
+.accessibility-button.active {
+  background-color: var(--color-primary);
+  color: var(--color-text-brightest);
+}

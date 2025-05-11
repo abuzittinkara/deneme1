@@ -41,15 +41,13 @@ export interface BulkNotificationResult {
 
 // VAPID anahtarlarını ayarla (gerçek uygulamada .env dosyasından alınmalı)
 export const vapidKeys: VapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
-  privateKey: process.env.VAPID_PRIVATE_KEY || 'UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTWKSbtM'
+  publicKey:
+    process.env.VAPID_PUBLIC_KEY ||
+    'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U',
+  privateKey: process.env.VAPID_PRIVATE_KEY || 'UUxI4O8-FbRouAevSmBQ6o18hgE4nSG3qwvJTWKSbtM',
 };
 
-webpush.setVapidDetails(
-  'mailto:info@fisqos.com.tr',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
+webpush.setVapidDetails('mailto:info@fisqos.com.tr', vapidKeys.publicKey, vapidKeys.privateKey);
 
 /**
  * Kullanıcının push aboneliğini kaydeder
@@ -107,7 +105,7 @@ export async function sendPushNotification(
       body: notification.body,
       icon: notification.icon || '/images/logo.png',
       badge: notification.badge || '/images/badge.png',
-      data: notification.data || {}
+      data: notification.data || {},
     });
 
     await webpush.sendNotification(user.pushSubscription as PushSubscription, payload);
@@ -115,7 +113,7 @@ export async function sendPushNotification(
     logger.info('Bildirim gönderildi', {
       userId,
       title: notification.title,
-      type: notification.data?.type
+      type: notification.data?.type,
     });
 
     return { success: true, message: 'Bildirim gönderildi' };
@@ -123,7 +121,7 @@ export async function sendPushNotification(
     logger.error('Push bildirimi gönderme hatası', {
       error: (error as Error).message,
       userId,
-      statusCode: (error as any).statusCode
+      statusCode: (error as any).statusCode,
     });
 
     // Abonelik süresi dolmuşsa veya geçersizse, aboneliği kaldır
@@ -153,7 +151,7 @@ export async function sendBulkNotifications(
   const results: BulkNotificationResult = {
     success: 0,
     failed: 0,
-    errors: []
+    errors: [],
   };
 
   for (const userId of userIds) {
@@ -174,7 +172,7 @@ export async function sendBulkNotifications(
   logger.info('Toplu bildirim gönderildi', {
     userCount: userIds.length,
     successCount: results.success,
-    failedCount: results.failed
+    failedCount: results.failed,
   });
 
   return results;
@@ -198,9 +196,8 @@ export async function sendNewMessageNotification(
     ? `${channelName} kanalında yeni mesaj`
     : `${senderName} size mesaj gönderdi`;
 
-  const body = messagePreview.length > 100
-    ? messagePreview.substring(0, 97) + '...'
-    : messagePreview;
+  const body =
+    messagePreview.length > 100 ? messagePreview.substring(0, 97) + '...' : messagePreview;
 
   return sendPushNotification(receiverId, {
     title,
@@ -208,8 +205,8 @@ export async function sendNewMessageNotification(
     data: {
       type: 'new_message',
       sender: senderName,
-      channel: channelName
-    }
+      channel: channelName,
+    },
   });
 }
 
@@ -228,8 +225,8 @@ export async function sendFriendRequestNotification(
     body: `${senderName} size arkadaşlık isteği gönderdi`,
     data: {
       type: 'friend_request',
-      sender: senderName
-    }
+      sender: senderName,
+    },
   });
 }
 
@@ -251,8 +248,8 @@ export async function sendGroupInviteNotification(
     data: {
       type: 'group_invite',
       sender: senderName,
-      group: groupName
-    }
+      group: groupName,
+    },
   });
 }
 
@@ -289,5 +286,5 @@ export default {
   sendNewMessageNotification,
   sendFriendRequestNotification,
   sendGroupInviteNotification,
-  removePushSubscription
+  removePushSubscription,
 };

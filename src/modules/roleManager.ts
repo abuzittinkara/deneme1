@@ -62,7 +62,7 @@ export async function createRole(
       group: group._id,
       color: color || '#99AAB5',
       position: position || 0,
-      permissions: permissions || {}
+      permissions: permissions || {},
     });
 
     await role.save();
@@ -76,7 +76,7 @@ export async function createRole(
     logger.info('Yeni rol oluşturuldu', {
       roleId: role._id,
       groupId,
-      name
+      name,
     });
 
     return {
@@ -84,13 +84,13 @@ export async function createRole(
       name: role.name,
       color: role.color,
       position: role.position,
-      permissions: role.permissions
+      permissions: role.permissions,
     };
   } catch (error) {
     logger.error('Rol oluşturma hatası', {
       error: (error as Error).message,
       groupId,
-      name
+      name,
     });
     throw error;
   }
@@ -124,7 +124,7 @@ export async function updateRole(
 
     // İzinleri güncelle
     if (updates.permissions) {
-      Object.keys(updates.permissions).forEach(perm => {
+      Object.keys(updates.permissions).forEach((perm) => {
         if (perm in role.permissions) {
           (role.permissions as any)[perm] = (updates.permissions as any)[perm];
         }
@@ -135,7 +135,7 @@ export async function updateRole(
 
     logger.info('Rol güncellendi', {
       roleId,
-      updates
+      updates,
     });
 
     return {
@@ -143,13 +143,13 @@ export async function updateRole(
       name: role.name,
       color: role.color,
       position: role.position,
-      permissions: role.permissions
+      permissions: role.permissions,
     };
   } catch (error) {
     logger.error('Rol güncelleme hatası', {
       error: (error as Error).message,
       roleId,
-      updates
+      updates,
     });
     throw error;
   }
@@ -187,7 +187,7 @@ export async function deleteRole(roleId: string): Promise<OperationResult> {
   } catch (error) {
     logger.error('Rol silme hatası', {
       error: (error as Error).message,
-      roleId
+      roleId,
     });
     throw error;
   }
@@ -228,12 +228,12 @@ export async function assignRoleToUser(
       member = new GroupMember({
         user: user._id,
         group: group._id,
-        roles: []
+        roles: [],
       });
     }
 
     // Rol zaten atanmış mı kontrol et
-    if (member.roles.some(r => r.toString() === roleId)) {
+    if (member.roles.some((r) => r.toString() === roleId)) {
       return { success: true, message: 'Rol zaten atanmış.' };
     }
 
@@ -244,7 +244,7 @@ export async function assignRoleToUser(
     logger.info('Kullanıcıya rol atandı', {
       groupId,
       username,
-      roleId
+      roleId,
     });
 
     return { success: true, message: 'Rol başarıyla atandı.' };
@@ -253,7 +253,7 @@ export async function assignRoleToUser(
       error: (error as Error).message,
       groupId,
       username,
-      roleId
+      roleId,
     });
     throw error;
   }
@@ -283,7 +283,7 @@ export async function removeRoleFromUser(
     }
 
     // Grup üyeliği kontrolü
-    let member = await GroupMemberHelper.findOne({ user: user._id, group: group._id });
+    const member = await GroupMemberHelper.findOne({ user: user._id, group: group._id });
     if (!member) {
       throw new ValidationError('Kullanıcı bu grubun üyesi değil.');
     }
@@ -294,13 +294,13 @@ export async function removeRoleFromUser(
     }
 
     // Rolü kaldır
-    member.roles = member.roles.filter(r => r.toString() !== roleId);
+    member.roles = member.roles.filter((r) => r.toString() !== roleId);
     await member.save();
 
     logger.info('Kullanıcıdan rol kaldırıldı', {
       groupId,
       username,
-      roleId
+      roleId,
     });
 
     return { success: true, message: 'Rol başarıyla kaldırıldı.' };
@@ -309,7 +309,7 @@ export async function removeRoleFromUser(
       error: (error as Error).message,
       groupId,
       username,
-      roleId
+      roleId,
     });
     throw error;
   }
@@ -344,11 +344,9 @@ export async function checkPermission(
     }
 
     // Kullanıcının grup üyeliğini bul
-    const member = await GroupMemberHelper.findOne(
-      { user: user._id, group: group._id },
-      null,
-      { populate: 'roles' }
-    );
+    const member = await GroupMemberHelper.findOne({ user: user._id, group: group._id }, null, {
+      populate: 'roles',
+    });
     if (!member) {
       return false;
     }
@@ -374,7 +372,7 @@ export async function checkPermission(
       error: (error as Error).message,
       username,
       groupId,
-      permission
+      permission,
     });
     throw error;
   }
@@ -386,10 +384,7 @@ export async function checkPermission(
  * @param groupId - Grup ID'si
  * @returns Roller listesi
  */
-export async function getUserRoles(
-  username: string,
-  groupId: string
-): Promise<RoleDocument[]> {
+export async function getUserRoles(username: string, groupId: string): Promise<RoleDocument[]> {
   try {
     const user = await UserHelper.findOne({ username });
     if (!user) {
@@ -408,16 +403,14 @@ export async function getUserRoles(
     }
 
     // Kullanıcının rollerini getir
-    const roles = await RoleHelper.find(
-      { _id: { $in: member.roles } },
-      null,
-      { sort: { position: -1 } }
-    );
+    const roles = await RoleHelper.find({ _id: { $in: member.roles } }, null, {
+      sort: { position: -1 },
+    });
 
     logger.info('Kullanıcı rolleri getirildi', {
       username,
       groupId,
-      roleCount: roles.length
+      roleCount: roles.length,
     });
 
     return roles;
@@ -425,7 +418,7 @@ export async function getUserRoles(
     logger.error('Kullanıcı rolleri getirme hatası', {
       error: (error as Error).message,
       username,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -438,5 +431,5 @@ export default {
   assignRoleToUser,
   removeRoleFromUser,
   checkPermission,
-  getUserRoles
+  getUserRoles,
 };

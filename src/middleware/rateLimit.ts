@@ -36,7 +36,7 @@ export function redisRateLimiter(options: RateLimiterOptions = {}) {
     message = 'İstek sınırı aşıldı, lütfen daha sonra tekrar deneyin',
     statusCode = 429,
     keyGenerator = (req: Request) => req.ip, // Varsayılan olarak IP adresini kullan
-    skip = () => false // Hiçbir isteği atla
+    skip = () => false, // Hiçbir isteği atla
   } = options;
 
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -71,14 +71,14 @@ export function redisRateLimiter(options: RateLimiterOptions = {}) {
         ip: req.ip,
         path: req.path,
         method: req.method,
-        userAgent: req.headers['user-agent']
+        userAgent: req.headers['user-agent'],
       });
 
       if (error instanceof RateLimitError) {
         return res.status(statusCode).json({
           success: false,
           message: error.message,
-          code: error.code
+          code: error.code,
         });
       }
 
@@ -94,7 +94,7 @@ export const apiLimiter = redisRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 dakika
   max: 100, // IP başına 15 dakikada 100 istek
   message: 'Bu IP adresinden çok fazla istek yapıldı, lütfen 15 dakika sonra tekrar deneyin',
-  keyGenerator: (req) => `api:${req.ip}`
+  keyGenerator: (req) => `api:${req.ip}`,
 });
 
 /**
@@ -104,7 +104,7 @@ export const authLimiter = redisRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 dakika
   max: 10, // IP başına 15 dakikada 10 istek
   message: 'Çok fazla kimlik doğrulama denemesi yapıldı, lütfen 15 dakika sonra tekrar deneyin',
-  keyGenerator: (req) => `auth:${req.ip}`
+  keyGenerator: (req) => `auth:${req.ip}`,
 });
 
 /**
@@ -115,12 +115,12 @@ export const userLimiter = redisRateLimiter({
   max: 30, // Kullanıcı başına 1 dakikada 30 istek
   message: 'Çok fazla istek yapıldı, lütfen 1 dakika sonra tekrar deneyin',
   keyGenerator: (req) => `user:${(req as any).user?.sub || req.ip}`,
-  skip: (req) => !(req as any).user // Kimliği doğrulanmamış istekleri atla
+  skip: (req) => !(req as any).user, // Kimliği doğrulanmamış istekleri atla
 });
 
 export default {
   redisRateLimiter,
   apiLimiter,
   authLimiter,
-  userLimiter
+  userLimiter,
 };

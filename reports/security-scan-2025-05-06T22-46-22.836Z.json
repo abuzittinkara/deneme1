@@ -1,0 +1,458 @@
+[
+  {
+    "file": "src\\app.ts",
+    "line": 140,
+    "column": 24,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "app.use(express.static(path.join(__dirname, '../public'), {"
+  },
+  {
+    "file": "src\\app.ts",
+    "line": 162,
+    "column": 19,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "}, express.static(path.join(__dirname, '../uploads')));"
+  },
+  {
+    "file": "src\\app.ts",
+    "line": 170,
+    "column": 26,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const helpFilePath = path.join(__dirname, '../public/help.html');"
+  },
+  {
+    "file": "src\\app.ts",
+    "line": 172,
+    "column": 34,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "if (!helpFilePath.startsWith(path.join(__dirname, '../public'))) {"
+  },
+  {
+    "file": "src\\config\\redis.ts",
+    "line": 45,
+    "column": 7,
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "code": "keyPrefix: process.env.REDIS_KEY_PREFIX || 'fisqos:',"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "line": 99,
+    "column": 23,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ username: { $regex: search, $options: 'i' } },"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "line": 100,
+    "column": 19,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ name: { $regex: search, $options: 'i' } },"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "line": 101,
+    "column": 22,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ surname: { $regex: search, $options: 'i' } },"
+  },
+  {
+    "file": "src\\controllers\\userController.ts",
+    "line": 102,
+    "column": 20,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ email: { $regex: search, $options: 'i' } }"
+  },
+  {
+    "file": "src\\middleware\\filtering.ts",
+    "line": 81,
+    "column": 18,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "[field]: { $regex: searchTerm, $options: 'i' }"
+  },
+  {
+    "file": "src\\middleware\\securityMiddleware.ts",
+    "line": 468,
+    "column": 24,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const User = require('../models/User').default;"
+  },
+  {
+    "file": "src\\middleware\\setup.ts",
+    "line": 35,
+    "column": 26,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "app.use(express.static(path.join(__dirname, '../../public')));"
+  },
+  {
+    "file": "src\\middleware\\setup.ts",
+    "line": 36,
+    "column": 38,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));"
+  },
+  {
+    "file": "src\\modules\\message\\searchManager.ts",
+    "line": 69,
+    "column": 18,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "content: { $regex: query, $options: 'i' }"
+  },
+  {
+    "file": "src\\modules\\message\\searchManager.ts",
+    "line": 176,
+    "column": 18,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "content: { $regex: query, $options: 'i' },"
+  },
+  {
+    "file": "src\\modules\\user\\userManager.ts",
+    "line": 173,
+    "column": 23,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ username: { $regex: query, $options: 'i' } },"
+  },
+  {
+    "file": "src\\modules\\user\\userManager.ts",
+    "line": 174,
+    "column": 19,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ name: { $regex: query, $options: 'i' } },"
+  },
+  {
+    "file": "src\\modules\\user\\userManager.ts",
+    "line": 175,
+    "column": 22,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ surname: { $regex: query, $options: 'i' } }"
+  },
+  {
+    "file": "src\\modules\\user\\userRepository.ts",
+    "line": 96,
+    "column": 25,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ username: { $regex: query, $options: 'i' } },"
+  },
+  {
+    "file": "src\\modules\\user\\userRepository.ts",
+    "line": 97,
+    "column": 21,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ name: { $regex: query, $options: 'i' } },"
+  },
+  {
+    "file": "src\\modules\\user\\userRepository.ts",
+    "line": 98,
+    "column": 24,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ surname: { $regex: query, $options: 'i' } },"
+  },
+  {
+    "file": "src\\modules\\user\\userRepository.ts",
+    "line": 99,
+    "column": 22,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "{ email: { $regex: query, $options: 'i' } }"
+  },
+  {
+    "file": "src\\services\\jwt.ts",
+    "line": 48,
+    "column": 26,
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "code": "logger.error('Access token oluşturma hatası:', {"
+  },
+  {
+    "file": "src\\services\\jwt.ts",
+    "line": 72,
+    "column": 27,
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "code": "logger.error('Refresh token oluşturma hatası:', {"
+  },
+  {
+    "file": "src\\services\\jwt.ts",
+    "line": 89,
+    "column": 19,
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "code": "logger.error('Token doğrulama hatası:', {"
+  },
+  {
+    "file": "src\\services\\jwt.ts",
+    "line": 106,
+    "column": 27,
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "code": "logger.error('Refresh token doğrulama hatası:', {"
+  },
+  {
+    "file": "src\\utils\\db-helpers.ts",
+    "line": 126,
+    "column": 30,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "filters[baseKey] = { $regex: query[key], $options: 'i' };"
+  },
+  {
+    "file": "src\\utils\\searchUtils.ts",
+    "line": 69,
+    "column": 18,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "[field]: { $regex: searchText, $options: 'i' }"
+  },
+  {
+    "file": "src\\utils\\securityUtils.ts",
+    "line": 274,
+    "column": 25,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "return { [field]: { $regex: sanitizedText.substring(0, 100), $options: 'i' } };"
+  },
+  {
+    "file": "src\\utils\\securityUtils.ts",
+    "line": 278,
+    "column": 23,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "return { [field]: { $regex: sanitizedText, $options: 'i' } };"
+  },
+  {
+    "file": "src\\utils\\securityUtils.ts",
+    "line": 300,
+    "column": 44,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "return fields.map(field => ({ [field]: { $regex: finalText, $options: 'i' } }));"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "line": 52,
+    "column": 38,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const { stopScheduledTasks } = require('../../modules/scheduler/scheduledTasks');"
+  },
+  {
+    "file": "src\\__tests__\\integration\\auth.test.ts",
+    "line": 60,
+    "column": 39,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const scheduledMessageManager = require('../../modules/scheduledMessageManager').default;"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\authMiddleware.test.ts",
+    "line": 330,
+    "column": 18,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "jest.spyOn(require('../../middleware/authMiddleware'), 'requireRole').mockImplementation(mockRequireRole);"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\authMiddleware.test.ts",
+    "line": 344,
+    "column": 18,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "jest.spyOn(require('../../middleware/authMiddleware'), 'requireRole').mockImplementation(mockRequireRole);"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\performanceMiddleware.test.ts",
+    "line": 136,
+    "column": 38,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const originalLogMemoryUsage = require('../../utils/memoryOptimizer').logMemoryUsage;"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\performanceMiddleware.test.ts",
+    "line": 137,
+    "column": 7,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "require('../../utils/memoryOptimizer').logMemoryUsage = jest.fn();"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\performanceMiddleware.test.ts",
+    "line": 145,
+    "column": 7,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "require('../../utils/memoryOptimizer').logMemoryUsage = originalLogMemoryUsage;"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\performanceMiddleware.test.ts",
+    "line": 170,
+    "column": 68,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const { largeResponseMonitor: mockedLargeResponseMonitor } = require('../../middleware/performanceMiddleware');"
+  },
+  {
+    "file": "src\\__tests__\\middleware\\validateResourceAccess.test.ts",
+    "line": 72,
+    "column": 5,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "} = require('../../middleware/validateResourceAccess');"
+  },
+  {
+    "file": "src\\__tests__\\setup.ts",
+    "line": 81,
+    "column": 17,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const app = require('../app').default;"
+  },
+  {
+    "file": "src\\__tests__\\utils\\asyncOptimizer.test.ts",
+    "line": 29,
+    "column": 50,
+    "issue": "Potential XSS",
+    "severity": "HIGH",
+    "code": "const slowPromise = new Promise(resolve => setTimeout(() => resolve('slow'), 500));"
+  },
+  {
+    "file": "src\\__tests__\\utils\\asyncOptimizer.test.ts",
+    "line": 99,
+    "column": 62,
+    "issue": "Potential XSS",
+    "severity": "HIGH",
+    "code": ".mockImplementationOnce(() => new Promise(resolve => setTimeout(() => resolve('slow'), 200)))"
+  },
+  {
+    "file": "src\\__tests__\\utils\\securityUtils.test.ts",
+    "line": 233,
+    "column": 14,
+    "issue": "Hardcoded Credentials",
+    "severity": "HIGH",
+    "code": "expect(key).toContain('127.0.0.1:user123:');"
+  },
+  {
+    "file": "src\\__tests__\\utils\\securityUtils.test.ts",
+    "line": 66,
+    "column": 50,
+    "issue": "Weak Encryption",
+    "severity": "HIGH",
+    "code": "expect(hash).toMatch(/^[a-f0-9]{32}$/); // MD5 produces 32 hex chars"
+  },
+  {
+    "file": "scripts\\archiveLogs.ts",
+    "line": 5,
+    "column": 17,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const logsDir = path.join(__dirname, '../logs');"
+  },
+  {
+    "file": "scripts\\security-scan.js",
+    "line": 46,
+    "column": 15,
+    "issue": "Potential XSS",
+    "severity": "HIGH",
+    "code": "pattern: /innerHTML|outerHTML|document\\.write/gi,"
+  },
+  {
+    "file": "scripts\\security-scan.js",
+    "line": 46,
+    "column": 25,
+    "issue": "Potential XSS",
+    "severity": "HIGH",
+    "code": "pattern: /innerHTML|outerHTML|document\\.write/gi,"
+  },
+  {
+    "file": "scripts\\security-scan.js",
+    "line": 207,
+    "column": 22,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const reportPath = path.join(__dirname, '../security-report.json');"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 65,
+    "column": 15,
+    "issue": "Potential XSS",
+    "severity": "HIGH",
+    "code": "pattern: /innerHTML|outerHTML|document\\.write\\(|eval\\(|setTimeout\\(.*?['\"]/g,"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 65,
+    "column": 25,
+    "issue": "Potential XSS",
+    "severity": "HIGH",
+    "code": "pattern: /innerHTML|outerHTML|document\\.write\\(|eval\\(|setTimeout\\(.*?['\"]/g,"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 75,
+    "column": 30,
+    "issue": "Weak Encryption",
+    "severity": "HIGH",
+    "code": "pattern: /createCipher\\(|MD5|SHA1/g,"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 75,
+    "column": 34,
+    "issue": "Weak Encryption",
+    "severity": "HIGH",
+    "code": "pattern: /createCipher\\(|MD5|SHA1/g,"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 90,
+    "column": 34,
+    "issue": "Potential Prototype Pollution",
+    "severity": "MEDIUM",
+    "code": "pattern: /Object\\.assign\\(.*?__proto__|Object\\.setPrototypeOf\\(|__proto__.*?=/g,"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 105,
+    "column": 16,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "pattern: /\\$where:.*?\\{.*?\\}|\\$regex:.*?\\$options/g,"
+  },
+  {
+    "file": "scripts\\security-scan.ts",
+    "line": 105,
+    "column": 35,
+    "issue": "Potential NoSQL Injection",
+    "severity": "HIGH",
+    "code": "pattern: /\\$where:.*?\\{.*?\\}|\\$regex:.*?\\$options/g,"
+  },
+  {
+    "file": "scripts\\ts-migration.js",
+    "line": 12,
+    "column": 17,
+    "issue": "Potential Path Traversal",
+    "severity": "HIGH",
+    "code": "const SRC_DIR = path.join(__dirname, '../src');"
+  }
+]

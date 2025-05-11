@@ -6,7 +6,7 @@ import {
   sanitizePath,
   generateUniqueFilename,
   formatFileSize,
-  isValidFileType
+  isValidFileType,
 } from '../../utils/fileUtils';
 import path from 'path';
 

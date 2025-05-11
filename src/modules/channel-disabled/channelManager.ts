@@ -36,7 +36,7 @@ export async function getChannelDetails(channelId: string, userId: string): Prom
 
     logger.debug('Kanal detayları getirildi', {
       channelId,
-      userId
+      userId,
     });
 
     return channel;
@@ -44,7 +44,7 @@ export async function getChannelDetails(channelId: string, userId: string): Prom
     logger.error('Kanal detayları getirme hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -79,7 +79,7 @@ export async function getGroupChannels(groupId: string, userId: string): Promise
     logger.debug('Grup kanalları getirildi', {
       groupId,
       userId,
-      channelCount: channels.length
+      channelCount: channels.length,
     });
 
     return channels;
@@ -87,7 +87,7 @@ export async function getGroupChannels(groupId: string, userId: string): Promise
     logger.error('Grup kanalları getirme hatası', {
       error: (error as Error).message,
       groupId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -117,7 +117,7 @@ export async function createChannel(channelData: any): Promise<any> {
     // Aynı isimde kanal var mı kontrol et
     const existingChannel = await Channel.findOne({
       name,
-      group
+      group,
     });
 
     if (existingChannel) {
@@ -132,7 +132,7 @@ export async function createChannel(channelData: any): Promise<any> {
       isPrivate: isPrivate || false,
       group,
       category,
-      createdBy
+      createdBy,
     });
 
     await channel.save();
@@ -141,14 +141,14 @@ export async function createChannel(channelData: any): Promise<any> {
       channelId: channel._id,
       name,
       groupId: group,
-      createdBy
+      createdBy,
     });
 
     return channel;
   } catch (error) {
     logger.error('Kanal oluşturma hatası', {
       error: (error as Error).message,
-      channelData
+      channelData,
     });
     throw error;
   }
@@ -161,11 +161,7 @@ export async function createChannel(channelData: any): Promise<any> {
  * @param userId - Kullanıcı ID'si
  * @returns Güncellenen kanal
  */
-export async function updateChannel(
-  channelId: string,
-  updates: any,
-  userId: string
-): Promise<any> {
+export async function updateChannel(channelId: string, updates: any, userId: string): Promise<any> {
   try {
     // Kanalı bul
     const channel = await Channel.findById(channelId);
@@ -184,7 +180,7 @@ export async function updateChannel(
       const existingChannel = await Channel.findOne({
         name: updates.name,
         group: channel.group,
-        _id: { $ne: channelId }
+        _id: { $ne: channelId },
       });
 
       if (existingChannel) {
@@ -214,7 +210,7 @@ export async function updateChannel(
     logger.info('Kanal güncellendi', {
       channelId,
       updates: updateData,
-      userId
+      userId,
     });
 
     return updatedChannel;
@@ -223,7 +219,7 @@ export async function updateChannel(
       error: (error as Error).message,
       channelId,
       updates,
-      userId
+      userId,
     });
     throw error;
   }
@@ -254,7 +250,7 @@ export async function deleteChannel(channelId: string, userId: string): Promise<
 
     logger.info('Kanal silindi', {
       channelId,
-      userId
+      userId,
     });
 
     return true;
@@ -262,7 +258,7 @@ export async function deleteChannel(channelId: string, userId: string): Promise<
     logger.error('Kanal silme hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -291,7 +287,7 @@ export async function getChannelMembers(channelId: string, userId: string): Prom
     // Kanal özel ise, izin verilen kullanıcıları getir
     if (channel.isPrivate) {
       const members = await User.find({
-        _id: { $in: channel.allowedUsers }
+        _id: { $in: channel.allowedUsers },
       })
         .select('username displayName avatar status')
         .lean();
@@ -299,7 +295,7 @@ export async function getChannelMembers(channelId: string, userId: string): Prom
       logger.debug('Kanal üyeleri getirildi (özel kanal)', {
         channelId,
         userId,
-        memberCount: members.length
+        memberCount: members.length,
       });
 
       return members;
@@ -307,7 +303,7 @@ export async function getChannelMembers(channelId: string, userId: string): Prom
 
     // Kanal özel değilse, grup üyelerini getir
     const members = await User.find({
-      groups: { $in: [channel.group] }
+      groups: { $in: [channel.group] },
     })
       .select('username displayName avatar status')
       .lean();
@@ -315,7 +311,7 @@ export async function getChannelMembers(channelId: string, userId: string): Prom
     logger.debug('Kanal üyeleri getirildi', {
       channelId,
       userId,
-      memberCount: members.length
+      memberCount: members.length,
     });
 
     return members;
@@ -323,7 +319,7 @@ export async function getChannelMembers(channelId: string, userId: string): Prom
     logger.error('Kanal üyeleri getirme hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -352,19 +348,19 @@ export async function joinChannel(channelId: string, userId: string): Promise<an
     // Kanal özel ise, kullanıcıyı izin verilenler listesine ekle
     if (channel.isPrivate) {
       // Kullanıcı zaten izin verilenler listesinde mi kontrol et
-      if (channel.allowedUsers && channel.allowedUsers.includes(new mongoose.Types.ObjectId(userId))) {
+      if (
+        channel.allowedUsers &&
+        channel.allowedUsers.includes(new mongoose.Types.ObjectId(userId))
+      ) {
         return channel;
       }
 
       // Kullanıcıyı izin verilenler listesine ekle
-      await Channel.updateOne(
-        { _id: channelId },
-        { $addToSet: { allowedUsers: userId } }
-      );
+      await Channel.updateOne({ _id: channelId }, { $addToSet: { allowedUsers: userId } });
 
       logger.info('Kullanıcı özel kanala katıldı', {
         channelId,
-        userId
+        userId,
       });
 
       return await Channel.findById(channelId);
@@ -373,7 +369,7 @@ export async function joinChannel(channelId: string, userId: string): Promise<an
     // Kanal özel değilse, zaten erişim var
     logger.info('Kullanıcı kanala katıldı', {
       channelId,
-      userId
+      userId,
     });
 
     return channel;
@@ -381,7 +377,7 @@ export async function joinChannel(channelId: string, userId: string): Promise<an
     logger.error('Kanala katılma hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -403,14 +399,11 @@ export async function leaveChannel(channelId: string, userId: string): Promise<b
 
     // Kanal özel ise, kullanıcıyı izin verilenler listesinden çıkar
     if (channel.isPrivate) {
-      await Channel.updateOne(
-        { _id: channelId },
-        { $pull: { allowedUsers: userId } }
-      );
+      await Channel.updateOne({ _id: channelId }, { $pull: { allowedUsers: userId } });
 
       logger.info('Kullanıcı özel kanaldan ayrıldı', {
         channelId,
-        userId
+        userId,
       });
 
       return true;
@@ -419,7 +412,7 @@ export async function leaveChannel(channelId: string, userId: string): Promise<b
     // Kanal özel değilse, ayrılma işlemi yok
     logger.info('Kullanıcı kanaldan ayrıldı', {
       channelId,
-      userId
+      userId,
     });
 
     return true;
@@ -427,7 +420,7 @@ export async function leaveChannel(channelId: string, userId: string): Promise<b
     logger.error('Kanaldan ayrılma hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -459,12 +452,14 @@ async function checkChannelAccess(channelId: string, userId: string): Promise<bo
     }
 
     // Kanal özel ise, kullanıcının izin verilenler listesinde olup olmadığını kontrol et
-    return channel.allowedUsers && channel.allowedUsers.includes(new mongoose.Types.ObjectId(userId));
+    return (
+      channel.allowedUsers && channel.allowedUsers.includes(new mongoose.Types.ObjectId(userId))
+    );
   } catch (error) {
     logger.error('Kanal erişim kontrolü hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     return false;
   }
@@ -490,7 +485,7 @@ async function checkGroupMembership(groupId: string, userId: string): Promise<bo
     logger.error('Grup üyeliği kontrolü hatası', {
       error: (error as Error).message,
       groupId,
-      userId
+      userId,
     });
     return false;
   }
@@ -523,7 +518,7 @@ async function checkChannelCreatePermission(groupId: string, userId: string): Pr
     logger.error('Kanal oluşturma yetkisi kontrolü hatası', {
       error: (error as Error).message,
       groupId,
-      userId
+      userId,
     });
     return false;
   }
@@ -562,7 +557,7 @@ async function checkChannelUpdatePermission(channelId: string, userId: string): 
     logger.error('Kanal güncelleme yetkisi kontrolü hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     return false;
   }
@@ -601,7 +596,7 @@ async function checkChannelDeletePermission(channelId: string, userId: string): 
     logger.error('Kanal silme yetkisi kontrolü hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     return false;
   }
@@ -615,5 +610,5 @@ export default {
   deleteChannel,
   getChannelMembers,
   joinChannel,
-  leaveChannel
+  leaveChannel,
 };

@@ -53,7 +53,7 @@ export async function createSession(
       userAgent,
       ipAddress,
       lastActivity: new Date(),
-      isActive: true
+      isActive: true,
     });
 
     await session.save();
@@ -66,17 +66,22 @@ export async function createSession(
       userAgent,
       ipAddress,
       lastActivity: new Date().toISOString(),
-      createdAt: session.createdAt.toISOString()
+      createdAt: session.createdAt.toISOString(),
     };
 
     // Socket ID'si ile oturum eşleştirmesi
     await setHashCache('sessions:socket', socketId, session._id.toString(), SESSION_TTL);
 
     // Kullanıcı ID'si ile oturum eşleştirmesi
-    await setHashCache('sessions:user', userId, {
-      sessionId: session._id.toString(),
-      socketId
-    } as UserSessionInfo, SESSION_TTL);
+    await setHashCache(
+      'sessions:user',
+      userId,
+      {
+        sessionId: session._id.toString(),
+        socketId,
+      } as UserSessionInfo,
+      SESSION_TTL
+    );
 
     // Oturum detayları
     await setHashCache('sessions:details', session._id.toString(), sessionData, SESSION_TTL);
@@ -116,7 +121,7 @@ export async function endSessionBySocketId(socketId: string): Promise<boolean> {
     // Veritabanında oturumu güncelle
     await SessionHelper.findByIdAndUpdate(sessionId, {
       isActive: false,
-      logoutTime: new Date()
+      logoutTime: new Date(),
     });
 
     // Redis'ten oturum bilgilerini sil
@@ -143,14 +148,19 @@ export async function getUserActiveSessions(userId: string): Promise<SessionDocu
     // Veritabanından aktif oturumları getir
     const sessions = await SessionHelper.find({
       user: userId,
-      isActive: true
-    }).sort({ createdAt: -1 }).exec();
+      isActive: true,
+    })
+      .sort({ createdAt: -1 })
+      .exec();
 
     logger.debug('Kullanıcı aktif oturumları getirildi', { userId, count: sessions.length });
 
     return sessions;
   } catch (error) {
-    logger.error('Kullanıcı oturumları getirme hatası', { error: (error as Error).message, userId });
+    logger.error('Kullanıcı oturumları getirme hatası', {
+      error: (error as Error).message,
+      userId,
+    });
     throw error;
   }
 }
@@ -164,7 +174,7 @@ export async function updateSessionActivity(sessionId: string): Promise<boolean>
   try {
     // Veritabanında oturumu güncelle
     await SessionHelper.findByIdAndUpdate(sessionId, {
-      lastActivity: new Date()
+      lastActivity: new Date(),
     });
 
     // Redis'te oturum detaylarını güncelle
@@ -177,7 +187,10 @@ export async function updateSessionActivity(sessionId: string): Promise<boolean>
 
     return true;
   } catch (error) {
-    logger.error('Oturum aktivitesi güncelleme hatası', { error: (error as Error).message, sessionId });
+    logger.error('Oturum aktivitesi güncelleme hatası', {
+      error: (error as Error).message,
+      sessionId,
+    });
     return false;
   }
 }
@@ -195,7 +208,7 @@ export async function endSessionById(sessionId: string): Promise<boolean> {
     // Veritabanında oturumu güncelle
     await SessionHelper.findByIdAndUpdate(sessionId, {
       isActive: false,
-      logoutTime: new Date()
+      logoutTime: new Date(),
     });
 
     // Redis'ten oturum bilgilerini sil
@@ -241,7 +254,10 @@ export async function endAllUserSessions(userId: string): Promise<number> {
 
     return result.modifiedCount;
   } catch (error) {
-    logger.error('Tüm kullanıcı oturumlarını sonlandırma hatası', { error: (error as Error).message, userId });
+    logger.error('Tüm kullanıcı oturumlarını sonlandırma hatası', {
+      error: (error as Error).message,
+      userId,
+    });
     throw error;
   }
 }
@@ -262,7 +278,10 @@ export async function cleanupExpiredSessions(inactiveMinutes = 1440): Promise<nu
       { isActive: false, logoutTime: new Date() }
     );
 
-    logger.info('Süresi dolmuş oturumlar temizlendi', { count: result.modifiedCount, inactiveMinutes });
+    logger.info('Süresi dolmuş oturumlar temizlendi', {
+      count: result.modifiedCount,
+      inactiveMinutes,
+    });
 
     return result.modifiedCount;
   } catch (error) {
@@ -302,14 +321,19 @@ export async function getUserSessions(userId: string): Promise<SessionDocument[]
   try {
     // Veritabanından oturumları getir
     const sessions = await Session.find({
-      user: userId
-    }).sort({ createdAt: -1 }).exec();
+      user: userId,
+    })
+      .sort({ createdAt: -1 })
+      .exec();
 
     logger.debug('Kullanıcı oturumları getirildi', { userId, count: sessions.length });
 
     return sessions;
   } catch (error) {
-    logger.error('Kullanıcı oturumları getirme hatası', { error: (error as Error).message, userId });
+    logger.error('Kullanıcı oturumları getirme hatası', {
+      error: (error as Error).message,
+      userId,
+    });
     throw error;
   }
 }
@@ -320,7 +344,10 @@ export async function getUserSessions(userId: string): Promise<SessionDocument[]
  * @param currentSessionId - Mevcut oturum ID'si
  * @returns Sonlandırılan oturum sayısı
  */
-export async function endAllSessionsExcept(userId: string, currentSessionId: string): Promise<number> {
+export async function endAllSessionsExcept(
+  userId: string,
+  currentSessionId: string
+): Promise<number> {
   try {
     // Veritabanında oturumları güncelle
     const result = await Session.updateMany(
@@ -328,11 +355,19 @@ export async function endAllSessionsExcept(userId: string, currentSessionId: str
       { isActive: false, logoutTime: new Date() }
     );
 
-    logger.info('Diğer tüm kullanıcı oturumları sonlandırıldı', { userId, currentSessionId, count: result.modifiedCount });
+    logger.info('Diğer tüm kullanıcı oturumları sonlandırıldı', {
+      userId,
+      currentSessionId,
+      count: result.modifiedCount,
+    });
 
     return result.modifiedCount;
   } catch (error) {
-    logger.error('Diğer tüm kullanıcı oturumlarını sonlandırma hatası', { error: (error as Error).message, userId, currentSessionId });
+    logger.error('Diğer tüm kullanıcı oturumlarını sonlandırma hatası', {
+      error: (error as Error).message,
+      userId,
+      currentSessionId,
+    });
     throw error;
   }
 }
@@ -347,5 +382,5 @@ export default {
   cleanupExpiredSessions,
   getSessionById,
   getUserSessions,
-  endAllSessionsExcept
+  endAllSessionsExcept,
 };

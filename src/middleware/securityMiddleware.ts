@@ -24,7 +24,7 @@ const contentSecurityPolicy = {
       'unpkg.com',
       'www.google-analytics.com',
       'www.googletagmanager.com',
-      (req: any, res: any) => `'nonce-${res.locals.nonce}'`
+      (req: any, res: any) => `'nonce-${res.locals.nonce}'`,
     ],
     styleSrc: [
       "'self'",
@@ -32,7 +32,7 @@ const contentSecurityPolicy = {
       'fonts.googleapis.com',
       'cdnjs.cloudflare.com',
       'cdn.jsdelivr.net',
-      'unpkg.com'
+      'unpkg.com',
     ],
     imgSrc: [
       "'self'",
@@ -45,7 +45,7 @@ const contentSecurityPolicy = {
       'www.googletagmanager.com',
       'i.imgur.com',
       'placehold.it',
-      'placekitten.com'
+      'placekitten.com',
     ],
     connectSrc: [
       "'self'",
@@ -56,28 +56,12 @@ const contentSecurityPolicy = {
       env.isProduction ? env.SOCKET_URL || '' : '*',
       '*.sentry.io', // Sentry için
       'www.google-analytics.com',
-      'stats.g.doubleclick.net'
+      'stats.g.doubleclick.net',
     ],
-    fontSrc: [
-      "'self'",
-      'fonts.gstatic.com',
-      'cdnjs.cloudflare.com',
-      'cdn.jsdelivr.net',
-      'data:'
-    ],
+    fontSrc: ['\'self\'', 'fonts.gstatic.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'data:'],
     objectSrc: ["'none'"],
-    mediaSrc: [
-      "'self'",
-      'blob:',
-      'data:',
-      'res.cloudinary.com',
-      '*.amazonaws.com'
-    ],
-    frameSrc: [
-      "'self'",
-      'www.youtube.com',
-      'player.vimeo.com'
-    ],
+    mediaSrc: ['\'self\'', 'blob:', 'data:', 'res.cloudinary.com', '*.amazonaws.com'],
+    frameSrc: ['\'self\'', 'www.youtube.com', 'player.vimeo.com'],
     workerSrc: ["'self'", 'blob:'],
     formAction: ["'self'"],
     baseUri: ["'self'"],
@@ -85,8 +69,8 @@ const contentSecurityPolicy = {
     manifestSrc: ["'self'"],
     upgradeInsecureRequests: env.isProduction ? [] : null,
     blockAllMixedContent: [],
-    reportUri: env.isProduction && env.SENTRY_DSN ? 'https://sentry.io/api/csp-report' : null
-  }
+    reportUri: env.isProduction && env.SENTRY_DSN ? 'https://sentry.io/api/csp-report' : null,
+  },
 };
 
 // Güvenlik başlıkları
@@ -98,15 +82,15 @@ export const securityHeaders = helmet({
   hsts: {
     maxAge: 31536000, // 1 yıl
     includeSubDomains: true,
-    preload: true
+    preload: true,
   },
   frameguard: {
-    action: 'deny'
+    action: 'deny',
   },
   permittedCrossDomainPolicies: {
-    permittedPolicies: 'none'
+    permittedPolicies: 'none',
   },
-  dnsPrefetchControl: { allow: false }
+  dnsPrefetchControl: { allow: false },
   // expectCt artık helmet 7.x'te desteklenmiyor
   // expectCt: {
   //   enforce: true,
@@ -125,8 +109,8 @@ export const apiLimiter = rateLimit({
     error: {
       message: 'Çok fazla istek, lütfen daha sonra tekrar deneyin',
       statusCode: 429,
-      code: 'RATE_LIMIT_EXCEEDED'
-    }
+      code: 'RATE_LIMIT_EXCEEDED',
+    },
   },
   skip: (req) => !env.FEATURE_RATE_LIMIT || env.NODE_ENV === 'development', // Geliştirme modunda veya özellik kapalıysa atla
   handler: (req, res, next, options) => {
@@ -135,7 +119,7 @@ export const apiLimiter = rateLimit({
       path: req.path,
       method: req.method,
       userAgent: req.headers['user-agent'],
-      userId: (req as any).user?._id
+      userId: (req as any).user?._id,
     });
 
     // Sentry'ye bildir
@@ -146,17 +130,17 @@ export const apiLimiter = rateLimit({
         tags: {
           ip: req.ip,
           path: req.path,
-          method: req.method
+          method: req.method,
         },
         user: {
           ip_address: req.ip,
-          id: (req as any).user?._id
-        }
+          id: (req as any).user?._id,
+        },
       });
     }
 
     res.status(429).json(options.message);
-  }
+  },
 });
 
 // Kimlik doğrulama limitleri
@@ -169,15 +153,15 @@ export const authLimiter = rateLimit({
     success: false,
     error: {
       message: 'Çok fazla başarısız giriş denemesi, lütfen daha sonra tekrar deneyin',
-      statusCode: 429
-    }
+      statusCode: 429,
+    },
   },
   skip: (req) => env.NODE_ENV === 'development', // Geliştirme modunda atla
   handler: (req, res, next, options) => {
     logger.warn('Kimlik doğrulama hız sınırı aşıldı', {
       ip: req.ip,
       username: req.body.username,
-      userAgent: req.headers['user-agent']
+      userAgent: req.headers['user-agent'],
     });
     res.status(429).json(options.message);
   },
@@ -187,7 +171,7 @@ export const authLimiter = rateLimit({
     const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
     const userAgent = req.headers['user-agent'] || '';
     return `${ip}:${userAgent.substring(0, 20)}`;
-  }
+  },
 });
 
 // Hassas işlemler için limitleri
@@ -200,8 +184,8 @@ export const sensitiveActionLimiter = rateLimit({
     success: false,
     error: {
       message: 'Çok fazla hassas işlem denemesi, lütfen daha sonra tekrar deneyin',
-      statusCode: 429
-    }
+      statusCode: 429,
+    },
   },
   skip: (req) => env.NODE_ENV === 'development', // Geliştirme modunda atla
   handler: (req, res, next, options) => {
@@ -209,7 +193,7 @@ export const sensitiveActionLimiter = rateLimit({
       ip: req.ip,
       path: req.path,
       method: req.method,
-      userId: (req as any).user?._id
+      userId: (req as any).user?._id,
     });
     res.status(429).json(options.message);
   },
@@ -220,37 +204,43 @@ export const sensitiveActionLimiter = rateLimit({
     const userId = (req as any).user?._id || 'anonymous';
     const userAgent = req.headers['user-agent'] || '';
     return `${ip}:${userId}:${userAgent.substring(0, 20)}`;
-  }
+  },
 });
 
 // CORS yapılandırması
 export const corsOptions = {
   origin: env.CORS_ORIGIN || '*',
-  methods: env.CORS_METHODS ? env.CORS_METHODS.split(',') : ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: env.CORS_ALLOWED_HEADERS ? env.CORS_ALLOWED_HEADERS.split(',') : [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'X-Auth-Token',
-    'X-CSRF-Token'
-  ],
-  exposedHeaders: env.CORS_EXPOSED_HEADERS ? env.CORS_EXPOSED_HEADERS.split(',') : [
-    'Content-Range',
-    'X-Total-Count',
-    'X-Rate-Limit-Limit',
-    'X-Rate-Limit-Remaining',
-    'X-Rate-Limit-Reset'
-  ],
-  credentials: env.CORS_CREDENTIALS !== 'false',
+  methods: env.CORS_METHODS
+    ? env.CORS_METHODS.split(',')
+    : ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: env.CORS_ALLOWED_HEADERS
+    ? env.CORS_ALLOWED_HEADERS.split(',')
+    : [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'X-Auth-Token',
+      'X-CSRF-Token',
+    ],
+  exposedHeaders: env.CORS_EXPOSED_HEADERS
+    ? env.CORS_EXPOSED_HEADERS.split(',')
+    : [
+      'Content-Range',
+      'X-Total-Count',
+      'X-Rate-Limit-Limit',
+      'X-Rate-Limit-Remaining',
+      'X-Rate-Limit-Reset',
+    ],
+  credentials: env.CORS_CREDENTIALS === true,
   maxAge: env.CORS_MAX_AGE || 86400, // 1 gün
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
 };
 
 // Content-Type doğrulama
-export function validateContentType(req: Request, res: Response, next: NextFunction) {
+export function validateContentType(req: Request, res: Response, next: NextFunction): void {
   if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
     const contentType = req.headers['content-type'];
 
@@ -259,16 +249,17 @@ export function validateContentType(req: Request, res: Response, next: NextFunct
         contentType,
         path: req.path,
         method: req.method,
-        ip: req.ip
+        ip: req.ip,
       });
 
-      return res.status(415).json({
+      res.status(415).json({
         success: false,
         error: {
           message: 'Content-Type application/json olmalıdır',
-          statusCode: 415
-        }
+          statusCode: 415,
+        },
       });
+      return;
     }
   }
 
@@ -281,10 +272,10 @@ export function nonceMiddleware(req: Request, res: Response, next: NextFunction)
   const nonce = crypto.randomBytes(16).toString('base64');
 
   // Nonce'u response locals'a ekle
-  res.locals.nonce = nonce;
+  (res.locals as any).nonce = nonce;
 
   // Content Security Policy'yi güncelle
-  if (res.locals.cspNonce) {
+  if ((res.locals as any).cspNonce) {
     const csp = res.getHeader('Content-Security-Policy') as string;
     if (csp) {
       const updatedCsp = csp.replace(/'nonce-[^']*'/g, `'nonce-${nonce}'`);
@@ -308,7 +299,10 @@ export function securityHeadersMiddleware(req: Request, res: Response, next: Nex
   if (env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     res.setHeader('Referrer-Policy', 'same-origin');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
+    res.setHeader(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+    );
   }
 
   next();
@@ -332,14 +326,16 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
       'localhost',
       '127.0.0.1',
       env.isProduction && env.API_URL ? new URL(env.API_URL).host : undefined,
-      env.ALLOWED_HOSTS ? env.ALLOWED_HOSTS.split(',').map(h => h.trim()) : []
-    ].flat().filter(Boolean);
+      env.ALLOWED_HOSTS ? env.ALLOWED_HOSTS.split(',').map((h) => h.trim()) : [],
+    ]
+      .flat()
+      .filter(Boolean);
 
-    if (host && !allowedHosts.some(allowedHost => host.includes(allowedHost as string))) {
+    if (host && !allowedHosts.some((allowedHost) => host.includes(allowedHost as string))) {
       logger.warn('Geçersiz host başlığı', {
         host,
         ip: req.ip,
-        allowedHosts
+        allowedHosts,
       });
 
       return res.status(403).json({
@@ -347,8 +343,8 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
         error: {
           message: 'Geçersiz host',
           statusCode: 403,
-          code: 'INVALID_HOST'
-        }
+          code: 'INVALID_HOST',
+        },
       });
     }
 
@@ -359,18 +355,20 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
         'localhost',
         '127.0.0.1',
         env.isProduction && env.CLIENT_URL ? new URL(env.CLIENT_URL).host : undefined,
-        env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',').map(o => o.trim()) : []
-      ].flat().filter(Boolean);
+        env.CORS_ORIGIN ? env.CORS_ORIGIN.split(',').map((o) => o.trim()) : [],
+      ]
+        .flat()
+        .filter(Boolean);
 
       const originHost = origin.includes('://') ? new URL(origin).host : origin;
 
-      if (!allowedOrigins.some(allowedOrigin => originHost.includes(allowedOrigin as string))) {
+      if (!allowedOrigins.some((allowedOrigin) => originHost.includes(allowedOrigin as string))) {
         logger.warn('Geçersiz origin başlığı', {
           origin,
           ip: req.ip,
           method: req.method,
           path: req.path,
-          allowedOrigins
+          allowedOrigins,
         });
 
         return res.status(403).json({
@@ -378,8 +376,8 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
           error: {
             message: 'Geçersiz origin',
             statusCode: 403,
-            code: 'INVALID_ORIGIN'
-          }
+            code: 'INVALID_ORIGIN',
+          },
         });
       }
     }
@@ -390,7 +388,7 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
       logger.warn('User-Agent başlığı eksik', {
         ip: req.ip,
         method: req.method,
-        path: req.path
+        path: req.path,
       });
 
       return res.status(403).json({
@@ -398,8 +396,8 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
         error: {
           message: 'User-Agent başlığı gerekli',
           statusCode: 403,
-          code: 'MISSING_USER_AGENT'
-        }
+          code: 'MISSING_USER_AGENT',
+        },
       });
     }
 
@@ -409,7 +407,7 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
       stack: error instanceof Error ? error.stack : undefined,
       ip: req.ip,
-      path: req.path
+      path: req.path,
     });
 
     return res.status(500).json({
@@ -417,8 +415,8 @@ export function securityChecksMiddleware(req: Request, res: Response, next: Next
       error: {
         message: 'Sunucu hatası',
         statusCode: 500,
-        code: 'SERVER_ERROR'
-      }
+        code: 'SERVER_ERROR',
+      },
     });
   }
 }
@@ -460,23 +458,32 @@ export function setupSecurityMiddleware(app: any): void {
   // Brute force koruması
   if (env.FEATURE_BRUTE_FORCE_PROTECTION) {
     const { bruteForceProtection } = require('./bruteForceProtection');
-    app.use('/api/auth/login', bruteForceProtection({
-      maxAttempts: 5,
-      blockDuration: 30 * 60 * 1000, // 30 dakika
-      findUserByUsername: async (username: string) => {
-        try {
-          const User = require('../models/User').default;
-          return await User.findOne({
-            $or: [
-              { username: username.toLowerCase() },
-              { email: username.toLowerCase() }
-            ]
-          });
-        } catch (error) {
-          return null;
-        }
-      }
-    }));
+    app.use(
+      '/api/auth/login',
+      bruteForceProtection({
+        maxAttempts: 5,
+        blockDuration: 30 * 60 * 1000, // 30 dakika
+        findUserByUsername: async (username: string) => {
+          try {
+            // Güvenli bir şekilde modeli içe aktar
+            const { default: User } = await import('../models/User');
+
+            // Kullanıcı adı ve e-posta adresini güvenli hale getir
+            const sanitizedUsername = username.toLowerCase().trim();
+
+            // NoSQL enjeksiyon koruması için regex kullanma
+            return await User.findOne({
+              $or: [{ username: sanitizedUsername }, { email: sanitizedUsername }],
+            });
+          } catch (error) {
+            logger.error('Kullanıcı arama hatası', {
+              error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+            });
+            return null;
+          }
+        },
+      })
+    );
   }
 
   // API hız sınırlayıcı
@@ -499,8 +506,8 @@ export function setupSecurityMiddleware(app: any): void {
       helmet: env.FEATURE_HELMET,
       csrf: env.FEATURE_CSRF,
       bruteForceProtection: env.FEATURE_BRUTE_FORCE_PROTECTION,
-      rateLimit: env.FEATURE_RATE_LIMIT
-    }
+      rateLimit: env.FEATURE_RATE_LIMIT,
+    },
   });
 }
 
@@ -514,5 +521,5 @@ export default {
   nonceMiddleware,
   securityHeadersMiddleware,
   securityChecksMiddleware,
-  setupSecurityMiddleware
+  setupSecurityMiddleware,
 };

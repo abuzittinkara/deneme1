@@ -3,7 +3,12 @@
  * Davetiye yönetimi işlemleri
  */
 import mongoose from 'mongoose';
-import { Invitation, InvitationDocument, InvitationType, InvitationStatus } from '../models/Invitation';
+import {
+  Invitation,
+  InvitationDocument,
+  InvitationType,
+  InvitationStatus,
+} from '../models/Invitation';
 import { User, UserDocument } from '../models/User';
 import { Group, GroupDocument } from '../models/Group';
 import { Channel, ChannelDocument } from '../models/Channel';
@@ -88,7 +93,7 @@ export async function createInvitation(
       // Kullanıcının grupta olduğunu kontrol et
       const isMember = await GroupMemberHelper.findOne({
         user: toObjectId(params.creatorId),
-        group: toObjectId(params.targetId)
+        group: toObjectId(params.targetId),
       });
       if (!isMember) {
         throw new ForbiddenError('Bu grup için davetiye oluşturma yetkiniz yok');
@@ -102,7 +107,7 @@ export async function createInvitation(
       // Kullanıcının kanalın ait olduğu grupta olduğunu kontrol et
       const isMember = await GroupMemberHelper.findOne({
         user: toObjectId(params.creatorId),
-        group: target.group
+        group: target.group,
       });
       if (!isMember) {
         throw new ForbiddenError('Bu kanal için davetiye oluşturma yetkiniz yok');
@@ -140,7 +145,7 @@ export async function createInvitation(
       useCount: 0,
       expiresAt,
       status: InvitationStatus.PENDING,
-      acceptedBy: []
+      acceptedBy: [],
     });
 
     // Aktivite kaydı
@@ -149,12 +154,12 @@ export async function createInvitation(
       type: ActivityType.INVITATION_CREATED,
       target: {
         type: params.type === InvitationType.GROUP ? 'group' : 'channel',
-        id: params.targetId
+        id: params.targetId,
       },
       metadata: {
         invitationId: invitation._id.toString(),
-        code: invitation.code
-      }
+        code: invitation.code,
+      },
     });
 
     logger.info('Davetiye oluşturuldu', {
@@ -162,7 +167,7 @@ export async function createInvitation(
       code: invitation.code,
       creatorId: params.creatorId,
       type: params.type,
-      targetId: params.targetId
+      targetId: params.targetId,
     });
 
     return invitation;
@@ -171,7 +176,7 @@ export async function createInvitation(
       error: (error as Error).message,
       creatorId: params.creatorId,
       type: params.type,
-      targetId: params.targetId
+      targetId: params.targetId,
     });
     throw error;
   }
@@ -182,16 +187,14 @@ export async function createInvitation(
  * @param code - Davetiye kodu
  * @returns Davetiye
  */
-export async function getInvitationByCode(
-  code: string
-): Promise<InvitationDocument | null> {
+export async function getInvitationByCode(code: string): Promise<InvitationDocument | null> {
   try {
     const invitation = await InvitationHelper.getModel().findByCode(code);
 
     if (invitation) {
       logger.debug('Davetiye koda göre getirildi', {
         code,
-        invitationId: invitation._id
+        invitationId: invitation._id,
       });
     } else {
       logger.debug('Davetiye bulunamadı', { code });
@@ -201,7 +204,7 @@ export async function getInvitationByCode(
   } catch (error) {
     logger.error('Davetiye getirme hatası', {
       error: (error as Error).message,
-      code
+      code,
     });
     throw error;
   }
@@ -249,7 +252,7 @@ export async function acceptInvitation(
       // Kullanıcının zaten grupta olup olmadığını kontrol et
       const isMember = await GroupMemberHelper.findOne({
         user: toObjectId(params.userId),
-        group: invitation.target
+        group: invitation.target,
       });
       if (isMember) {
         throw new ValidationError('Zaten bu grubun üyesisiniz');
@@ -260,7 +263,7 @@ export async function acceptInvitation(
         user: toObjectId(params.userId),
         group: invitation.target,
         roles: [],
-        joinedAt: new Date()
+        joinedAt: new Date(),
       });
 
       // Grup üyeleri listesini güncelle
@@ -284,7 +287,7 @@ export async function acceptInvitation(
       // Kullanıcının kanalın ait olduğu grupta olup olmadığını kontrol et
       const isMember = await GroupMemberHelper.findOne({
         user: toObjectId(params.userId),
-        group: channel.group
+        group: channel.group,
       });
       if (!isMember) {
         throw new ValidationError('Önce gruba katılmalısınız');
@@ -314,18 +317,18 @@ export async function acceptInvitation(
       type: ActivityType.INVITATION_ACCEPTED,
       target: {
         type: invitation.type === InvitationType.GROUP ? 'group' : 'channel',
-        id: invitation.target.toString()
+        id: invitation.target.toString(),
       },
       metadata: {
         invitationId: invitation._id.toString(),
-        code: invitation.code
-      }
+        code: invitation.code,
+      },
     });
 
     logger.info('Davetiye kabul edildi', {
       invitationId: invitation._id,
       code: invitation.code,
-      userId: params.userId
+      userId: params.userId,
     });
 
     return { success: true, invitation };
@@ -333,7 +336,7 @@ export async function acceptInvitation(
     logger.error('Davetiye kabul etme hatası', {
       error: (error as Error).message,
       code: params.code,
-      userId: params.userId
+      userId: params.userId,
     });
     throw error;
   }
@@ -371,18 +374,18 @@ export async function revokeInvitation(
       type: ActivityType.INVITATION_REVOKED,
       target: {
         type: invitation.type === InvitationType.GROUP ? 'group' : 'channel',
-        id: invitation.target.toString()
+        id: invitation.target.toString(),
       },
       metadata: {
         invitationId: invitation._id.toString(),
-        code: invitation.code
-      }
+        code: invitation.code,
+      },
     });
 
     logger.info('Davetiye iptal edildi', {
       invitationId,
       code: invitation.code,
-      userId
+      userId,
     });
 
     return { success: true };
@@ -390,7 +393,7 @@ export async function revokeInvitation(
     logger.error('Davetiye iptal etme hatası', {
       error: (error as Error).message,
       invitationId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -401,9 +404,7 @@ export async function revokeInvitation(
  * @param userId - Kullanıcı ID'si
  * @returns Davetiyeler
  */
-export async function getInvitationsByCreator(
-  userId: string
-): Promise<InvitationDocument[]> {
+export async function getInvitationsByCreator(userId: string): Promise<InvitationDocument[]> {
   try {
     // Kullanıcıyı kontrol et
     const user = await UserHelper.findById(userId);
@@ -416,14 +417,14 @@ export async function getInvitationsByCreator(
 
     logger.debug('Kullanıcının oluşturduğu davetiyeler getirildi', {
       userId,
-      count: invitations.length
+      count: invitations.length,
     });
 
     return invitations;
   } catch (error) {
     logger.error('Kullanıcının davetiyelerini getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -434,9 +435,7 @@ export async function getInvitationsByCreator(
  * @param userId - Kullanıcı ID'si
  * @returns Davetiyeler
  */
-export async function getInvitationsByRecipient(
-  userId: string
-): Promise<InvitationDocument[]> {
+export async function getInvitationsByRecipient(userId: string): Promise<InvitationDocument[]> {
   try {
     // Kullanıcıyı kontrol et
     const user = await UserHelper.findById(userId);
@@ -449,14 +448,14 @@ export async function getInvitationsByRecipient(
 
     logger.debug('Kullanıcıya gönderilen davetiyeler getirildi', {
       userId,
-      count: invitations.length
+      count: invitations.length,
     });
 
     return invitations;
   } catch (error) {
     logger.error('Kullanıcıya gönderilen davetiyeleri getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -475,7 +474,7 @@ export async function markExpiredInvitations(): Promise<{ success: boolean }> {
     return { success: true };
   } catch (error) {
     logger.error('Süresi dolmuş davetiyeleri işaretleme hatası', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
     throw error;
   }
@@ -493,22 +492,22 @@ export function formatInvitation(invitation: InvitationDocument): InvitationResu
     type: invitation.type,
     creator: {
       id: invitation.creator.toString(),
-      username: (invitation.creator as any)?.username || 'Unknown'
+      username: (invitation.creator as any)?.username || 'Unknown',
     },
     target: {
       id: invitation.target.toString(),
-      name: (invitation.target as any)?.name || 'Unknown'
+      name: (invitation.target as any)?.name || 'Unknown',
     },
     useCount: invitation.useCount,
     status: invitation.status,
-    createdAt: invitation.createdAt
+    createdAt: invitation.createdAt,
   };
 
   // Alıcı bilgisini ekle (varsa)
   if (invitation.recipient) {
     result.recipient = {
       id: invitation.recipient.toString(),
-      username: (invitation.recipient as any)?.username || 'Unknown'
+      username: (invitation.recipient as any)?.username || 'Unknown',
     };
   }
 
@@ -533,5 +532,5 @@ export default {
   getInvitationsByCreator,
   getInvitationsByRecipient,
   markExpiredInvitations,
-  formatInvitation
+  formatInvitation,
 };

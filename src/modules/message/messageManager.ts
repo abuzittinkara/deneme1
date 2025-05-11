@@ -81,18 +81,16 @@ export async function sendChannelMessage(
       attachments,
       isEdited: false,
       isDeleted: false,
-      reactions: {}
+      reactions: {},
     });
 
     // Mesajı kaydet
     const savedMessage = await message.save();
 
     // Mesajı kullanıcı bilgileriyle birlikte getir
-    const populatedMessage = await MessageHelper.findById(
-      savedMessage._id.toString(),
-      null,
-      { populate: { path: 'user', select: 'username name surname profilePicture' } }
-    );
+    const populatedMessage = await MessageHelper.findById(savedMessage._id.toString(), null, {
+      populate: { path: 'user', select: 'username name surname profilePicture' },
+    });
 
     if (!populatedMessage) {
       throw new Error('Mesaj kaydedildi ancak getirilemedi');
@@ -153,7 +151,7 @@ export async function editChannelMessage(
       channelId: message.channel,
       content: message.content,
       isEdited: message.isEdited,
-      editedAt: message.editedAt
+      editedAt: message.editedAt,
     };
   } catch (error) {
     logger.error('Mesaj düzenleme hatası', { error: (error as Error).message, messageId, userId });
@@ -199,7 +197,7 @@ export async function deleteChannelMessage(
       messageId: toObjectId(message._id),
       channelId: message.channel,
       isDeleted: message.isDeleted,
-      deletedAt: message.deletedAt
+      deletedAt: message.deletedAt,
     };
   } catch (error) {
     logger.error('Mesaj silme hatası', { error: (error as Error).message, messageId, userId });
@@ -237,16 +235,12 @@ export async function getChannelMessages(
     }
 
     // Mesajları getir
-    const messages = await MessageHelper.find(
-      { channel: channelId, isDeleted: false },
-      null,
-      {
-        sort: { timestamp: -1 },
-        skip,
-        limit,
-        populate: { path: 'user', select: 'username name surname profilePicture' }
-      }
-    );
+    const messages = await MessageHelper.find({ channel: channelId, isDeleted: false }, null, {
+      sort: { timestamp: -1 },
+      skip,
+      limit,
+      populate: { path: 'user', select: 'username name surname profilePicture' },
+    });
 
     // Önbelleğe ekle
     messageCache.set(cacheKey, messages, 60000); // 1 dakika TTL
@@ -297,11 +291,11 @@ export async function addReaction(
     const userReactions = message.reactions[emoji] || [];
 
     // Kullanıcı zaten tepki vermiş mi kontrol et
-    if (!userReactions.some(id => id.toString() === userId.toString())) {
+    if (!userReactions.some((id) => id.toString() === userId.toString())) {
       userReactions.push({
         userId,
         username: user.username,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
       message.reactions[emoji] = userReactions;
 
@@ -318,10 +312,15 @@ export async function addReaction(
       messageId: toObjectId(message._id),
       emoji,
       userId: new mongoose.Types.ObjectId(userId),
-      count: userReactions.length
+      count: userReactions.length,
     };
   } catch (error) {
-    logger.error('Tepki ekleme hatası', { error: (error as Error).message, messageId, emoji, userId });
+    logger.error('Tepki ekleme hatası', {
+      error: (error as Error).message,
+      messageId,
+      emoji,
+      userId,
+    });
     throw error;
   }
 }
@@ -351,13 +350,13 @@ export async function removeReaction(
         messageId: toObjectId(message._id),
         emoji,
         userId: new mongoose.Types.ObjectId(userId),
-        count: 0
+        count: 0,
       };
     }
 
     // Tepkiyi kaldır
     let userReactions = message.reactions[emoji] || [];
-    userReactions = userReactions.filter(reaction => reaction.userId !== userId);
+    userReactions = userReactions.filter((reaction) => reaction.userId !== userId);
 
     if (userReactions.length === 0) {
       delete message.reactions[emoji];
@@ -377,10 +376,15 @@ export async function removeReaction(
       messageId: toObjectId(message._id),
       emoji,
       userId: new mongoose.Types.ObjectId(userId),
-      count: userReactions.length
+      count: userReactions.length,
     };
   } catch (error) {
-    logger.error('Tepki kaldırma hatası', { error: (error as Error).message, messageId, emoji, userId });
+    logger.error('Tepki kaldırma hatası', {
+      error: (error as Error).message,
+      messageId,
+      emoji,
+      userId,
+    });
     throw error;
   }
 }
@@ -391,10 +395,7 @@ export async function removeReaction(
  * @param userId - Kullanıcı ID'si
  * @returns Sabitlenen mesaj
  */
-export async function pinMessage(
-  messageId: string,
-  userId: string
-): Promise<MessageResult> {
+export async function pinMessage(messageId: string, userId: string): Promise<MessageResult> {
   try {
     // Mesajı bul
     const message = await MessageHelper.findById(messageId);
@@ -419,7 +420,7 @@ export async function pinMessage(
       messageId: toObjectId(message._id),
       isPinned: message.isPinned,
       pinnedAt: message.pinnedAt,
-      pinnedBy: message.pinnedBy
+      pinnedBy: message.pinnedBy,
     };
   } catch (error) {
     logger.error('Mesaj sabitleme hatası', { error: (error as Error).message, messageId, userId });
@@ -433,10 +434,7 @@ export async function pinMessage(
  * @param userId - Kullanıcı ID'si
  * @returns Sabitleme kaldırılan mesaj
  */
-export async function unpinMessage(
-  messageId: string,
-  userId: string
-): Promise<MessageResult> {
+export async function unpinMessage(messageId: string, userId: string): Promise<MessageResult> {
   try {
     // Mesajı bul
     const message = await MessageHelper.findById(messageId);
@@ -448,7 +446,7 @@ export async function unpinMessage(
     if (!message.isPinned) {
       return {
         messageId: toObjectId(message._id),
-        isPinned: false
+        isPinned: false,
       };
     }
 
@@ -467,10 +465,14 @@ export async function unpinMessage(
 
     return {
       messageId: toObjectId(message._id),
-      isPinned: message.isPinned
+      isPinned: message.isPinned,
     };
   } catch (error) {
-    logger.error('Mesaj sabitlemesi kaldırma hatası', { error: (error as Error).message, messageId, userId });
+    logger.error('Mesaj sabitlemesi kaldırma hatası', {
+      error: (error as Error).message,
+      messageId,
+      userId,
+    });
     throw error;
   }
 }
@@ -505,8 +507,8 @@ export async function getPinnedMessages(channelId: string): Promise<MessageDocum
         sort: { pinnedAt: -1 },
         populate: [
           { path: 'user', select: 'username name surname profilePicture' },
-          { path: 'pinnedBy', select: 'username' }
-        ]
+          { path: 'pinnedBy', select: 'username' },
+        ],
       }
     );
 
@@ -517,7 +519,10 @@ export async function getPinnedMessages(channelId: string): Promise<MessageDocum
 
     return messages;
   } catch (error) {
-    logger.error('Sabitlenmiş mesaj getirme hatası', { error: (error as Error).message, channelId });
+    logger.error('Sabitlenmiş mesaj getirme hatası', {
+      error: (error as Error).message,
+      channelId,
+    });
     throw error;
   }
 }
@@ -531,5 +536,5 @@ export default {
   removeReaction,
   pinMessage,
   unpinMessage,
-  getPinnedMessages
+  getPinnedMessages,
 };

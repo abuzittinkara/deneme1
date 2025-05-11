@@ -17,11 +17,20 @@ interface FileSaveResult {
   size: number;
 }
 
-// Uploads dizinini oluştur (yoksa)
-const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  logger.info('Uploads dizini oluşturuldu', { path: uploadsDir });
+// Uploads dizinini oluştur (yoksa) - güvenli yol kullanarak
+const uploadsDir = path.resolve(path.join(__dirname, '..', '..', 'uploads'));
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true, mode: 0o755 });
+    logger.info('Uploads dizini oluşturuldu', { path: uploadsDir });
+  }
+} catch (error) {
+  logger.error('Uploads dizini oluşturulamadı', {
+    error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+    path: uploadsDir,
+  });
+  // Kritik hata, uygulama başlatılmamalı
+  throw new Error('Uploads dizini oluşturulamadı');
 }
 
 /**
@@ -32,10 +41,55 @@ if (!fs.existsSync(uploadsDir)) {
  */
 async function saveFileToDisk(fileData: string, originalName: string): Promise<FileSaveResult> {
   try {
-    // Benzersiz bir dosya adı oluştur
-    const fileExtension = path.extname(originalName);
-    const serverFilename = `${uuidv4()}${fileExtension}`;
-    const filePath = path.join(uploadsDir, serverFilename);
+    // Dosya uzantısını güvenli hale getir
+    const fileExtension = path.extname(originalName).toLowerCase();
+
+    // İzin verilen uzantıları kontrol et
+    const allowedExtensions = [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.webp',
+      '.svg',
+      '.mp3',
+      '.wav',
+      '.ogg',
+      '.m4a',
+      '.aac',
+      '.mp4',
+      '.webm',
+      '.mov',
+      '.avi',
+      '.mkv',
+      '.pdf',
+      '.doc',
+      '.docx',
+      '.xls',
+      '.xlsx',
+      '.ppt',
+      '.pptx',
+      '.txt',
+      '.md',
+      '.zip',
+      '.rar',
+      '.7z',
+      '.tar',
+      '.gz',
+    ];
+
+    const safeExtension = allowedExtensions.includes(fileExtension) ? fileExtension : '.bin';
+
+    // Benzersiz ve güvenli bir dosya adı oluştur
+    const serverFilename = `${uuidv4()}${safeExtension}`;
+
+    // Dosya yolunu güvenli bir şekilde oluştur
+    const filePath = path.resolve(path.join(uploadsDir, serverFilename));
+
+    // Yol geçişi kontrolü
+    if (!filePath.startsWith(uploadsDir)) {
+      throw new Error('Güvenli olmayan dosya yolu');
+    }
 
     // Base64 verisini buffer'a dönüştür
     const base64Data = fileData.replace(/^data:([A-Za-z-+/]+);base64,/, '');
@@ -54,13 +108,13 @@ async function saveFileToDisk(fileData: string, originalName: string): Promise<F
       originalName,
       serverFilename,
       size: buffer.length,
-      path: filePath
+      path: filePath,
     });
 
     return {
       serverFilename,
       filePath: `/uploads/${serverFilename}`,
-      size: buffer.length
+      size: buffer.length,
     };
   } catch (error) {
     logger.error('Dosya kaydetme hatası', { error: (error as Error).message, originalName });
@@ -89,7 +143,7 @@ const ALLOWED_MIME_TYPES = [
   'audio/wav',
   'audio/ogg',
   'video/mp4',
-  'video/webm'
+  'video/webm',
 ];
 
 /**
@@ -132,7 +186,7 @@ export async function handleFileUpload(
       path: filePath,
       message: messageId ? new mongoose.Types.ObjectId(messageId) : undefined,
       dmMessage: dmMessageId ? new mongoose.Types.ObjectId(dmMessageId) : undefined,
-      uploadDate: new Date()
+      uploadDate: new Date(),
     });
 
     await fileAttachment.save();
@@ -142,7 +196,7 @@ export async function handleFileUpload(
       originalName: safeOriginalName,
       size,
       mimeType,
-      userId
+      userId,
     });
 
     return fileAttachment;
@@ -151,7 +205,7 @@ export async function handleFileUpload(
       error: (error as Error).message,
       originalName,
       mimeType,
-      userId
+      userId,
     });
     throw error;
   }
@@ -197,25 +251,44 @@ export async function deleteFile(fileId: string): Promise<boolean> {
       throw new Error('Geçersiz dosya yolu');
     }
 
-    // Dosya yolunun uploads dizini içinde olduğundan emin ol
-    const absolutePath = path.join(__dirname, '..', '..', filePath);
-    const normalizedPath = path.normalize(absolutePath);
-    const normalizedUploadsDir = path.normalize(uploadsDir);
+    // Dosya yolunun uploads dizini içinde olduğundan emin ol - güvenli yol kullanarak
+    const absolutePath = path.resolve(path.join(__dirname, '..', '..', filePath));
 
-    if (!normalizedPath.startsWith(normalizedUploadsDir)) {
+    // Yol geçişi kontrolü
+    if (!absolutePath.startsWith(uploadsDir)) {
+      logger.warn('Güvenli olmayan dosya silme girişimi engellendi', {
+        fileId,
+        filePath,
+        absolutePath,
+        uploadsDir,
+      });
       throw new Error('Güvenlik hatası: Dosya yolu uploads dizini dışında');
     }
 
-    // Dosyayı diskten sil (promises kullanarak)
-    if (fs.existsSync(normalizedPath)) {
-      await fs.promises.unlink(normalizedPath);
+    // Dosyanın varlığını kontrol et
+    if (!fs.existsSync(absolutePath)) {
+      logger.warn('Silinecek dosya bulunamadı', { fileId, absolutePath });
+      // Dosya bulunamasa bile veritabanı kaydını silmeye devam et
+    } else {
+      // Dosyayı diskten sil (promises kullanarak)
+      try {
+        await fs.promises.unlink(absolutePath);
+        logger.debug('Dosya diskten silindi', { fileId, absolutePath });
+      } catch (unlinkError) {
+        logger.error('Dosya diskten silinirken hata oluştu', {
+          error: unlinkError instanceof Error ? unlinkError.message : 'Bilinmeyen hata',
+          fileId,
+          absolutePath,
+        });
+        // Dosya silme hatası kritik değil, veritabanı kaydını silmeye devam et
+      }
     }
 
     // Veritabanından kaydı sil
     await FileAttachment.deleteOne({ _id: fileId });
 
     const originalName = file.get('originalName');
-    logger.info('Dosya silindi', { fileId, originalName, path: normalizedPath });
+    logger.info('Dosya silindi', { fileId, originalName, path: filePath });
 
     return true;
   } catch (error) {
@@ -227,5 +300,5 @@ export async function deleteFile(fileId: string): Promise<boolean> {
 export default {
   handleFileUpload,
   getFileInfo,
-  deleteFile
+  deleteFile,
 };

@@ -10,7 +10,7 @@ import crypto from 'crypto';
 // Davetiye türleri
 export enum InvitationType {
   GROUP = 'group',
-  CHANNEL = 'channel'
+  CHANNEL = 'channel',
 }
 
 // Davetiye durumları
@@ -19,7 +19,7 @@ export enum InvitationStatus {
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
   EXPIRED = 'expired',
-  REVOKED = 'revoked'
+  REVOKED = 'revoked',
 }
 
 // Davetiye arayüzü
@@ -63,59 +63,61 @@ const InvitationSchema = new Schema<InvitationDocument, InvitationModel>(
     type: {
       type: String,
       enum: Object.values(InvitationType),
-      required: true
+      required: true,
     },
     // Davetiye kodu
     code: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
     },
     // Davetiyeyi oluşturan kullanıcı
     creator: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     // Davetiyenin hedefi (grup veya kanal)
     target: {
       type: Schema.Types.ObjectId,
       required: true,
-      refPath: 'type'
+      refPath: 'type',
     },
     // Davetiyenin alıcısı (belirli bir kullanıcı için)
     recipient: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
     },
     // Maksimum kullanım sayısı
     maxUses: {
       type: Number,
-      min: 1
+      min: 1,
     },
     // Kullanım sayısı
     useCount: {
       type: Number,
-      default: 0
+      default: 0,
     },
     // Son kullanma tarihi
     expiresAt: {
-      type: Date
+      type: Date,
     },
     // Davetiye durumu
     status: {
       type: String,
       enum: Object.values(InvitationStatus),
-      default: InvitationStatus.PENDING
+      default: InvitationStatus.PENDING,
     },
     // Kabul eden kullanıcılar
-    acceptedBy: [{
-      type: Schema.Types.ObjectId,
-      ref: 'User'
-    }]
+    acceptedBy: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -130,19 +132,23 @@ InvitationSchema.index({ expiresAt: 1 });
 InvitationSchema.index({ type: 1, target: 1 });
 
 // Metotlar
-InvitationSchema.methods.isValid = function(): boolean {
+InvitationSchema.methods['isValid'] = function (): boolean {
   // Davetiye geçerli mi kontrol et
-  if (this.status !== InvitationStatus.PENDING) {
+  const status = this['status'];
+  if (status !== 'PENDING') {
     return false;
   }
 
   // Son kullanma tarihi kontrolü
-  if (this.expiresAt && new Date() > this.expiresAt) {
+  const expiresAt = this['expiresAt'] as Date | undefined;
+  if (expiresAt && new Date() > expiresAt) {
     return false;
   }
 
   // Maksimum kullanım sayısı kontrolü
-  if (this.maxUses && this.useCount >= this.maxUses) {
+  const maxUses = this['maxUses'] as number | undefined;
+  const useCount = this['useCount'] as number | undefined;
+  if (maxUses && useCount >= maxUses) {
     return false;
   }
 
@@ -150,7 +156,7 @@ InvitationSchema.methods.isValid = function(): boolean {
 };
 
 // Statik metodlar
-InvitationSchema.statics.findByCode = function(
+InvitationSchema.statics['findByCode'] = function (
   code: string
 ): Promise<InvitationDocument | null> {
   return this.findOne({ code })
@@ -158,54 +164,49 @@ InvitationSchema.statics.findByCode = function(
     .populate('target') as unknown as Promise<InvitationDocument | null>;
 };
 
-InvitationSchema.statics.findActiveByTarget = function(
+InvitationSchema.statics['findActiveByTarget'] = function (
   targetId: mongoose.Types.ObjectId
 ): Promise<InvitationDocument[]> {
   return this.find({
     target: targetId,
     status: InvitationStatus.PENDING,
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: { $gt: new Date() } }
-    ]
+    $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
   }) as unknown as Promise<InvitationDocument[]>;
 };
 
-InvitationSchema.statics.findByCreator = function(
+InvitationSchema.statics['findByCreator'] = function (
   creatorId: mongoose.Types.ObjectId
 ): Promise<InvitationDocument[]> {
-  return this.find({ creator: creatorId })
-    .sort({ createdAt: -1 }) as unknown as Promise<InvitationDocument[]>;
+  return this.find({ creator: creatorId }).sort({ createdAt: -1 }) as unknown as Promise<
+    InvitationDocument[]
+  >;
 };
 
-InvitationSchema.statics.findByRecipient = function(
+InvitationSchema.statics['findByRecipient'] = function (
   recipientId: mongoose.Types.ObjectId
 ): Promise<InvitationDocument[]> {
   return this.find({
     recipient: recipientId,
     status: InvitationStatus.PENDING,
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: { $gt: new Date() } }
-    ]
+    $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
   })
     .sort({ createdAt: -1 })
     .populate('creator', 'username profilePicture')
     .populate('target') as unknown as Promise<InvitationDocument[]>;
 };
 
-InvitationSchema.statics.generateCode = function(): string {
+InvitationSchema.statics['generateCode'] = function (): string {
   return crypto.randomBytes(4).toString('hex').toUpperCase();
 };
 
-InvitationSchema.statics.markAsExpired = async function(): Promise<void> {
+InvitationSchema.statics['markAsExpired'] = async function (): Promise<void> {
   await this.updateMany(
     {
       status: InvitationStatus.PENDING,
-      expiresAt: { $lt: new Date() }
+      expiresAt: { $lt: new Date() },
     },
     {
-      $set: { status: InvitationStatus.EXPIRED }
+      $set: { status: InvitationStatus.EXPIRED },
     }
   );
 };
@@ -214,7 +215,7 @@ InvitationSchema.statics.markAsExpired = async function(): Promise<void> {
 let Invitation: InvitationModel;
 
 // Geliştirme modunda mock model oluştur
-if (process.env.NODE_ENV === 'development') {
+if (process.env['NODE_ENV'] === 'development') {
   // Mock model
   Invitation = {
     find: () => Promise.resolve([]),
@@ -234,7 +235,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as InvitationModel;
 } else {
   // Gerçek model
-  Invitation = (mongoose.models.Invitation as InvitationModel) ||
+  Invitation =
+    (mongoose.models['Invitation'] as InvitationModel) ||
     mongoose.model<InvitationDocument, InvitationModel>('Invitation', InvitationSchema);
 }
 

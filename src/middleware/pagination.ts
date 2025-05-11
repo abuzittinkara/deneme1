@@ -27,16 +27,16 @@ declare global {
  */
 export function paginationMiddleware(defaultLimit = 20, maxLimit = 100) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const requestedLimit = parseInt(req.query.limit as string) || defaultLimit;
+    const page = Math.max(1, parseInt(req.query['page'] as string) || 1);
+    const requestedLimit = parseInt(req.query['limit'] as string) || defaultLimit;
     const limit = Math.min(requestedLimit, maxLimit);
-    
+
     req.pagination = {
       page,
       limit,
-      skip: (page - 1) * limit
+      skip: (page - 1) * limit,
     };
-    
+
     next();
   };
 }
@@ -49,7 +49,7 @@ export function paginationMiddleware(defaultLimit = 20, maxLimit = 100) {
 export function createPaginationMeta(total: number, pagination: PaginationParams) {
   const { page, limit, skip } = pagination;
   const totalPages = Math.ceil(total / limit);
-  
+
   return {
     total,
     page,
@@ -58,7 +58,7 @@ export function createPaginationMeta(total: number, pagination: PaginationParams
     hasNextPage: page < totalPages,
     hasPrevPage: page > 1,
     nextPage: page < totalPages ? page + 1 : null,
-    prevPage: page > 1 ? page - 1 : null
+    prevPage: page > 1 ? page - 1 : null,
   };
 }
 
@@ -70,6 +70,6 @@ export function createPaginationMeta(total: number, pagination: PaginationParams
 export function paginatedResponse(data: any[], meta: any) {
   return {
     data,
-    meta
+    meta,
   };
 }

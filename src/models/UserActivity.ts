@@ -27,7 +27,7 @@ export enum ActivityType {
   INVITATION_CREATED = 'invitation_created',
   INVITATION_ACCEPTED = 'invitation_accepted',
   INVITATION_REVOKED = 'invitation_revoked',
-  INVITATION_EXPIRED = 'invitation_expired'
+  INVITATION_EXPIRED = 'invitation_expired',
 }
 
 // Aktivite hedefi arayüzü
@@ -56,19 +56,26 @@ export interface UserActivityModel extends CommonModelStaticMethods<UserActivity
   // Özel statik metodlar
   findByUser(userId: mongoose.Types.ObjectId, limit?: number): Promise<UserActivityDocument[]>;
   findByType(type: ActivityType, limit?: number): Promise<UserActivityDocument[]>;
-  findByTarget(targetType: string, targetId: mongoose.Types.ObjectId, limit?: number): Promise<UserActivityDocument[]>;
+  findByTarget(
+    targetType: string,
+    targetId: mongoose.Types.ObjectId,
+    limit?: number
+  ): Promise<UserActivityDocument[]>;
   logActivity(activity: Omit<IUserActivity, 'timestamp'>): Promise<UserActivityDocument>;
 }
 
 // Aktivite hedefi şeması
-const ActivityTargetSchema = new Schema({
-  type: {
-    type: String,
-    enum: ['message', 'directMessage', 'user', 'group', 'channel', 'role'],
-    required: true
+const ActivityTargetSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['message', 'directMessage', 'user', 'group', 'channel', 'role'],
+      required: true,
+    },
+    id: { type: Schema.Types.ObjectId, required: true },
   },
-  id: { type: Schema.Types.ObjectId, required: true }
-}, { _id: false });
+  { _id: false }
+);
 
 // Kullanıcı aktivitesi şeması
 const UserActivitySchema = new Schema<UserActivityDocument, UserActivityModel>(
@@ -78,38 +85,38 @@ const UserActivitySchema = new Schema<UserActivityDocument, UserActivityModel>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true
+      index: true,
     },
     // Aktivite türü
     type: {
       type: String,
       enum: Object.values(ActivityType),
       required: true,
-      index: true
+      index: true,
     },
     // Aktivite zamanı
     timestamp: {
       type: Date,
       default: Date.now,
-      index: true
+      index: true,
     },
     // IP adresi
     ipAddress: {
-      type: String
+      type: String,
     },
     // Kullanıcı tarayıcı bilgisi
     userAgent: {
-      type: String
+      type: String,
     },
     // Aktivite hedefi
     target: ActivityTargetSchema,
     // Ek bilgiler
     metadata: {
-      type: Schema.Types.Mixed
-    }
+      type: Schema.Types.Mixed,
+    },
   },
   {
-    timestamps: false
+    timestamps: false,
   }
 );
 
@@ -123,17 +130,14 @@ UserActivitySchema.index({ 'target.type': 1, 'target.id': 1, timestamp: -1 });
 UserActivitySchema.index({ timestamp: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
 
 // Statik metodlar
-UserActivitySchema.statics.findByUser = async function(
+UserActivitySchema.statics['findByUser'] = async function (
   userId: mongoose.Types.ObjectId,
   limit = 50
 ): Promise<UserActivityDocument[]> {
-  return (this.find({ user: userId }) as any)
-    .sort({ timestamp: -1 })
-    .limit(limit)
-    .exec();
+  return (this.find({ user: userId }) as any).sort({ timestamp: -1 }).limit(limit).exec();
 };
 
-UserActivitySchema.statics.findByType = async function(
+UserActivitySchema.statics['findByType'] = async function (
   type: ActivityType,
   limit = 50
 ): Promise<UserActivityDocument[]> {
@@ -144,27 +148,29 @@ UserActivitySchema.statics.findByType = async function(
     .exec();
 };
 
-UserActivitySchema.statics.findByTarget = async function(
+UserActivitySchema.statics['findByTarget'] = async function (
   targetType: string,
   targetId: mongoose.Types.ObjectId,
   limit = 50
 ): Promise<UserActivityDocument[]> {
-  return (this.find({
-    'target.type': targetType,
-    'target.id': targetId
-  }) as any)
+  return (
+    this.find({
+      'target.type': targetType,
+      'target.id': targetId,
+    }) as any
+  )
     .sort({ timestamp: -1 })
     .limit(limit)
     .populate('user', 'username profilePicture')
     .exec();
 };
 
-UserActivitySchema.statics.logActivity = function(
+UserActivitySchema.statics['logActivity'] = function (
   activity: Omit<IUserActivity, 'timestamp'>
 ): Promise<UserActivityDocument> {
   return this.create({
     ...activity,
-    timestamp: new Date()
+    timestamp: new Date(),
   }) as unknown as Promise<UserActivityDocument>;
 };
 
@@ -188,7 +194,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as UserActivityModel;
 } else {
   // Gerçek model
-  UserActivity = (mongoose.models.UserActivity as UserActivityModel) ||
+  UserActivity =
+    (mongoose.models['UserActivity'] as UserActivityModel) ||
     mongoose.model<UserActivityDocument, UserActivityModel>('UserActivity', UserActivitySchema);
 }
 

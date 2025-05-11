@@ -35,22 +35,29 @@ export interface IDirectMessage {
 }
 
 // Direkt mesaj dokümanı arayüzü
-export interface DirectMessageDocument extends TypedDocument<IDirectMessage> {}
+export type DirectMessageDocument = TypedDocument<IDirectMessage>;
 
 // Direkt mesaj modeli arayüzü
 export interface DirectMessageModel extends FullModelType<IDirectMessage> {
   // Özel statik metodlar
-  findConversation(user1Id: mongoose.Types.ObjectId, user2Id: mongoose.Types.ObjectId, limit?: number): Promise<DirectMessageDocument[]>;
+  findConversation(
+    user1Id: mongoose.Types.ObjectId,
+    user2Id: mongoose.Types.ObjectId,
+    limit?: number
+  ): Promise<DirectMessageDocument[]>;
   findUnreadMessages(userId: mongoose.Types.ObjectId): Promise<DirectMessageDocument[]>;
   markAsRead(messageId: mongoose.Types.ObjectId, userId: mongoose.Types.ObjectId): Promise<void>;
 }
 
 // Düzenleme geçmişi şeması
-const DMEditHistorySchema = new Schema({
-  content: { type: String, required: true },
-  editedAt: { type: Date, default: Date.now },
-  editedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
-}, { _id: false });
+const DMEditHistorySchema = new Schema(
+  {
+    content: { type: String, required: true },
+    editedAt: { type: Date, default: Date.now },
+    editedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  },
+  { _id: false }
+);
 
 // Direkt mesaj şeması
 const directMessageSchema = new Schema<DirectMessageDocument, DirectMessageModel>(
@@ -58,70 +65,72 @@ const directMessageSchema = new Schema<DirectMessageDocument, DirectMessageModel
     sender: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     recipient: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     content: {
       type: String,
-      required: true
+      required: true,
     },
     timestamp: {
       type: Date,
       default: Date.now,
-      required: true
+      required: true,
     },
     isEdited: {
       type: Boolean,
-      default: false
+      default: false,
     },
     editedAt: {
-      type: Date
+      type: Date,
     },
     originalContent: {
-      type: String
+      type: String,
     },
     editHistory: [DMEditHistorySchema],
     isDeleted: {
       type: Boolean,
-      default: false
+      default: false,
     },
     deletedAt: {
-      type: Date
+      type: Date,
     },
     deletedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
     },
     isRead: {
       type: Boolean,
-      default: false
+      default: false,
     },
     readAt: {
-      type: Date
+      type: Date,
     },
-    attachments: [{
-      type: Schema.Types.ObjectId,
-      ref: 'File'
-    }],
+    attachments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'File',
+      },
+    ],
     reactions: {
       type: Map,
-      of: [Schema.Types.ObjectId]
+      of: [Schema.Types.ObjectId],
     },
     replyTo: {
       type: Schema.Types.ObjectId,
-      ref: 'DirectMessage'
+      ref: 'DirectMessage',
     },
     isSystemMessage: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -138,12 +147,12 @@ directMessageSchema.index(
   { deletedAt: 1 },
   {
     expireAfterSeconds: 30 * 24 * 60 * 60, // 30 gün sonra otomatik sil
-    partialFilterExpression: { isDeleted: true }
+    partialFilterExpression: { isDeleted: true },
   }
 );
 
 // Statik metodlar
-directMessageSchema.statics.findConversation = function(
+directMessageSchema.statics['findConversation'] = function (
   user1Id: mongoose.Types.ObjectId,
   user2Id: mongoose.Types.ObjectId,
   limit = 50
@@ -151,29 +160,31 @@ directMessageSchema.statics.findConversation = function(
   return this.find({
     $or: [
       { sender: user1Id, recipient: user2Id },
-      { sender: user2Id, recipient: user1Id }
+      { sender: user2Id, recipient: user1Id },
     ],
-    isDeleted: false
+    isDeleted: false,
   })
     .sort({ timestamp: -1 })
     .limit(limit)
     .populate('sender', 'username profilePicture')
-    .populate('recipient', 'username profilePicture') as unknown as Promise<DirectMessageDocument[]>;
+    .populate('recipient', 'username profilePicture') as unknown as Promise<
+    DirectMessageDocument[]
+  >;
 };
 
-directMessageSchema.statics.findUnreadMessages = function(
+directMessageSchema.statics['findUnreadMessages'] = function (
   userId: mongoose.Types.ObjectId
 ): Promise<DirectMessageDocument[]> {
   return this.find({
     recipient: userId,
     isDeleted: false,
-    isRead: false
+    isRead: false,
   })
     .sort({ timestamp: -1 })
     .populate('sender', 'username profilePicture') as unknown as Promise<DirectMessageDocument[]>;
 };
 
-directMessageSchema.statics.markAsRead = async function(
+directMessageSchema.statics['markAsRead'] = async function (
   messageId: mongoose.Types.ObjectId,
   userId: mongoose.Types.ObjectId
 ): Promise<void> {
@@ -181,13 +192,13 @@ directMessageSchema.statics.markAsRead = async function(
     {
       _id: messageId,
       recipient: userId,
-      isRead: false
+      isRead: false,
     },
     {
       $set: {
         isRead: true,
-        readAt: new Date()
-      }
+        readAt: new Date(),
+      },
     }
   );
 };
@@ -212,7 +223,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as DirectMessageModel;
 } else {
   // Gerçek model
-  DirectMessage = (mongoose.models.DirectMessage as DirectMessageModel) ||
+  DirectMessage =
+    (mongoose.models['DirectMessage'] as DirectMessageModel) ||
     mongoose.model<DirectMessageDocument, DirectMessageModel>('DirectMessage', directMessageSchema);
 }
 

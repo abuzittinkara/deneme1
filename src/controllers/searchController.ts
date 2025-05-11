@@ -7,11 +7,12 @@ import { asyncHandler, sendSuccess, sendError } from '../utils/controllerUtils';
 import { getSearchAndFilterParams, formatSearchResults } from '../utils/searchUtils';
 import { logger } from '../utils/logger';
 import { ValidationError } from '../utils/errors';
+import { createSafeRegexQuery, createSafeMultiFieldRegexQuery } from '../utils/securityUtils';
 import { User } from '../models/User';
 import { Group } from '../models/Group';
 import { Channel } from '../models/Channel';
 import { Message } from '../models/Message';
-import { File } from '../models/File';
+import File from '../models/File';
 
 /**
  * @swagger
@@ -120,218 +121,238 @@ import { File } from '../models/File';
  */
 export const search = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
   const userId = (req as any).user._id;
-  const searchText = req.query.search as string;
-  const searchType = req.query.type as string || 'all';
-  
+  const searchText = req.query['search'] as string;
+  const searchType = (req.query['type'] as string) || 'all';
+
   // Arama metni kontrolü
   if (!searchText || searchText.trim().length < 2) {
     throw new ValidationError('Arama metni en az 2 karakter olmalıdır');
   }
-  
+
   // Arama türü kontrolü
   const validTypes = ['all', 'users', 'groups', 'channels', 'messages', 'files'];
-  
+
   if (!validTypes.includes(searchType)) {
     throw new ValidationError(`Geçersiz arama türü: ${searchType}`);
   }
-  
+
   // Arama sonuçları
   const results: any = {};
-  
+
   // Kullanıcı araması
   if (searchType === 'all' || searchType === 'users') {
-    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
-      searchFields: ['username', 'name', 'surname', 'email'],
-      allowedFilters: ['status', 'role'],
-      allowedSortFields: ['username', 'name', 'surname', 'createdAt', 'lastActive'],
-      defaultSortField: 'username'
-    });
-    
-    // Arama sorgusunu oluştur
+    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(
+      req,
+      {
+        searchFields: ['username', 'name', 'surname', 'email'],
+        allowedFilters: ['status', 'role'],
+        allowedSortFields: ['username', 'name', 'surname', 'createdAt', 'lastActive'],
+        defaultSortField: 'username',
+      }
+    );
+
+    // Arama sorgusunu güvenli bir şekilde oluştur
+    const safeQueries = createSafeMultiFieldRegexQuery(
+      ['username', 'name', 'surname', 'email'],
+      searchText
+    );
+
     const query = {
-      $or: [
-        { username: { $regex: searchText, $options: 'i' } },
-        { name: { $regex: searchText, $options: 'i' } },
-        { surname: { $regex: searchText, $options: 'i' } },
-        { email: { $regex: searchText, $options: 'i' } }
-      ],
-      ...filterQuery
+      $or: safeQueries,
+      ...filterQuery,
     };
-    
+
     // Kullanıcıları getir
     const total = await User.countDocuments(query);
-    
+
     const users = await User.find(query)
-      .select('-passwordHash -refreshToken -emailVerificationToken -passwordResetToken -passwordResetExpires')
+      .select(
+        '-passwordHash -refreshToken -emailVerificationToken -passwordResetToken -passwordResetExpires'
+      )
       .sort({ [sortParams.sortBy]: sortParams.sortOrder })
       .skip(paginationParams.skip)
       .limit(paginationParams.limit);
-    
+
     // Sonuçları formatla
     results.users = formatSearchResults(users, total, paginationParams);
   }
-  
+
   // Grup araması
   if (searchType === 'all' || searchType === 'groups') {
-    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
-      searchFields: ['name', 'description'],
-      allowedFilters: ['type', 'isPublic'],
-      allowedSortFields: ['name', 'createdAt', 'memberCount'],
-      defaultSortField: 'name'
-    });
-    
-    // Arama sorgusunu oluştur
+    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(
+      req,
+      {
+        searchFields: ['name', 'description'],
+        allowedFilters: ['type', 'isPublic'],
+        allowedSortFields: ['name', 'createdAt', 'memberCount'],
+        defaultSortField: 'name',
+      }
+    );
+
+    // Arama sorgusunu güvenli bir şekilde oluştur
+    const safeQueries = createSafeMultiFieldRegexQuery(['name', 'description'], searchText);
+
     const query = {
-      $or: [
-        { name: { $regex: searchText, $options: 'i' } },
-        { description: { $regex: searchText, $options: 'i' } }
-      ],
+      $or: safeQueries,
       $and: [
         {
-          $or: [
-            { isPublic: true },
-            { owner: userId },
-            { members: userId }
-          ]
-        }
+          $or: [{ isPublic: true }, { owner: userId }, { members: userId }],
+        },
       ],
-      ...filterQuery
+      ...filterQuery,
     };
-    
+
     // Grupları getir
     const total = await Group.countDocuments(query);
-    
+
     const groups = await Group.find(query)
       .sort({ [sortParams.sortBy]: sortParams.sortOrder })
       .skip(paginationParams.skip)
       .limit(paginationParams.limit)
       .populate('owner', 'username name surname profilePicture');
-    
+
     // Sonuçları formatla
     results.groups = formatSearchResults(groups, total, paginationParams);
   }
-  
+
   // Kanal araması
   if (searchType === 'all' || searchType === 'channels') {
-    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
-      searchFields: ['name', 'description'],
-      allowedFilters: ['type', 'group'],
-      allowedSortFields: ['name', 'createdAt'],
-      defaultSortField: 'name'
-    });
-    
+    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(
+      req,
+      {
+        searchFields: ['name', 'description'],
+        allowedFilters: ['type', 'group'],
+        allowedSortFields: ['name', 'createdAt'],
+        defaultSortField: 'name',
+      }
+    );
+
     // Kullanıcının erişebileceği grupları bul
     const accessibleGroups = await Group.find({
-      $or: [
-        { isPublic: true },
-        { owner: userId },
-        { members: userId }
-      ]
+      $or: [{ isPublic: true }, { owner: userId }, { members: userId }],
     }).select('_id');
-    
-    const groupIds = accessibleGroups.map(group => group._id);
-    
-    // Arama sorgusunu oluştur
+
+    const groupIds = accessibleGroups.map((group) => group._id);
+
+    // Arama sorgusunu güvenli bir şekilde oluştur
+    const safeQueries = createSafeMultiFieldRegexQuery(['name', 'description'], searchText);
+
     const query = {
-      $or: [
-        { name: { $regex: searchText, $options: 'i' } },
-        { description: { $regex: searchText, $options: 'i' } }
-      ],
+      $or: safeQueries,
       group: { $in: groupIds },
-      ...filterQuery
+      ...filterQuery,
     };
-    
+
     // Kanalları getir
     const total = await Channel.countDocuments(query);
-    
+
     const channels = await Channel.find(query)
       .sort({ [sortParams.sortBy]: sortParams.sortOrder })
       .skip(paginationParams.skip)
       .limit(paginationParams.limit)
       .populate('group', 'name');
-    
+
     // Sonuçları formatla
     results.channels = formatSearchResults(channels, total, paginationParams);
   }
-  
+
   // Mesaj araması
   if (searchType === 'all' || searchType === 'messages') {
-    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
-      searchFields: ['content'],
-      allowedFilters: ['channel', 'sender'],
-      allowedSortFields: ['createdAt'],
-      defaultSortField: 'createdAt'
-    });
-    
+    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(
+      req,
+      {
+        searchFields: ['content'],
+        allowedFilters: ['channel', 'sender'],
+        allowedSortFields: ['createdAt'],
+        defaultSortField: 'createdAt',
+      }
+    );
+
     // Kullanıcının erişebileceği kanalları bul
     const accessibleGroups = await Group.find({
-      $or: [
-        { isPublic: true },
-        { owner: userId },
-        { members: userId }
-      ]
+      $or: [{ isPublic: true }, { owner: userId }, { members: userId }],
     }).select('_id');
-    
-    const groupIds = accessibleGroups.map(group => group._id);
-    
+
+    const groupIds = accessibleGroups.map((group) => group._id);
+
     const accessibleChannels = await Channel.find({
-      group: { $in: groupIds }
+      group: { $in: groupIds },
     }).select('_id');
-    
-    const channelIds = accessibleChannels.map(channel => channel._id);
-    
-    // Arama sorgusunu oluştur
+
+    const channelIds = accessibleChannels.map((channel) => channel._id);
+
+    // Arama sorgusunu güvenli bir şekilde oluştur
+    const safeContentQuery = createSafeRegexQuery('content', searchText);
+
     const query = {
-      content: { $regex: searchText, $options: 'i' },
+      ...safeContentQuery,
       channel: { $in: channelIds },
-      ...filterQuery
+      ...filterQuery,
     };
-    
+
     // Mesajları getir
     const total = await Message.countDocuments(query);
-    
+
     const messages = await Message.find(query)
       .sort({ [sortParams.sortBy]: sortParams.sortOrder })
       .skip(paginationParams.skip)
       .limit(paginationParams.limit)
       .populate('sender', 'username name surname profilePicture')
       .populate('channel', 'name');
-    
+
     // Sonuçları formatla
     results.messages = formatSearchResults(messages, total, paginationParams);
   }
-  
+
   // Dosya araması
   if (searchType === 'all' || searchType === 'files') {
-    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
-      searchFields: ['originalName', 'fileName'],
-      allowedFilters: ['fileType', 'uploadedBy'],
-      allowedSortFields: ['originalName', 'createdAt', 'size'],
-      defaultSortField: 'createdAt'
-    });
-    
-    // Arama sorgusunu oluştur
+    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(
+      req,
+      {
+        searchFields: ['originalName', 'fileName'],
+        allowedFilters: ['fileType', 'uploadedBy'],
+        allowedSortFields: ['originalName', 'createdAt', 'size'],
+        defaultSortField: 'createdAt',
+      }
+    );
+
+    // Arama sorgusunu güvenli bir şekilde oluştur
+    const safeQueries = createSafeMultiFieldRegexQuery(['originalName', 'fileName'], searchText);
+
     const query = {
-      $or: [
-        { originalName: { $regex: searchText, $options: 'i' } },
-        { fileName: { $regex: searchText, $options: 'i' } }
-      ],
+      $or: safeQueries,
       uploadedBy: userId,
-      ...filterQuery
+      ...filterQuery,
     };
-    
+
     // Dosyaları getir
     const total = await File.countDocuments(query);
-    
-    const files = await File.find(query)
-      .sort({ [sortParams.sortBy]: sortParams.sortOrder })
-      .skip(paginationParams.skip)
-      .limit(paginationParams.limit);
-    
+
+    // Dosyaları getir ve bellek içinde işle
+    const filesQuery = await File.find(query).exec();
+
+    // Bellek içinde sıralama ve sayfalama yap
+    const sortedFiles = Array.from(filesQuery).sort((a: any, b: any) => {
+      const aValue = a.get(sortParams.sortBy) || '';
+      const bValue = b.get(sortParams.sortBy) || '';
+
+      if (sortParams.sortOrder === 1) {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    // Sayfalama uygula
+    const files = sortedFiles.slice(
+      paginationParams.skip,
+      paginationParams.skip + paginationParams.limit
+    );
+
     // Sonuçları formatla
     results.files = formatSearchResults(files, total, paginationParams);
   }
-  
+
   return sendSuccess(res, results);
 });
 
@@ -422,44 +443,46 @@ export const search = asyncHandler(async (req: Request, res: Response, next: Nex
  *               $ref: '#/components/schemas/Error'
  */
 export const searchUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const searchText = req.query.search as string;
-  
+  const searchText = req.query['search'] as string;
+
   // Arama metni kontrolü
   if (!searchText || searchText.trim().length < 2) {
     throw new ValidationError('Arama metni en az 2 karakter olmalıdır');
   }
-  
+
   // Arama parametrelerini al
   const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
     searchFields: ['username', 'name', 'surname', 'email'],
     allowedFilters: ['status', 'role'],
     allowedSortFields: ['username', 'name', 'surname', 'createdAt', 'lastActive'],
-    defaultSortField: 'username'
+    defaultSortField: 'username',
   });
-  
-  // Arama sorgusunu oluştur
+
+  // Arama sorgusunu güvenli bir şekilde oluştur
+  const safeQueries = createSafeMultiFieldRegexQuery(
+    ['username', 'name', 'surname', 'email'],
+    searchText
+  );
+
   const query = {
-    $or: [
-      { username: { $regex: searchText, $options: 'i' } },
-      { name: { $regex: searchText, $options: 'i' } },
-      { surname: { $regex: searchText, $options: 'i' } },
-      { email: { $regex: searchText, $options: 'i' } }
-    ],
-    ...filterQuery
+    $or: safeQueries,
+    ...filterQuery,
   };
-  
+
   // Kullanıcıları getir
   const total = await User.countDocuments(query);
-  
+
   const users = await User.find(query)
-    .select('-passwordHash -refreshToken -emailVerificationToken -passwordResetToken -passwordResetExpires')
+    .select(
+      '-passwordHash -refreshToken -emailVerificationToken -passwordResetToken -passwordResetExpires'
+    )
     .sort({ [sortParams.sortBy]: sortParams.sortOrder })
     .skip(paginationParams.skip)
     .limit(paginationParams.limit);
-  
+
   // Sonuçları formatla
   const results = formatSearchResults(users, total, paginationParams);
-  
+
   return sendSuccess(res, results);
 });
 
@@ -542,58 +565,58 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response, next
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export const searchGroups = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  const userId = (req as any).user._id;
-  const searchText = req.query.search as string;
-  
-  // Arama metni kontrolü
-  if (!searchText || searchText.trim().length < 2) {
-    throw new ValidationError('Arama metni en az 2 karakter olmalıdır');
-  }
-  
-  // Arama parametrelerini al
-  const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(req, {
-    searchFields: ['name', 'description'],
-    allowedFilters: ['isPublic'],
-    allowedSortFields: ['name', 'createdAt', 'memberCount'],
-    defaultSortField: 'name'
-  });
-  
-  // Arama sorgusunu oluştur
-  const query = {
-    $or: [
-      { name: { $regex: searchText, $options: 'i' } },
-      { description: { $regex: searchText, $options: 'i' } }
-    ],
-    $and: [
+export const searchGroups = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as any).user._id;
+    const searchText = req.query['search'] as string;
+
+    // Arama metni kontrolü
+    if (!searchText || searchText.trim().length < 2) {
+      throw new ValidationError('Arama metni en az 2 karakter olmalıdır');
+    }
+
+    // Arama parametrelerini al
+    const { searchQuery, filterQuery, sortParams, paginationParams } = getSearchAndFilterParams(
+      req,
       {
-        $or: [
-          { isPublic: true },
-          { owner: userId },
-          { members: userId }
-        ]
+        searchFields: ['name', 'description'],
+        allowedFilters: ['isPublic'],
+        allowedSortFields: ['name', 'createdAt', 'memberCount'],
+        defaultSortField: 'name',
       }
-    ],
-    ...filterQuery
-  };
-  
-  // Grupları getir
-  const total = await Group.countDocuments(query);
-  
-  const groups = await Group.find(query)
-    .sort({ [sortParams.sortBy]: sortParams.sortOrder })
-    .skip(paginationParams.skip)
-    .limit(paginationParams.limit)
-    .populate('owner', 'username name surname profilePicture');
-  
-  // Sonuçları formatla
-  const results = formatSearchResults(groups, total, paginationParams);
-  
-  return sendSuccess(res, results);
-});
+    );
+
+    // Arama sorgusunu güvenli bir şekilde oluştur
+    const safeQueries = createSafeMultiFieldRegexQuery(['name', 'description'], searchText);
+
+    const query = {
+      $or: safeQueries,
+      $and: [
+        {
+          $or: [{ isPublic: true }, { owner: userId }, { members: userId }],
+        },
+      ],
+      ...filterQuery,
+    };
+
+    // Grupları getir
+    const total = await Group.countDocuments(query);
+
+    const groups = await Group.find(query)
+      .sort({ [sortParams.sortBy]: sortParams.sortOrder })
+      .skip(paginationParams.skip)
+      .limit(paginationParams.limit)
+      .populate('owner', 'username name surname profilePicture');
+
+    // Sonuçları formatla
+    const results = formatSearchResults(groups, total, paginationParams);
+
+    return sendSuccess(res, results);
+  }
+);
 
 export default {
   search,
   searchUsers,
-  searchGroups
+  searchGroups,
 };

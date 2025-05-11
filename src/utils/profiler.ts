@@ -13,7 +13,7 @@ export class Timer {
   private startTime: number | null;
   private endTime: number | null;
   private duration: number | null;
-  
+
   /**
    * Zamanlayıcı oluşturur
    * @param name - Zamanlayıcı adı
@@ -24,7 +24,7 @@ export class Timer {
     this.endTime = null;
     this.duration = null;
   }
-  
+
   /**
    * Zamanlayıcıyı başlatır
    * @returns Zamanlayıcı
@@ -33,7 +33,7 @@ export class Timer {
     this.startTime = performance.now();
     return this;
   }
-  
+
   /**
    * Zamanlayıcıyı durdurur
    * @returns Zamanlayıcı
@@ -42,12 +42,12 @@ export class Timer {
     if (this.startTime === null) {
       throw new Error('Timer must be started before stopping');
     }
-    
+
     this.endTime = performance.now();
     this.duration = this.endTime - this.startTime;
     return this;
   }
-  
+
   /**
    * Zamanlayıcı süresini döndürür
    * @returns Süre (milisaniye)
@@ -56,10 +56,10 @@ export class Timer {
     if (this.duration === null) {
       throw new Error('Timer must be stopped before getting duration');
     }
-    
+
     return this.duration;
   }
-  
+
   /**
    * Zamanlayıcı süresini günlüğe kaydeder
    * @param message - Ek mesaj
@@ -69,7 +69,7 @@ export class Timer {
     if (this.duration === null) {
       this.stop();
     }
-    
+
     logger.info(`${message || this.name} - Süre: ${this.duration!.toFixed(2)} ms`);
     return this;
   }
@@ -86,20 +86,23 @@ type AnyFunction = (...args: any[]) => any;
  */
 export function profileFunction<T extends AnyFunction>(fn: T, name?: string): T {
   const fnName = name || fn.name || 'Anonim Fonksiyon';
-  
-  return (async function(this: any, ...args: Parameters<T>): Promise<ReturnType<T>> {
+
+  return async function (this: any, ...args: Parameters<T>): Promise<ReturnType<T>> {
     const timer = new Timer(fnName).start();
-    
+
     try {
       const result = await fn.apply(this, args);
       timer.stop().log();
       return result;
     } catch (error) {
       timer.stop();
-      logger.error(`${fnName} - Hata:`, { error: (error as Error).message, duration: timer.getDuration() });
+      logger.error(`${fnName} - Hata:`, {
+        error: (error as Error).message,
+        duration: timer.getDuration(),
+      });
       throw error;
     }
-  }) as unknown as T;
+  } as unknown as T;
 }
 
 /**
@@ -108,12 +111,12 @@ export function profileFunction<T extends AnyFunction>(fn: T, name?: string): T 
  */
 export function measureMemoryUsage(): Record<string, number> {
   const memoryUsage = process.memoryUsage();
-  
+
   return {
     rss: Math.round(memoryUsage.rss / 1024 / 1024),
     heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
     heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-    external: Math.round(memoryUsage.external / 1024 / 1024)
+    external: Math.round(memoryUsage.external / 1024 / 1024),
   };
 }
 
@@ -123,12 +126,12 @@ export function measureMemoryUsage(): Record<string, number> {
  */
 export function logMemoryUsage(label = 'Bellek Kullanımı'): void {
   const memory = measureMemoryUsage();
-  
+
   logger.info(`${label}:`, {
-    rss: `${memory.rss} MB`,
-    heapTotal: `${memory.heapTotal} MB`,
-    heapUsed: `${memory.heapUsed} MB`,
-    external: `${memory.external} MB`
+    rss: `${memory['rss']} MB`,
+    heapTotal: `${memory['heapTotal']} MB`,
+    heapUsed: `${memory['heapUsed']} MB`,
+    external: `${memory['external']} MB`,
   });
 }
 
@@ -139,19 +142,20 @@ export function logMemoryUsage(label = 'Bellek Kullanımı'): void {
 export function profileClass<T extends { new (...args: any[]): any }>(target: T): T {
   // Sınıf adını al
   const className = target.name;
-  
+
   // Prototip metodlarını al
   const prototype = target.prototype;
-  const methodNames = Object.getOwnPropertyNames(prototype)
-    .filter(name => name !== 'constructor' && typeof prototype[name] === 'function');
-  
+  const methodNames = Object.getOwnPropertyNames(prototype).filter(
+    (name) => name !== 'constructor' && typeof prototype[name] === 'function'
+  );
+
   // Her metodu profille
   for (const methodName of methodNames) {
     const originalMethod = prototype[methodName];
-    
+
     prototype[methodName] = profileFunction(originalMethod, `${className}.${methodName}`);
   }
-  
+
   return target;
 }
 
@@ -169,9 +173,9 @@ export function profileMethod(
 ): PropertyDescriptor {
   const originalMethod = descriptor.value;
   const className = target.constructor.name;
-  
+
   descriptor.value = profileFunction(originalMethod, `${className}.${propertyKey}`);
-  
+
   return descriptor;
 }
 
@@ -189,21 +193,24 @@ export function profileAsync(
 ): PropertyDescriptor {
   const originalMethod = descriptor.value;
   const className = target.constructor.name;
-  
-  descriptor.value = async function(...args: any[]): Promise<any> {
+
+  descriptor.value = async function (...args: any[]): Promise<any> {
     const timer = new Timer(`${className}.${propertyKey}`).start();
-    
+
     try {
       const result = await originalMethod.apply(this, args);
       timer.stop().log();
       return result;
     } catch (error) {
       timer.stop();
-      logger.error(`${className}.${propertyKey} - Hata:`, { error: (error as Error).message, duration: timer.getDuration() });
+      logger.error(`${className}.${propertyKey} - Hata:`, {
+        error: (error as Error).message,
+        duration: timer.getDuration(),
+      });
       throw error;
     }
   };
-  
+
   return descriptor;
 }
 
@@ -212,11 +219,11 @@ export function profileAsync(
  */
 export class FunctionCallCounter {
   private counts: Map<string, number>;
-  
+
   constructor() {
     this.counts = new Map<string, number>();
   }
-  
+
   /**
    * Fonksiyon çağrı sayısını artırır
    * @param name - Fonksiyon adı
@@ -225,7 +232,7 @@ export class FunctionCallCounter {
     const count = this.counts.get(name) || 0;
     this.counts.set(name, count + 1);
   }
-  
+
   /**
    * Fonksiyon çağrı sayısını döndürür
    * @param name - Fonksiyon adı
@@ -234,28 +241,28 @@ export class FunctionCallCounter {
   getCount(name: string): number {
     return this.counts.get(name) || 0;
   }
-  
+
   /**
    * Tüm fonksiyon çağrı sayılarını döndürür
    * @returns Çağrı sayıları
    */
   getAllCounts(): Record<string, number> {
     const result: Record<string, number> = {};
-    
+
     for (const [name, count] of this.counts.entries()) {
       result[name] = count;
     }
-    
+
     return result;
   }
-  
+
   /**
    * Fonksiyon çağrı sayılarını günlüğe kaydeder
    */
   log(): void {
     logger.info('Fonksiyon Çağrı Sayıları:', this.getAllCounts());
   }
-  
+
   /**
    * Fonksiyon çağrı sayılarını sıfırlar
    */
@@ -275,11 +282,11 @@ export const functionCallCounter = new FunctionCallCounter();
  */
 export function countFunctionCalls<T extends AnyFunction>(fn: T, name?: string): T {
   const fnName = name || fn.name || 'Anonim Fonksiyon';
-  
-  return (function(this: any, ...args: Parameters<T>): ReturnType<T> {
+
+  return function (this: any, ...args: Parameters<T>): ReturnType<T> {
     functionCallCounter.increment(fnName);
     return fn.apply(this, args);
-  }) as unknown as T;
+  } as unknown as T;
 }
 
 // CPU kullanımı ölçüm sonucu arayüzü
@@ -296,25 +303,25 @@ export interface CpuUsageResult {
  * @returns CPU kullanımı
  */
 export async function measureCpuUsage(duration = 5000): Promise<CpuUsageResult> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const startUsage = process.cpuUsage();
     const startTime = process.hrtime.bigint();
-    
+
     setTimeout(() => {
       const endUsage = process.cpuUsage(startUsage);
       const endTime = process.hrtime.bigint();
-      
+
       const elapsedMs = Number(endTime - startTime) / 1000000;
-      
-      const userPercent = (endUsage.user / 1000) / elapsedMs * 100;
-      const systemPercent = (endUsage.system / 1000) / elapsedMs * 100;
+
+      const userPercent = (endUsage.user / 1000 / elapsedMs) * 100;
+      const systemPercent = (endUsage.system / 1000 / elapsedMs) * 100;
       const totalPercent = userPercent + systemPercent;
-      
+
       resolve({
         user: userPercent.toFixed(2),
         system: systemPercent.toFixed(2),
         total: totalPercent.toFixed(2),
-        elapsedMs
+        elapsedMs,
       });
     }, duration);
   });
@@ -327,12 +334,12 @@ export async function measureCpuUsage(duration = 5000): Promise<CpuUsageResult> 
  */
 export async function logCpuUsage(duration = 5000, label = 'CPU Kullanımı'): Promise<void> {
   const cpuUsage = await measureCpuUsage(duration);
-  
+
   logger.info(`${label}:`, {
     user: `${cpuUsage.user}%`,
     system: `${cpuUsage.system}%`,
     total: `${cpuUsage.total}%`,
-    elapsedMs: cpuUsage.elapsedMs
+    elapsedMs: cpuUsage.elapsedMs,
   });
 }
 
@@ -347,5 +354,5 @@ export default {
   functionCallCounter,
   countFunctionCalls,
   measureCpuUsage,
-  logCpuUsage
+  logCpuUsage,
 };

@@ -20,27 +20,27 @@ export const validateRequest = (schema: Joi.Schema) => {
       const dataToValidate = {
         ...req.body,
         ...req.query,
-        ...req.params
+        ...req.params,
       };
 
       // Doğrulama yap
       const { error, value } = schema.validate(dataToValidate, {
         abortEarly: false, // Tüm hataları topla
         stripUnknown: true, // Bilinmeyen alanları kaldır
-        allowUnknown: true // Şemada olmayan alanları kabul et
+        allowUnknown: true, // Şemada olmayan alanları kabul et
       });
 
       if (error) {
         // Hata mesajlarını topla
-        const errorMessages = error.details.map(detail => detail.message).join(', ');
+        const errorMessages = error.details.map((detail) => detail.message).join(', ');
 
         logger.warn('Doğrulama hatası', {
           path: req.path,
           method: req.method,
-          errors: error.details.map(detail => ({
+          errors: error.details.map((detail) => ({
             message: detail.message,
-            path: detail.path
-          }))
+            path: detail.path,
+          })),
         });
 
         throw new ValidationError(errorMessages);
@@ -55,8 +55,8 @@ export const validateRequest = (schema: Joi.Schema) => {
         res.status(400).json({
           success: false,
           error: {
-            message: error.message
-          }
+            message: error.message,
+          },
         });
         return;
       }
@@ -64,14 +64,76 @@ export const validateRequest = (schema: Joi.Schema) => {
       logger.error('Doğrulama sırasında beklenmeyen hata', {
         error: error instanceof Error ? error.message : 'Bilinmeyen hata',
         path: req.path,
-        method: req.method
+        method: req.method,
       });
 
       res.status(500).json({
         success: false,
         error: {
-          message: 'Sunucu hatası'
-        }
+          message: 'Sunucu hatası',
+        },
+      });
+    }
+  };
+};
+
+/**
+ * Şema doğrulama middleware'i
+ *
+ * @param schema - Joi doğrulama şeması
+ * @returns Middleware fonksiyonu
+ */
+export const validateSchema = (schema: Joi.Schema) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      // Sadece istek gövdesini doğrula
+      const { error, value } = schema.validate(req.body, {
+        abortEarly: false, // Tüm hataları topla
+        stripUnknown: true, // Bilinmeyen alanları kaldır
+      });
+
+      if (error) {
+        // Hata mesajlarını topla
+        const errorMessages = error.details.map((detail) => detail.message).join(', ');
+
+        logger.warn('Şema doğrulama hatası', {
+          path: req.path,
+          method: req.method,
+          errors: error.details.map((detail) => ({
+            message: detail.message,
+            path: detail.path,
+          })),
+        });
+
+        throw new ValidationError(errorMessages);
+      }
+
+      // Doğrulanmış değerleri istek nesnesine ekle
+      req.body = value;
+
+      next();
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        res.status(400).json({
+          success: false,
+          error: {
+            message: error.message,
+          },
+        });
+        return;
+      }
+
+      logger.error('Şema doğrulama sırasında beklenmeyen hata', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        path: req.path,
+        method: req.method,
+      });
+
+      res.status(500).json({
+        success: false,
+        error: {
+          message: 'Sunucu hatası',
+        },
       });
     }
   };

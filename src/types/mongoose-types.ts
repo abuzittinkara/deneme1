@@ -10,7 +10,7 @@ import mongoose, {
   QueryWithHelpers,
   FilterQuery,
   UpdateQuery,
-  PipelineStage
+  PipelineStage,
 } from 'mongoose';
 
 /**
@@ -36,7 +36,9 @@ export type TypedModel<T, TQueryHelpers = {}> = mongoose.Model<
  * @template T - Doküman tipi
  * @template TInstanceMethods - Örnek metodları
  */
-export type TypedDocument<T, TInstanceMethods = {}> = Document<unknown, {}, T> & T & TInstanceMethods;
+export type TypedDocument<T, TInstanceMethods = {}> = Document<unknown, {}, T> &
+  T &
+  TInstanceMethods;
 
 /**
  * Mongoose model statik metodları için tip yardımcısı
@@ -64,14 +66,11 @@ export type FullModelType<T, TQueryHelpers = {}, TInstanceMethods = {}> = mongoo
   T,
   TQueryHelpers,
   TInstanceMethods,
-  {},
-  mongoose.Document<unknown, {}, T> & T & TInstanceMethods,
-  mongoose.Schema<T, mongoose.Model<T, TQueryHelpers, TInstanceMethods>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, T>,
-  {},
-  {},
-  {},
-  {},
-  {}
+  any,
+  any,
+  any,
+  any,
+  any
 > & {
   findById(id: ID): Promise<TypedDocument<T> | null>;
   findOne(filter: FilterQuery<T>): Promise<TypedDocument<T> | null>;
@@ -88,12 +87,7 @@ export type FullModelType<T, TQueryHelpers = {}, TInstanceMethods = {}> = mongoo
 /**
  * Mongoose sorgu tipi için basitleştirilmiş tip yardımcısı
  */
-export type TypedQuery<T, TQueryHelpers = {}> = QueryWithHelpers<
-  Array<T>,
-  T,
-  TQueryHelpers,
-  T
->;
+export type TypedQuery<T, TQueryHelpers = {}> = QueryWithHelpers<Array<T>, T, TQueryHelpers, T>;
 
 /**
  * Mongoose tekil sorgu tipi için basitleştirilmiş tip yardımcısı

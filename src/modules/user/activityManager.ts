@@ -33,7 +33,9 @@ export interface ActivityHistoryResult {
  * @param params - Aktivite geçmişi parametreleri
  * @returns Aktivite geçmişi
  */
-export async function getActivityHistory(params: ActivityHistoryParams): Promise<ActivityHistoryResult> {
+export async function getActivityHistory(
+  params: ActivityHistoryParams
+): Promise<ActivityHistoryResult> {
   try {
     const { userId, types, startDate, endDate, limit = 20, skip = 0 } = params;
 
@@ -62,14 +64,15 @@ export async function getActivityHistory(params: ActivityHistoryParams): Promise
     const total = await (UserActivity as any).countDocuments(query);
 
     // Aktiviteleri getir
-    const activities = await (UserActivity as any).find(query)
+    const activities = await (UserActivity as any)
+      .find(query)
       .sort({ timestamp: -1 })
       .skip(skip)
       .limit(limit)
       .populate({
         path: 'target.id',
         select: 'name username content',
-        options: { lean: true }
+        options: { lean: true },
       });
 
     // Aktiviteleri formatla
@@ -79,7 +82,7 @@ export async function getActivityHistory(params: ActivityHistoryParams): Promise
         type: activity.type,
         timestamp: activity.timestamp,
         ipAddress: activity.ipAddress,
-        userAgent: activity.userAgent
+        userAgent: activity.userAgent,
       };
 
       // Hedef bilgisini ekle (varsa)
@@ -87,7 +90,8 @@ export async function getActivityHistory(params: ActivityHistoryParams): Promise
         result.target = {
           type: activity.target.type,
           id: activity.target.id.toString(),
-          name: (activity.target.id as any)?.name || (activity.target.id as any)?.username || 'Unknown'
+          name:
+            (activity.target.id as any)?.name || (activity.target.id as any)?.username || 'Unknown',
         };
       }
 
@@ -102,18 +106,18 @@ export async function getActivityHistory(params: ActivityHistoryParams): Promise
     logger.debug('Kullanıcı aktivite geçmişi getirildi', {
       userId,
       total,
-      found: formattedActivities.length
+      found: formattedActivities.length,
     });
 
     return {
       activities: formattedActivities,
       total,
-      hasMore: skip + formattedActivities.length < total
+      hasMore: skip + formattedActivities.length < total,
     };
   } catch (error) {
     logger.error('Kullanıcı aktivite geçmişi getirme hatası', {
       error: (error as Error).message,
-      userId: params.userId
+      userId: params.userId,
     });
     throw error;
   }
@@ -134,14 +138,16 @@ export async function getMessageActivity(userId: string, limit: number = 20): Pr
     }
 
     // Kanal mesajlarını getir
-    const channelMessages = await (Message as any).find({ user: toObjectId(userId) })
+    const channelMessages = await (Message as any)
+      .find({ user: toObjectId(userId) })
       .sort({ timestamp: -1 })
       .limit(limit / 2)
       .populate('channel', 'name')
       .lean();
 
     // Direkt mesajları getir
-    const directMessages = await (DirectMessage as any).find({ sender: toObjectId(userId) })
+    const directMessages = await (DirectMessage as any)
+      .find({ sender: toObjectId(userId) })
       .sort({ timestamp: -1 })
       .limit(limit / 2)
       .populate('recipient', 'username')
@@ -155,10 +161,10 @@ export async function getMessageActivity(userId: string, limit: number = 20): Pr
       timestamp: message.timestamp,
       channel: {
         id: (message.channel as any)._id.toString(),
-        name: (message.channel as any).name
+        name: (message.channel as any).name,
       },
       isEdited: message.isEdited,
-      isDeleted: message.isDeleted
+      isDeleted: message.isDeleted,
     }));
 
     const formattedDirectMessages = directMessages.map((message: any) => ({
@@ -168,10 +174,10 @@ export async function getMessageActivity(userId: string, limit: number = 20): Pr
       timestamp: message.timestamp,
       recipient: {
         id: (message.recipient as any)._id.toString(),
-        username: (message.recipient as any).username
+        username: (message.recipient as any).username,
       },
       isEdited: message.isEdited,
-      isDeleted: message.isDeleted
+      isDeleted: message.isDeleted,
     }));
 
     // Tüm mesajları birleştir ve tarihe göre sırala
@@ -181,14 +187,14 @@ export async function getMessageActivity(userId: string, limit: number = 20): Pr
 
     logger.debug('Kullanıcı mesaj aktivitesi getirildi', {
       userId,
-      count: allMessages.length
+      count: allMessages.length,
     });
 
     return allMessages;
   } catch (error) {
     logger.error('Kullanıcı mesaj aktivitesi getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -209,10 +215,11 @@ export async function getLoginActivity(userId: string, limit: number = 20): Prom
     }
 
     // Giriş aktivitelerini getir
-    const loginActivities = await (UserActivity as any).find({
-      user: toObjectId(userId),
-      type: ActivityType.LOGIN
-    })
+    const loginActivities = await (UserActivity as any)
+      .find({
+        user: toObjectId(userId),
+        type: ActivityType.LOGIN,
+      })
       .sort({ timestamp: -1 })
       .limit(limit);
 
@@ -223,19 +230,19 @@ export async function getLoginActivity(userId: string, limit: number = 20): Prom
       ipAddress: activity.ipAddress,
       userAgent: activity.userAgent,
       device: activity.metadata?.device,
-      location: activity.metadata?.location
+      location: activity.metadata?.location,
     }));
 
     logger.debug('Kullanıcı giriş aktivitesi getirildi', {
       userId,
-      count: formattedActivities.length
+      count: formattedActivities.length,
     });
 
     return formattedActivities;
   } catch (error) {
     logger.error('Kullanıcı giriş aktivitesi getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -244,5 +251,5 @@ export async function getLoginActivity(userId: string, limit: number = 20): Prom
 export default {
   getActivityHistory,
   getMessageActivity,
-  getLoginActivity
+  getLoginActivity,
 };

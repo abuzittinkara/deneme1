@@ -27,7 +27,7 @@ export class MultiLevelCache {
   constructor(options: CacheOptions = {}) {
     const {
       maxSize = 1000,
-      ttl = 60 * 60 // 1 saat
+      ttl = 60 * 60, // 1 saat
     } = options;
 
     // L1: Bellek içi önbellek
@@ -35,7 +35,7 @@ export class MultiLevelCache {
       max: maxSize,
       ttl: ttl * 1000, // milisaniye cinsinden
       updateAgeOnGet: true,
-      allowStale: false
+      allowStale: false,
     });
 
     // Varsayılan TTL
@@ -191,7 +191,7 @@ export class MultiLevelCache {
     return {
       memorySize: this.memoryCache.size,
       memoryMaxSize: this.memoryCache.max as number,
-      memoryItemCount: this.memoryCache.size
+      memoryItemCount: this.memoryCache.size,
     };
   }
 }
@@ -205,11 +205,11 @@ export const caches = {
   messages: new MultiLevelCache({ maxSize: 1000, ttl: 1800 }),
   groups: new MultiLevelCache({ maxSize: 300, ttl: 3600 }),
   channels: new MultiLevelCache({ maxSize: 500, ttl: 3600 }),
-  notifications: new MultiLevelCache({ maxSize: 500, ttl: 1800 })
+  notifications: new MultiLevelCache({ maxSize: 500, ttl: 1800 }),
 };
 
 export default {
   MultiLevelCache,
   defaultCache,
-  caches
+  caches,
 };

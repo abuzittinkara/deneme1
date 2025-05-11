@@ -1,0 +1,33 @@
+[
+  {
+    "filePath": "src/routes/auth.ts",
+    "messages": [
+      {
+        "ruleId": "security/no-eval",
+        "severity": 2,
+        "message": "Eval can be harmful.",
+        "line": 42,
+        "column": 10
+      },
+      {
+        "ruleId": "security/detect-non-literal-regexp",
+        "severity": 1,
+        "message": "Non-literal RegExp can lead to RegExp Denial of Service (ReDoS) attacks.",
+        "line": 78,
+        "column": 15
+      }
+    ]
+  },
+  {
+    "filePath": "src/utils/validation.ts",
+    "messages": [
+      {
+        "ruleId": "security/detect-object-injection",
+        "severity": 2,
+        "message": "Variable object injection can lead to prototype pollution.",
+        "line": 25,
+        "column": 5
+      }
+    ]
+  }
+]

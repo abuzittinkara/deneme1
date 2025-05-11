@@ -73,7 +73,7 @@ export async function createNotification(
     if (params.target) {
       target = {
         type: params.target.type,
-        id: toObjectId(params.target.id)
+        id: toObjectId(params.target.id),
       };
     }
 
@@ -93,13 +93,13 @@ export async function createNotification(
       isRead: false,
       priority: params.priority || 'normal',
       expiresAt,
-      metadata: params.metadata
+      metadata: params.metadata,
     });
 
     logger.info('Bildirim oluşturuldu', {
       notificationId: notification._id,
       recipientId: params.recipientId,
-      type: params.type
+      type: params.type,
     });
 
     return notification as NotificationDocument;
@@ -107,7 +107,7 @@ export async function createNotification(
     logger.error('Bildirim oluşturma hatası', {
       error: (error as Error).message,
       recipientId: params.recipientId,
-      type: params.type
+      type: params.type,
     });
     throw error;
   }
@@ -118,22 +118,20 @@ export async function createNotification(
  * @param userId - Kullanıcı ID'si
  * @returns Okunmamış bildirimler
  */
-export async function getUnreadNotifications(
-  userId: string
-): Promise<NotificationDocument[]> {
+export async function getUnreadNotifications(userId: string): Promise<NotificationDocument[]> {
   try {
     const notifications = await Notification.findUnreadByUser(toObjectId(userId));
 
     logger.debug('Okunmamış bildirimler getirildi', {
       userId,
-      count: notifications.length
+      count: notifications.length,
     });
 
     return notifications;
   } catch (error) {
     logger.error('Okunmamış bildirimleri getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -151,14 +149,14 @@ export async function markNotificationAsRead(
     await Notification.markAsRead(toObjectId(notificationId));
 
     logger.debug('Bildirim okundu olarak işaretlendi', {
-      notificationId
+      notificationId,
     });
 
     return { success: true };
   } catch (error) {
     logger.error('Bildirimi okundu olarak işaretleme hatası', {
       error: (error as Error).message,
-      notificationId
+      notificationId,
     });
     throw error;
   }
@@ -182,14 +180,14 @@ export async function markAllNotificationsAsRead(
 
     logger.info('Tüm bildirimler okundu olarak işaretlendi', {
       userId,
-      count
+      count,
     });
 
     return { success: true, count };
   } catch (error) {
     logger.error('Tüm bildirimleri okundu olarak işaretleme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -200,9 +198,7 @@ export async function markAllNotificationsAsRead(
  * @param notificationId - Bildirim ID'si
  * @returns İşlem sonucu
  */
-export async function deleteNotification(
-  notificationId: string
-): Promise<{ success: boolean }> {
+export async function deleteNotification(notificationId: string): Promise<{ success: boolean }> {
   try {
     const result = await Notification.deleteOne({ _id: toObjectId(notificationId) });
 
@@ -211,14 +207,14 @@ export async function deleteNotification(
     }
 
     logger.info('Bildirim silindi', {
-      notificationId
+      notificationId,
     });
 
     return { success: true };
   } catch (error) {
     logger.error('Bildirim silme hatası', {
       error: (error as Error).message,
-      notificationId
+      notificationId,
     });
     throw error;
   }
@@ -237,7 +233,7 @@ export async function cleanupExpiredNotifications(): Promise<{ count: number }> 
     return { count: 0 }; // Gerçek sayı döndürülemiyor çünkü deleteExpired() sayı dönmüyor
   } catch (error) {
     logger.error('Süresi dolmuş bildirimleri temizleme hatası', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
     throw error;
   }
@@ -253,20 +249,20 @@ export function formatNotification(notification: NotificationDocument): Notifica
     id: notification._id.toString(),
     recipient: {
       id: notification.recipient.toString(),
-      username: (notification.recipient as any)?.username || 'Unknown'
+      username: (notification.recipient as any)?.username || 'Unknown',
     },
     type: notification.type as NotificationType,
     content: notification.content,
     isRead: notification.isRead,
     createdAt: notification.createdAt,
-    priority: notification.priority as 'low' | 'normal' | 'high'
+    priority: notification.priority as 'low' | 'normal' | 'high',
   };
 
   // Gönderen bilgisini ekle (varsa)
   if (notification.sender) {
     result.sender = {
       id: notification.sender.toString(),
-      username: (notification.sender as any)?.username || 'Unknown'
+      username: (notification.sender as any)?.username || 'Unknown',
     };
   }
 
@@ -289,5 +285,5 @@ export default {
   markAllNotificationsAsRead,
   deleteNotification,
   cleanupExpiredNotifications,
-  formatNotification
+  formatNotification,
 };

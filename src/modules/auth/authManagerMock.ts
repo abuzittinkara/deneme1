@@ -2,12 +2,12 @@
  * src/modules/auth/authManagerMock.ts
  * Kimlik doğrulama işlemleri için mock fonksiyonlar
  */
-import { 
-  UserRegistrationData, 
-  RegistrationResult, 
-  LoginResult, 
-  TokenRefreshResult, 
-  LogoutResult 
+import {
+  UserRegistrationData,
+  RegistrationResult,
+  LoginResult,
+  TokenRefreshResult,
+  LogoutResult,
 } from './authManager';
 
 /**
@@ -20,7 +20,7 @@ export async function registerUser(userData: UserRegistrationData): Promise<Regi
     success: true,
     userId: '123456789',
     username: userData.username,
-    message: 'Kullanıcı başarıyla kaydedildi'
+    message: 'Kullanıcı başarıyla kaydedildi',
   };
 }
 
@@ -34,7 +34,7 @@ export async function loginUser(usernameOrEmail: string, password: string): Prom
   if (password === 'WrongPassword') {
     throw new Error('Geçersiz kullanıcı adı/e-posta veya şifre');
   }
-  
+
   return {
     success: true,
     userId: '123456789',
@@ -45,7 +45,7 @@ export async function loginUser(usernameOrEmail: string, password: string): Prom
     role: 'user',
     accessToken: 'access-token',
     refreshToken: 'refresh-token',
-    expiresIn: 3600
+    expiresIn: 3600,
   };
 }
 
@@ -58,12 +58,12 @@ export async function refreshToken(refreshToken: string): Promise<TokenRefreshRe
   if (refreshToken === 'invalid-refresh-token') {
     throw new Error('Geçersiz refresh token');
   }
-  
+
   return {
     success: true,
     accessToken: 'new-access-token',
     refreshToken: 'new-refresh-token',
-    expiresIn: 3600
+    expiresIn: 3600,
   };
 }
 
@@ -75,6 +75,6 @@ export async function refreshToken(refreshToken: string): Promise<TokenRefreshRe
 export async function logoutUser(refreshToken?: string): Promise<LogoutResult> {
   return {
     success: true,
-    message: 'Çıkış başarılı'
+    message: 'Çıkış başarılı',
   };
 }

@@ -18,19 +18,19 @@ export function asyncHandler(handler: AsyncControllerHandler) {
     try {
       // İşlem başlangıç zamanı (performans izleme için)
       const startTime = Date.now();
-      
+
       // İşleyiciyi çağır
       await handler(req, res, next);
-      
+
       // İşlem süresini hesapla
       const duration = Date.now() - startTime;
-      
+
       // Yavaş işlemleri logla (100ms'den uzun süren)
       if (duration > 100) {
         logger.debug('Yavaş controller işlemi', {
           path: req.path,
           method: req.method,
-          duration: `${duration}ms`
+          duration: `${duration}ms`,
         });
       }
     } catch (error) {
@@ -51,7 +51,7 @@ export function sendSuccess(res: Response, data: any, statusCode = 200, meta?: a
   return res.status(statusCode).json({
     success: true,
     data,
-    ...(meta && { meta })
+    ...(meta && { meta }),
   });
 }
 
@@ -68,8 +68,8 @@ export function sendError(res: Response, message: string, statusCode = 400, deta
     error: {
       message,
       statusCode,
-      ...(details && { details })
-    }
+      ...(details && { details }),
+    },
   });
 }
 
@@ -81,13 +81,13 @@ export function sendError(res: Response, message: string, statusCode = 400, deta
  */
 export function validateRequest(req: Request, requiredFields: string[]): string | null {
   const missingFields: string[] = [];
-  
+
   for (const field of requiredFields) {
     // Nokta notasyonu ile iç içe alanları kontrol et (örn: "user.name")
     if (field.includes('.')) {
       const parts = field.split('.');
       let value = req.body;
-      
+
       for (const part of parts) {
         if (!value || value[part] === undefined) {
           missingFields.push(field);
@@ -99,11 +99,11 @@ export function validateRequest(req: Request, requiredFields: string[]): string 
       missingFields.push(field);
     }
   }
-  
+
   if (missingFields.length > 0) {
     return `Eksik alanlar: ${missingFields.join(', ')}`;
   }
-  
+
   return null;
 }
 
@@ -111,5 +111,5 @@ export default {
   asyncHandler,
   sendSuccess,
   sendError,
-  validateRequest
+  validateRequest,
 };

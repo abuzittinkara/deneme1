@@ -22,22 +22,22 @@ const friendRequestSchema = new Schema<FriendRequestDocument>(
     sender: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     receiver: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
     },
     status: {
       type: String,
       enum: ['pending', 'accepted', 'rejected'],
       default: 'pending',
-      required: true
-    }
+      required: true,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -47,9 +47,7 @@ friendRequestSchema.index({ sender: 1, status: 1 });
 friendRequestSchema.index({ receiver: 1, status: 1 });
 
 // Model arayüzü
-export interface FriendRequestModel extends mongoose.Model<FriendRequestDocument> {
-  // Özel model metodları buraya eklenebilir
-}
+export type FriendRequestModel = mongoose.Model<FriendRequestDocument>;
 
 // Model oluştur
 let FriendRequest: FriendRequestModel;
@@ -68,7 +66,9 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as FriendRequestModel;
 } else {
   // Gerçek model
-  FriendRequest = mongoose.model<FriendRequestDocument, FriendRequestModel>('FriendRequest', friendRequestSchema);
+  FriendRequest =
+    (mongoose.models['FriendRequest'] as FriendRequestModel) ||
+    mongoose.model<FriendRequestDocument, FriendRequestModel>('FriendRequest', friendRequestSchema);
 }
 
 export default FriendRequest;

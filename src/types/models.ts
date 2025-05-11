@@ -4,7 +4,15 @@
  */
 
 import { Document, Types } from 'mongoose';
-import { ID, UserStatus, UserRole, ChannelType, MessageType, NotificationTypes, FileType } from './common';
+import {
+  ID,
+  UserStatus,
+  UserRole,
+  ChannelType,
+  MessageType,
+  NotificationTypes,
+  FileType,
+} from './common';
 import { FullModelType, TypedDocument } from './mongoose-types';
 
 // Kullanıcı
@@ -52,7 +60,7 @@ export interface IGroup {
   updatedAt?: Date;
 }
 
-export interface GroupDocument extends TypedDocument<IGroup> {}
+export type GroupDocument = TypedDocument<IGroup>;
 
 export interface GroupModel extends FullModelType<GroupDocument> {
   findByName(name: string): Promise<GroupDocument | null>;
@@ -67,7 +75,7 @@ export interface IGroupMember {
   lastActive: Date;
 }
 
-export interface GroupMemberDocument extends TypedDocument<IGroupMember> {}
+export type GroupMemberDocument = TypedDocument<IGroupMember>;
 
 export interface GroupMemberModel extends FullModelType<GroupMemberDocument> {
   findByUserAndGroup(userId: ID, groupId: ID): Promise<GroupMemberDocument | null>;
@@ -85,7 +93,7 @@ export interface IRole {
   updatedAt?: Date;
 }
 
-export interface RoleDocument extends TypedDocument<IRole> {}
+export type RoleDocument = TypedDocument<IRole>;
 
 export interface RoleModel extends FullModelType<RoleDocument> {
   findByNameAndGroup(name: string, groupId: ID): Promise<RoleDocument | null>;
@@ -101,7 +109,7 @@ export interface ICategory {
   updatedAt?: Date;
 }
 
-export interface CategoryDocument extends TypedDocument<ICategory> {}
+export type CategoryDocument = TypedDocument<ICategory>;
 
 export interface CategoryModel extends FullModelType<CategoryDocument> {
   findByNameAndGroup(name: string, groupId: ID): Promise<CategoryDocument | null>;
@@ -121,7 +129,7 @@ export interface IChannel {
   updatedAt?: Date;
 }
 
-export interface ChannelDocument extends TypedDocument<IChannel> {}
+export type ChannelDocument = TypedDocument<IChannel>;
 
 export interface ChannelModel extends FullModelType<ChannelDocument> {
   findByNameAndGroup(name: string, groupId: ID): Promise<ChannelDocument | null>;
@@ -288,7 +296,12 @@ export interface UserActivityDocument extends Document {
 }
 
 export interface UserActivityModel extends FullModelType<UserActivityDocument> {
-  logActivity(data: { user: ID, type: string, target?: ID, metadata?: any }): Promise<UserActivityDocument>;
+  logActivity(data: {
+    user: ID;
+    type: string;
+    target?: ID;
+    metadata?: any;
+  }): Promise<UserActivityDocument>;
   findByUser(userId: ID, limit?: number): Promise<UserActivityDocument[]>;
   findByType(type: string, limit?: number): Promise<UserActivityDocument[]>;
   findByTarget(targetId: ID, limit?: number): Promise<UserActivityDocument[]>;

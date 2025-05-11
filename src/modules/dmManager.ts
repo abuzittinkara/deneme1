@@ -70,11 +70,11 @@ export async function sendDMMessage(
     }
 
     // Engellenmiş mi kontrol et
-    if (receiverDoc.blocked.some(id => objectIdEquals(id, senderDoc._id))) {
+    if (receiverDoc.blocked.some((id) => objectIdEquals(id, senderDoc._id))) {
       throw new ForbiddenError('Bu kullanıcı sizi engellemiş.');
     }
 
-    if (senderDoc.blocked.some(id => objectIdEquals(id, receiverDoc._id))) {
+    if (senderDoc.blocked.some((id) => objectIdEquals(id, receiverDoc._id))) {
       throw new ForbiddenError('Bu kullanıcıyı engellemişsiniz.');
     }
 
@@ -86,7 +86,7 @@ export async function sendDMMessage(
       sender: toObjectId(senderDoc._id),
       receiver: toObjectId(receiverDoc._id),
       content: formattedContent,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // Dosya eki varsa ekle
@@ -99,7 +99,7 @@ export async function sendDMMessage(
     logger.info('DM mesajı gönderildi', {
       sender: senderUsername,
       receiver: receiverUsername,
-      messageId: newMessage._id
+      messageId: newMessage._id,
     });
 
     // Mesaj bilgilerini döndür
@@ -109,13 +109,13 @@ export async function sendDMMessage(
       timestamp: newMessage.timestamp,
       sender: senderUsername,
       receiver: receiverUsername,
-      attachments: fileAttachment ? [fileAttachment] : []
+      attachments: fileAttachment ? [fileAttachment] : [],
     };
   } catch (error) {
     logger.error('DM mesajı gönderme hatası', {
       error: (error as Error).message,
       sender: senderUsername,
-      receiver: receiverUsername
+      receiver: receiverUsername,
     });
     throw error;
   }
@@ -145,52 +145,60 @@ export async function getDMHistory(
     }
 
     // Mesajları getir
-    const messages = await DmMessageHelper.find({
-      $or: [
-        { sender: toObjectId(user1._id), receiver: toObjectId(user2._id) },
-        { sender: toObjectId(user2._id), receiver: toObjectId(user1._id) }
-      ]
-    }, null, {
-      sort: { timestamp: -1 },
-      skip,
-      limit,
-      populate: [
-        { path: 'sender', select: 'username' },
-        { path: 'receiver', select: 'username' },
-        { path: 'attachments' }
-      ]
-    });
+    const messages = await DmMessageHelper.find(
+      {
+        $or: [
+          { sender: toObjectId(user1._id), receiver: toObjectId(user2._id) },
+          { sender: toObjectId(user2._id), receiver: toObjectId(user1._id) },
+        ],
+      },
+      null,
+      {
+        sort: { timestamp: -1 },
+        skip,
+        limit,
+        populate: [
+          { path: 'sender', select: 'username' },
+          { path: 'receiver', select: 'username' },
+          { path: 'attachments' },
+        ],
+      }
+    );
 
     logger.info('DM geçmişi getirildi', {
       user1: username1,
       user2: username2,
-      count: messages.length
+      count: messages.length,
     });
 
     // Mesajları formatla
-    return messages.map(msg => ({
-      id: toObjectId(msg._id),
-      content: msg.content,
-      timestamp: msg.timestamp,
-      sender: (msg.sender as any).username,
-      receiver: (msg.receiver as any).username,
-      isEdited: msg.isEdited,
-      editedAt: msg.editedAt,
-      isDeleted: msg.isDeleted,
-      attachments: msg.attachments ? (msg.attachments as any).map((att: any) => ({
-        id: toObjectId(att._id),
-        fileId: toObjectId(att._id),
-        fileName: att.originalName,
-        filePath: att.path,
-        fileType: att.mimeType,
-        fileSize: att.size
-      })) : []
-    })).reverse(); // En eski mesajlar önce gelsin
+    return messages
+      .map((msg) => ({
+        id: toObjectId(msg._id),
+        content: msg.content,
+        timestamp: msg.timestamp,
+        sender: (msg.sender as any).username,
+        receiver: (msg.receiver as any).username,
+        isEdited: msg.isEdited,
+        editedAt: msg.editedAt,
+        isDeleted: msg.isDeleted,
+        attachments: msg.attachments
+          ? (msg.attachments as any).map((att: any) => ({
+            id: toObjectId(att._id),
+            fileId: toObjectId(att._id),
+            fileName: att.originalName,
+            filePath: att.path,
+            fileType: att.mimeType,
+            fileSize: att.size,
+          }))
+          : [],
+      }))
+      .reverse(); // En eski mesajlar önce gelsin
   } catch (error) {
     logger.error('DM geçmişi getirme hatası', {
       error: (error as Error).message,
       user1: username1,
-      user2: username2
+      user2: username2,
     });
     throw error;
   }
@@ -210,18 +218,19 @@ export async function getUserDMChats(username: string): Promise<ChatInfo[]> {
     }
 
     // Bu kullanıcının gönderdiği veya aldığı tüm mesajları bul
-    const messages = await DmMessageHelper.find({
-      $or: [
-        { sender: toObjectId(user._id) },
-        { receiver: toObjectId(user._id) }
-      ]
-    }, null, {
-      sort: { timestamp: -1 },
-      populate: [
-        { path: 'sender', select: 'username' },
-        { path: 'receiver', select: 'username' }
-      ]
-    });
+    const messages = await DmMessageHelper.find(
+      {
+        $or: [{ sender: toObjectId(user._id) }, { receiver: toObjectId(user._id) }],
+      },
+      null,
+      {
+        sort: { timestamp: -1 },
+        populate: [
+          { path: 'sender', select: 'username' },
+          { path: 'receiver', select: 'username' },
+        ],
+      }
+    );
 
     // Benzersiz sohbetleri bul
     const chats = new Map<string, ChatInfo>();
@@ -236,22 +245,22 @@ export async function getUserDMChats(username: string): Promise<ChatInfo[]> {
           lastMessage: {
             content: msg.content,
             timestamp: msg.timestamp,
-            isFromMe: isSender
-          }
+            isFromMe: isSender,
+          },
         });
       }
     }
 
     logger.info('Kullanıcı DM sohbetleri getirildi', {
       username,
-      count: chats.size
+      count: chats.size,
     });
 
     return Array.from(chats.values());
   } catch (error) {
     logger.error('Kullanıcı DM sohbetleri getirme hatası', {
       error: (error as Error).message,
-      username
+      username,
     });
     throw error;
   }
@@ -260,5 +269,5 @@ export async function getUserDMChats(username: string): Promise<ChatInfo[]> {
 export default {
   sendDMMessage,
   getDMHistory,
-  getUserDMChats
+  getUserDMChats,
 };

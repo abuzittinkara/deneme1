@@ -13,9 +13,9 @@ import { measurePerformanceAsync } from '../../utils/performance';
  */
 export function registerMessageHandlers(
   socket: TypedSocket,
-  dependencies: any
+  dependencies: Record<string, any>
 ): void {
-  const { messageManager, richTextFormatter, notificationManager } = dependencies;
+  const { messageManager, richTextFormatter, notificationManager, messageService } = dependencies;
   const userId = socket.data.userId;
   const username = socket.data.username;
 
@@ -23,37 +23,77 @@ export function registerMessageHandlers(
    * Mesaj gönderme olayı
    */
   socket.on('message:send', async (data) => {
-    const { content, channelId, type = 'text', attachments = [] } = data;
+    const { content, channelId, quotedMessageId, mentions = [], attachments = [] } = data;
 
     try {
       // Mesaj içeriğini işle (zengin metin, emoji, bahsetmeler vb.)
-      const processedContent = await richTextFormatter.processContent(content);
+      let processedContent = content;
+      if (richTextFormatter && typeof richTextFormatter.processContent === 'function') {
+        processedContent = await richTextFormatter.processContent(content);
+      }
 
       // Mesajı veritabanına kaydet
-      const message = await measurePerformanceAsync(
-        async () => {
+      let message;
+
+      if (messageService) {
+        // Yeni servis kullan
+        message = await measurePerformanceAsync(async () => {
+          return await messageService.createMessage({
+            channelId,
+            userId,
+            content: processedContent,
+            quotedMessageId,
+            mentions,
+            attachments,
+          });
+        }, 'Mesaj oluşturma (yeni servis)');
+      } else if (messageManager) {
+        // Eski modülü kullan
+        message = await measurePerformanceAsync(async () => {
           return await messageManager.createMessage({
             content: processedContent,
             channelId,
             senderId: userId,
-            type,
-            attachments
+            type: 'text',
+            attachments,
           });
-        },
-        'Mesaj oluşturma'
-      );
+        }, 'Mesaj oluşturma (eski modül)');
+      } else {
+        throw new Error('Mesaj servisi bulunamadı');
+      }
 
       // Mesajı kanaldaki diğer kullanıcılara gönder
-      socket.to(channelId).emit('message:new', { message });
+      socket.to(channelId).emit('message:new', {
+        message: {
+          id: message._id || message.id,
+          channelId,
+          content: processedContent,
+          sender: {
+            id: userId,
+            username,
+          },
+          attachments,
+          createdAt: message.createdAt || message.timestamp || new Date().toISOString(),
+          quotedMessageId,
+          mentions,
+        },
+      });
+
+      // Yazıyor... durumunu temizle
+      socket.to(channelId).emit('user:typing', {
+        channelId,
+        userId,
+        isTyping: false,
+      });
 
       // Bahsedilen kullanıcılara bildirim gönder
-      if (message.mentions && message.mentions.length > 0) {
-        for (const mentionedUser of message.mentions) {
+      if (mentions && mentions.length > 0 && notificationManager) {
+        for (const mentionedUser of mentions) {
           notificationManager.createMentionNotification(
             mentionedUser.toString(),
             userId,
             channelId,
-            message._id.toString()
+            message._id ? message._id.toString() : message.id
           );
         }
       }
@@ -62,19 +102,19 @@ export function registerMessageHandlers(
         userId,
         username,
         channelId,
-        messageId: message._id.toString()
+        messageId: message._id ? message._id.toString() : message.id,
       });
     } catch (error) {
       logger.error('Mesaj gönderme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        channelId
+        channelId,
       });
 
       socket.emit('error', {
         message: 'Mesaj gönderilemedi',
-        code: 'MESSAGE_SEND_ERROR'
+        code: 'MESSAGE_SEND_ERROR',
       });
     }
   });
@@ -87,43 +127,67 @@ export function registerMessageHandlers(
 
     try {
       // Mesaj içeriğini işle
-      const processedContent = await richTextFormatter.processContent(content);
+      let processedContent = content;
+      if (richTextFormatter && typeof richTextFormatter.processContent === 'function') {
+        processedContent = await richTextFormatter.processContent(content);
+      }
 
       // Mesajı güncelle
-      const updatedMessage = await measurePerformanceAsync(
-        async () => {
+      let updatedMessage;
+
+      if (messageService) {
+        // Yeni servis kullan
+        updatedMessage = await measurePerformanceAsync(async () => {
+          return await messageService.updateMessage(
+            messageId,
+            { content: processedContent },
+            userId
+          );
+        }, 'Mesaj güncelleme (yeni servis)');
+      } else if (messageManager) {
+        // Eski modülü kullan
+        updatedMessage = await measurePerformanceAsync(async () => {
           return await messageManager.updateMessage(messageId, userId, processedContent);
-        },
-        'Mesaj güncelleme'
-      );
+        }, 'Mesaj güncelleme (eski modül)');
+      } else {
+        throw new Error('Mesaj servisi bulunamadı');
+      }
 
       if (!updatedMessage) {
         throw new Error('Mesaj güncellenemedi');
       }
 
       // Mesajın bulunduğu kanala güncelleme bilgisini gönder
-      socket.to(updatedMessage.channel.toString()).emit('message:update', {
+      const channelId = updatedMessage.channel
+        ? updatedMessage.channel.toString()
+        : updatedMessage.channelId;
+
+      socket.to(channelId).emit('message:update', {
         messageId,
         content: processedContent,
-        updatedAt: updatedMessage.updatedAt.toISOString()
+        updatedAt: updatedMessage.updatedAt
+          ? updatedMessage.updatedAt.toISOString()
+          : new Date().toISOString(),
+        isEdited: true,
       });
 
       logger.debug('Mesaj güncellendi', {
         userId,
         username,
-        messageId
+        messageId,
+        channelId,
       });
     } catch (error) {
       logger.error('Mesaj güncelleme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        messageId
+        messageId,
       });
 
       socket.emit('error', {
         message: 'Mesaj güncellenemedi',
-        code: 'MESSAGE_UPDATE_ERROR'
+        code: 'MESSAGE_UPDATE_ERROR',
       });
     }
   });
@@ -136,39 +200,66 @@ export function registerMessageHandlers(
 
     try {
       // Mesajı sil
-      const deletedMessage = await measurePerformanceAsync(
-        async () => {
-          return await messageManager.deleteMessage(messageId, userId);
-        },
-        'Mesaj silme'
-      );
+      let deletedMessage;
+      let success = false;
 
-      if (!deletedMessage) {
+      if (messageService) {
+        // Yeni servis kullan
+        success = await measurePerformanceAsync(async () => {
+          return await messageService.deleteMessage(messageId, userId);
+        }, 'Mesaj silme (yeni servis)');
+
+        // Mesaj bilgilerini al
+        if (success) {
+          deletedMessage = await messageService.getMessageById(messageId);
+        }
+      } else if (messageManager) {
+        // Eski modülü kullan
+        deletedMessage = await measurePerformanceAsync(async () => {
+          return await messageManager.deleteMessage(messageId, userId);
+        }, 'Mesaj silme (eski modül)');
+
+        success = !!deletedMessage;
+      } else {
+        throw new Error('Mesaj servisi bulunamadı');
+      }
+
+      if (!success && !deletedMessage) {
         throw new Error('Mesaj silinemedi');
       }
 
       // Mesajın bulunduğu kanala silme bilgisini gönder
-      socket.to(deletedMessage.channel.toString()).emit('message:delete', {
-        messageId,
-        channelId: deletedMessage.channel.toString()
-      });
+      const channelId =
+        deletedMessage && deletedMessage.channel
+          ? deletedMessage.channel.toString()
+          : deletedMessage
+            ? deletedMessage.channelId
+            : null;
+
+      if (channelId) {
+        socket.to(channelId).emit('message:delete', {
+          messageId,
+          channelId,
+        });
+      }
 
       logger.debug('Mesaj silindi', {
         userId,
         username,
-        messageId
+        messageId,
+        channelId,
       });
     } catch (error) {
       logger.error('Mesaj silme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        messageId
+        messageId,
       });
 
       socket.emit('error', {
         message: 'Mesaj silinemedi',
-        code: 'MESSAGE_DELETE_ERROR'
+        code: 'MESSAGE_DELETE_ERROR',
       });
     }
   });
@@ -181,31 +272,28 @@ export function registerMessageHandlers(
 
     try {
       // Mesajı okundu olarak işaretle
-      await measurePerformanceAsync(
-        async () => {
-          await messageManager.markMessageAsRead(messageId, userId);
-        },
-        'Mesaj okundu işaretleme'
-      );
+      await measurePerformanceAsync(async () => {
+        await messageManager.markMessageAsRead(messageId, userId);
+      }, 'Mesaj okundu işaretleme');
 
       // Kanaldaki diğer kullanıcılara okundu bilgisini gönder
       socket.to(channelId).emit('message:read', {
         messageId,
         userId,
-        username
+        username,
       });
 
       logger.debug('Mesaj okundu işaretlendi', {
         userId,
         username,
-        messageId
+        messageId,
       });
     } catch (error) {
       logger.error('Mesaj okundu işaretleme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        messageId
+        messageId,
       });
     }
   });
@@ -218,26 +306,49 @@ export function registerMessageHandlers(
 
     try {
       // Mesaja tepki ekle
-      const reaction = await measurePerformanceAsync(
-        async () => {
-          return await messageManager.addReaction(messageId, userId, emoji);
-        },
-        'Mesaj tepki ekleme'
-      );
+      let success = false;
 
-      if (!reaction) {
+      if (messageService) {
+        // Yeni servis kullan
+        success = await measurePerformanceAsync(async () => {
+          return await messageService.addReaction(messageId, userId, emoji);
+        }, 'Mesaj tepki ekleme (yeni servis)');
+      } else if (messageManager) {
+        // Eski modülü kullan
+        const reaction = await measurePerformanceAsync(async () => {
+          return await messageManager.addReaction(messageId, userId, emoji);
+        }, 'Mesaj tepki ekleme (eski modül)');
+
+        success = !!reaction;
+      } else {
+        throw new Error('Mesaj servisi bulunamadı');
+      }
+
+      if (!success) {
         throw new Error('Tepki eklenemedi');
       }
 
       // Mesajın bulunduğu kanala tepki bilgisini gönder
-      const message = await messageManager.getMessage(messageId);
+      let channelId;
 
-      if (message) {
-        socket.to(message.channel.toString()).emit('message:reaction', {
+      if (messageService) {
+        const message = await messageService.getMessageById(messageId);
+        if (message) {
+          channelId = message.channel ? message.channel.toString() : message.channelId;
+        }
+      } else if (messageManager) {
+        const message = await messageManager.getMessage(messageId);
+        if (message) {
+          channelId = message.channel.toString();
+        }
+      }
+
+      if (channelId) {
+        socket.to(channelId).emit('message:reaction', {
           messageId,
           userId,
           username,
-          emoji
+          emoji,
         });
       }
 
@@ -245,7 +356,8 @@ export function registerMessageHandlers(
         userId,
         username,
         messageId,
-        emoji
+        emoji,
+        channelId,
       });
     } catch (error) {
       logger.error('Mesaj tepki ekleme hatası', {
@@ -253,12 +365,117 @@ export function registerMessageHandlers(
         userId,
         username,
         messageId,
-        emoji
+        emoji,
       });
 
       socket.emit('error', {
         message: 'Tepki eklenemedi',
-        code: 'REACTION_ADD_ERROR'
+        code: 'REACTION_ADD_ERROR',
+      });
+    }
+  });
+
+  /**
+   * Yazıyor... olayı
+   */
+  socket.on('user:typing', async (data) => {
+    const { channelId, isTyping } = data;
+
+    try {
+      // Kanaldaki diğer kullanıcılara yazıyor bilgisini gönder
+      socket.to(channelId).emit('user:typing', {
+        channelId,
+        userId,
+        username,
+        isTyping,
+      });
+
+      logger.debug('Yazıyor durumu güncellendi', {
+        userId,
+        username,
+        channelId,
+        isTyping,
+      });
+    } catch (error) {
+      logger.error('Yazıyor durumu güncelleme hatası', {
+        error: (error as Error).message,
+        userId,
+        username,
+        channelId,
+      });
+    }
+  });
+
+  /**
+   * Mesaj tepkisini kaldırma olayı
+   */
+  socket.on('message:reaction:remove', async (data) => {
+    const { messageId, emoji } = data;
+
+    try {
+      // Mesajdan tepkiyi kaldır
+      let success = false;
+
+      if (messageService) {
+        // Yeni servis kullan
+        success = await measurePerformanceAsync(async () => {
+          return await messageService.removeReaction(messageId, userId, emoji);
+        }, 'Mesaj tepki kaldırma (yeni servis)');
+      } else if (messageManager && messageManager.removeReaction) {
+        // Eski modülü kullan (eğer metot varsa)
+        success = await measurePerformanceAsync(async () => {
+          return await messageManager.removeReaction(messageId, userId, emoji);
+        }, 'Mesaj tepki kaldırma (eski modül)');
+      } else {
+        throw new Error('Mesaj servisi bulunamadı veya tepki kaldırma metodu yok');
+      }
+
+      if (!success) {
+        throw new Error('Tepki kaldırılamadı');
+      }
+
+      // Mesajın bulunduğu kanala tepki kaldırma bilgisini gönder
+      let channelId;
+
+      if (messageService) {
+        const message = await messageService.getMessageById(messageId);
+        if (message) {
+          channelId = message.channel ? message.channel.toString() : message.channelId;
+        }
+      } else if (messageManager) {
+        const message = await messageManager.getMessage(messageId);
+        if (message) {
+          channelId = message.channel.toString();
+        }
+      }
+
+      if (channelId) {
+        socket.to(channelId).emit('message:reaction:remove', {
+          messageId,
+          userId,
+          emoji,
+        });
+      }
+
+      logger.debug('Mesajdan tepki kaldırıldı', {
+        userId,
+        username,
+        messageId,
+        emoji,
+        channelId,
+      });
+    } catch (error) {
+      logger.error('Mesaj tepki kaldırma hatası', {
+        error: (error as Error).message,
+        userId,
+        username,
+        messageId,
+        emoji,
+      });
+
+      socket.emit('error', {
+        message: 'Tepki kaldırılamadı',
+        code: 'REACTION_REMOVE_ERROR',
       });
     }
   });

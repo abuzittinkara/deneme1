@@ -6,7 +6,7 @@
 import { ID, UserStatus, MessageType } from './common';
 import { UserResponse, MessageResponse, ChannelResponse, GroupResponse } from './api';
 import { Server, Socket } from 'socket.io';
-import { DefaultEventsMap } from 'socket.io/dist/typed-events';
+import { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 import { UserSession, GroupUser } from './app';
 import { TokenPayload } from '../config/jwt';
 import { JwtPayload } from '../utils/jwt';
@@ -173,8 +173,18 @@ export interface SocketData {
 /**
  * Tip güvenli soket ve sunucu
  */
-export type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
-export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
+export type TypedSocket = Socket<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  DefaultEventsMap,
+  SocketData
+>;
+export type TypedServer = Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  DefaultEventsMap,
+  SocketData
+>;
 
 /**
  * Kimlik doğrulama ile genişletilmiş socket arayüzü
@@ -222,6 +232,41 @@ export interface CallEndEvent {
   callId: ID;
 }
 
+// WebRTC sinyalleşme olayları
+export interface CallSignalOfferEvent {
+  callId: ID;
+  senderId: ID;
+  receiverId: ID;
+  sdp: RTCSessionDescriptionInit;
+}
+
+export interface CallSignalAnswerEvent {
+  callId: ID;
+  senderId: ID;
+  receiverId: ID;
+  sdp: RTCSessionDescriptionInit;
+}
+
+export interface CallSignalIceCandidateEvent {
+  callId: ID;
+  senderId: ID;
+  receiverId: ID;
+  candidate: RTCIceCandidateInit;
+}
+
+export interface CallMediaStateEvent {
+  callId: ID;
+  userId: ID;
+  audio: boolean;
+  video: boolean;
+}
+
+export interface CallScreenShareEvent {
+  callId: ID;
+  userId: ID;
+  active: boolean;
+}
+
 // Socket.IO istemci olayları
 export interface ClientToServerEvents {
   // Bağlantı olayları
@@ -232,28 +277,44 @@ export interface ClientToServerEvents {
 
   // Kullanıcı olayları
   'user:status': (data: { status: UserStatus }) => void;
-  typing: (data: { channelId: ID, isTyping: boolean }) => void;
+  typing: (data: { channelId: ID; isTyping: boolean }) => void;
   toggleMic: (enabled: boolean, callback: (error?: any, data?: any) => void) => void;
   toggleDeafen: (deafened: boolean, callback: (error?: any, data?: any) => void) => void;
   startScreenShare: (callback: (error?: any, data?: any) => void) => void;
   stopScreenShare: (callback: (error?: any, data?: any) => void) => void;
 
   // Mesaj olayları
-  'message:send': (data: { content: string, channelId: ID, type?: MessageType, attachments?: string[] }) => void;
-  'message:edit': (data: { messageId: ID, content: string }) => void;
+  'message:send': (data: {
+    content: string;
+    channelId: ID;
+    type?: MessageType;
+    attachments?: string[];
+  }) => void;
+  'message:edit': (data: { messageId: ID; content: string }) => void;
   'message:delete': (data: { messageId: ID }) => void;
-  'message:read': (data: { messageId: ID, channelId: ID }) => void;
-  'message:reaction': (data: { messageId: ID, emoji: string }) => void;
-  sendMessage: (data: { channelId: string; message: string }, callback: (error?: any, data?: any) => void) => void;
+  'message:read': (data: { messageId: ID; channelId: ID }) => void;
+  'message:reaction': (data: { messageId: ID; emoji: string }) => void;
+  sendMessage: (
+    data: { channelId: string; message: string },
+    callback: (error?: any, data?: any) => void
+  ) => void;
   deleteMessage: (data: { messageId: string }, callback: (error?: any, data?: any) => void) => void;
-  editMessage: (data: { messageId: string; content: string }, callback: (error?: any, data?: any) => void) => void;
+  editMessage: (
+    data: { messageId: string; content: string },
+    callback: (error?: any, data?: any) => void
+  ) => void;
 
   // Kanal olayları
   'channel:join': (data: { channelId: ID }) => void;
   'channel:leave': (data: { channelId: ID }) => void;
   joinRoom: (groupId: string, roomId: string, callback: (error?: any, data?: any) => void) => void;
   leaveRoom: (callback: (error?: any) => void) => void;
-  createRoom: (groupId: string, roomName: string, roomType: string, callback: (error?: any, data?: any) => void) => void;
+  createRoom: (
+    groupId: string,
+    roomName: string,
+    roomType: string,
+    callback: (error?: any, data?: any) => void
+  ) => void;
 
   // Grup olayları
   'group:join': (data: { groupId: ID }) => void;
@@ -272,13 +333,35 @@ export interface ClientToServerEvents {
   rejectFriendRequest: (username: string, callback: (error?: any, data?: any) => void) => void;
 
   // DM olayları
-  sendDM: (data: { to: string; message: string }, callback: (error?: any, data?: any) => void) => void;
+  sendDM: (
+    data: { to: string; message: string },
+    callback: (error?: any, data?: any) => void
+  ) => void;
 
   // Sesli/görüntülü görüşme olayları
   'call:start': (data: { channelId: ID }) => void;
   'call:join': (data: { callId: ID }) => void;
   'call:leave': (data: { callId: ID }) => void;
   'call:end': (data: { callId: ID }) => void;
+
+  // WebRTC sinyalleşme olayları
+  'call:signal:offer': (data: {
+    callId: ID;
+    receiverId: ID;
+    sdp: RTCSessionDescriptionInit;
+  }) => void;
+  'call:signal:answer': (data: {
+    callId: ID;
+    receiverId: ID;
+    sdp: RTCSessionDescriptionInit;
+  }) => void;
+  'call:signal:ice-candidate': (data: {
+    callId: ID;
+    receiverId: ID;
+    candidate: RTCIceCandidateInit;
+  }) => void;
+  'call:media-state': (data: { callId: ID; audio: boolean; video: boolean }) => void;
+  'call:screen-share': (data: { callId: ID; active: boolean }) => void;
 
   // Hata olayları
   error: (error: any) => void;
@@ -326,7 +409,10 @@ export interface ServerToClientEvents {
   'group:update': (data: GroupUpdateEvent) => void;
   'group:delete': (data: GroupDeleteEvent) => void;
   groupsList: (groups: Array<{ id: string; name: string; owner: string }>) => void;
-  groupUsers: (data: { online: Array<{ username: string }>; offline: Array<{ username: string }> }) => void;
+  groupUsers: (data: {
+    online: Array<{ username: string }>;
+    offline: Array<{ username: string }>;
+  }) => void;
 
   // Üyelik olayları
   'member:join': (data: MemberJoinEvent) => void;
@@ -337,8 +423,8 @@ export interface ServerToClientEvents {
   // Arkadaşlık olayları
   'friend:request': (data: FriendRequestEvent) => void;
   'friend:accept': (data: FriendAcceptEvent) => void;
-  'friend:reject': (data: { senderId: string, receiverId: string }) => void;
-  'friend:remove': (data: { userId: string, friendId: string }) => void;
+  'friend:reject': (data: { senderId: string; receiverId: string }) => void;
+  'friend:remove': (data: { userId: string; friendId: string }) => void;
   friendRequest: (data: { from: string; timestamp: Date }) => void;
   friendRequestAccepted: (data: { username: string }) => void;
   friendRequestRejected: (data: { username: string }) => void;
@@ -354,4 +440,11 @@ export interface ServerToClientEvents {
   'call:join': (data: CallJoinEvent) => void;
   'call:leave': (data: CallLeaveEvent) => void;
   'call:end': (data: CallEndEvent) => void;
+
+  // WebRTC sinyalleşme olayları
+  'call:signal:offer': (data: CallSignalOfferEvent) => void;
+  'call:signal:answer': (data: CallSignalAnswerEvent) => void;
+  'call:signal:ice-candidate': (data: CallSignalIceCandidateEvent) => void;
+  'call:media-state': (data: CallMediaStateEvent) => void;
+  'call:screen-share': (data: CallScreenShareEvent) => void;
 }

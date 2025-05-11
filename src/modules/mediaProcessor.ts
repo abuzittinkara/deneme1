@@ -87,8 +87,7 @@ export function categorizeFileType(mimeType: string): FileCategory {
  */
 export async function getFileInfo(fileId: string): Promise<FileInfo> {
   try {
-    const file = await FileAttachment.findById(fileId)
-      .populate('uploader', 'username');
+    const file = await FileAttachment.findById(fileId).populate('uploader', 'username');
 
     if (!file) {
       throw new NotFoundError('Dosya bulunamadı.');
@@ -130,12 +129,12 @@ export async function getFileInfo(fileId: string): Promise<FileInfo> {
       path,
       uploadDate,
       uploader: (uploader as any)?.username || null,
-      category
+      category,
     };
   } catch (error) {
     logger.error('Dosya bilgileri getirme hatası', {
       error: (error as Error).message,
-      fileId
+      fileId,
     });
     throw error;
   }
@@ -159,12 +158,12 @@ export async function getImagePreviewMetadata(fileId: string): Promise<ImagePrev
     return {
       ...fileInfo,
       previewUrl: fileInfo.path,
-      isAnimated: fileInfo.mimeType === 'image/gif' || fileInfo.mimeType === 'image/webp'
+      isAnimated: fileInfo.mimeType === 'image/gif' || fileInfo.mimeType === 'image/webp',
     };
   } catch (error) {
     logger.error('Resim önizleme meta verileri getirme hatası', {
       error: (error as Error).message,
-      fileId
+      fileId,
     });
     throw error;
   }
@@ -189,12 +188,12 @@ export async function getVideoPreviewMetadata(fileId: string): Promise<VideoPrev
     return {
       ...fileInfo,
       previewUrl: fileInfo.path,
-      isStreamable: fileInfo.mimeType === 'video/mp4' || fileInfo.mimeType === 'video/webm'
+      isStreamable: fileInfo.mimeType === 'video/mp4' || fileInfo.mimeType === 'video/webm',
     };
   } catch (error) {
     logger.error('Video önizleme meta verileri getirme hatası', {
       error: (error as Error).message,
-      fileId
+      fileId,
     });
     throw error;
   }
@@ -219,12 +218,15 @@ export async function getAudioPreviewMetadata(fileId: string): Promise<AudioPrev
     return {
       ...fileInfo,
       previewUrl: fileInfo.path,
-      isStreamable: fileInfo.mimeType === 'audio/mpeg' || fileInfo.mimeType === 'audio/wav' || fileInfo.mimeType === 'audio/ogg'
+      isStreamable:
+        fileInfo.mimeType === 'audio/mpeg' ||
+        fileInfo.mimeType === 'audio/wav' ||
+        fileInfo.mimeType === 'audio/ogg',
     };
   } catch (error) {
     logger.error('Ses önizleme meta verileri getirme hatası', {
       error: (error as Error).message,
-      fileId
+      fileId,
     });
     throw error;
   }
@@ -324,12 +326,12 @@ export async function generatePreviewHtml(fileId: string): Promise<PreviewHtmlRe
 
     return {
       previewHtml,
-      fileInfo
+      fileInfo,
     };
   } catch (error) {
     logger.error('Önizleme HTML\'i oluşturma hatası', {
       error: (error as Error).message,
-      fileId
+      fileId,
     });
     throw error;
   }
@@ -342,5 +344,5 @@ export default {
   getAudioPreviewMetadata,
   generatePreviewHtml,
   categorizeFileType,
-  getDocumentIcon
+  getDocumentIcon,
 };

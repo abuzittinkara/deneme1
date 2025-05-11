@@ -1,9 +1,291 @@
-/* Importing modular CSS files */
-@import url("style/variables.css"); /* Değişkenler önce yüklenmeli */
-@import url("style/base.css");
-@import url("style/layout.css");
-@import url("style/components.css");
-@import url("style/modals.css");
-@import url("style/media.css"); /* Sesli/Görüntülü görüşme ve ekran paylaşımı stilleri */
-@import url("style/responsive.css");
-@import url("style/browser-compatibility.css");
+/* Değişkenler */
+:root {
+  /* Renkler */
+  --color-primary: #c61884;
+  --color-primary-dark: #a01368;
+  --color-primary-light: #e63da0;
+  --color-primary-rgb: 198, 24, 132;
+
+  --color-bg-darker: #1e1e1e;
+  --color-bg-dark: #2a2a2a;
+  --color-bg-medium: #333333;
+  --color-bg-light: #444444;
+  --color-bg-lighter: #555555;
+
+  --color-text-brightest: #ffffff;
+  --color-text-bright: #e0e0e0;
+  --color-text-normal: #b0b0b0;
+  --color-text-muted: #808080;
+
+  --color-border: #444444;
+
+  --color-success: #43b581;
+  --color-warning: #faa61a;
+  --color-danger: #f04747;
+  --color-danger-dark: #c03737;
+
+  /* Boşluklar */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Yazı Tipi Boyutları */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 24px;
+
+  /* Yazı Tipi Ağırlıkları */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Köşe Yuvarlaklıkları */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-circle: 50%;
+
+  /* Geçişler */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+
+  /* Gölgeler */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+
+  /* Yazı Tipi */
+  --font-primary: 'Roboto', sans-serif;
+}
+
+/* Açık tema için değişkenler */
+[data-theme="light"] {
+  --color-bg-darker: #e0e0e0;
+  --color-bg-dark: #f0f0f0;
+  --color-bg-medium: #f5f5f5;
+  --color-bg-light: #fafafa;
+  --color-bg-lighter: #ffffff;
+
+  --color-text-brightest: #000000;
+  --color-text-bright: #333333;
+  --color-text-normal: #555555;
+  --color-text-muted: #777777;
+
+  --color-border: #dddddd;
+}
+
+/* Genel Stiller */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-primary);
+}
+
+body {
+  background-color: var(--color-bg-medium);
+  color: var(--color-text-bright);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Giriş Ekranı */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--color-bg-medium);
+}
+
+.login-box {
+  width: 400px;
+  background-color: var(--color-bg-dark);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.login-title {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-brightest);
+  margin-bottom: var(--spacing-xs);
+}
+
+.login-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-normal);
+}
+
+.login-form {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-normal);
+  text-transform: uppercase;
+}
+
+.form-input {
+  width: 100%;
+  height: 40px;
+  padding: 10px;
+  background-color: var(--color-bg-darker);
+  border: 1px solid var(--color-bg-darker);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-brightest);
+  font-size: var(--font-size-md);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+}
+
+.form-button {
+  width: 100%;
+  height: 44px;
+  background-color: var(--color-primary);
+  color: var(--color-text-brightest);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.form-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.login-footer {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.login-footer a {
+  color: var(--color-primary-light);
+  text-decoration: none;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Hata mesajı */
+.error-message {
+  background-color: var(--color-danger);
+  color: var(--color-text-brightest);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-md);
+  display: none;
+}
+
+/* Kullanıcı Listesi */
+.user-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.user-list-header h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-brightest);
+}
+
+.user-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.user-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-circle);
+  background-color: var(--color-bg-medium);
+  color: var(--color-text-normal);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.user-action-btn:hover {
+  background-color: var(--color-bg-light);
+  color: var(--color-text-bright);
+}
+
+.user-action-btn .material-icons {
+  font-size: 18px;
+}
+
+/* Animasyonlar */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Animasyon Sınıfları */
+.fade-in {
+  animation: fadeIn var(--transition-normal);
+}
+
+.slide-in {
+  animation: slideIn var(--transition-normal);
+}
+
+/* Animasyonsuz Mod */
+.no-animations * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Kompakt Mod */
+.compact-mode .message {
+  margin-bottom: var(--spacing-xs);
+  padding: 0;
+}
+
+.compact-mode .channel {
+  height: 28px;
+}
+
+.compact-mode .form-input,
+.compact-mode .form-button {
+  height: 36px;
+}
+
+.compact-mode .chat-header,
+.compact-mode .server-header {
+  height: 40px;
+}

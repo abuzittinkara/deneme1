@@ -49,7 +49,8 @@ const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
   winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message} ${info.metadata ? JSON.stringify(info.metadata) : ''}`
+    (info) =>
+      `${info['timestamp'] || ''} ${info.level}: ${info.message} ${info['metadata'] ? JSON.stringify(info['metadata']) : ''}`
   )
 );
 
@@ -112,7 +113,7 @@ export const httpLogger = {
 // Express için HTTP request logger middleware'i
 export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
   // İstek ID'si oluştur veya mevcut olanı kullan
-  const requestId = req.headers['x-request-id'] as string || uuidv4();
+  const requestId = (req.headers['x-request-id'] as string) || uuidv4();
   req.headers['x-request-id'] = requestId;
 
   // İstek başlangıç zamanı
@@ -120,11 +121,12 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 
   // İstek bilgilerini logla
   if (env.NODE_ENV === 'development') {
-    const requestBody = req.method !== 'GET' ?
-      (Object.keys(req.body || {}).length > 0 ?
-        JSON.stringify(sanitizeRequestBody(req.body)) :
-        '<empty>') :
-      undefined;
+    const requestBody =
+      req.method !== 'GET'
+        ? Object.keys(req.body || {}).length > 0
+          ? JSON.stringify(sanitizeRequestBody(req.body))
+          : '<empty>'
+        : undefined;
 
     logger.debug(`Request: ${req.method} ${req.originalUrl}`, {
       metadata: {
@@ -180,7 +182,15 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 function sanitizeRequestBody(body: any): any {
   if (!body) return body;
 
-  const sensitiveFields = ['password', 'passwordHash', 'token', 'secret', 'apiKey', 'credit_card', 'creditCard'];
+  const sensitiveFields = [
+    'password',
+    'passwordHash',
+    'token',
+    'secret',
+    'apiKey',
+    'credit_card',
+    'creditCard',
+  ];
   const sanitized = { ...body };
 
   for (const field of sensitiveFields) {
@@ -219,8 +229,8 @@ export const logError = (error: Error, context?: string, metadata?: any) => {
     logger.error(`Stack trace for error [${errorId}]:`, {
       metadata: {
         stack: error.stack,
-        errorId
-      }
+        errorId,
+      },
     });
   }
 
@@ -238,7 +248,7 @@ function isOperationalError(error: Error): boolean {
     'BadRequestError',
     'ConflictError',
     'TimeoutError',
-    'RateLimitError'
+    'RateLimitError',
   ];
 
   // Özel hata sınıflarımız için kontrol
@@ -252,7 +262,11 @@ function isOperationalError(error: Error): boolean {
   }
 
   // HTTP durum koduna göre kontrol (4xx hatalar genellikle operasyoneldir)
-  if ((error as any).statusCode && (error as any).statusCode >= 400 && (error as any).statusCode < 500) {
+  if (
+    (error as any).statusCode &&
+    (error as any).statusCode >= 400 &&
+    (error as any).statusCode < 500
+  ) {
     return true;
   }
 

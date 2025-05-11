@@ -44,18 +44,22 @@ export const setupSentry = (app: Application): void => {
       // Kullanıcı bilgilerini topla
       sendDefaultPii: true,
       // Sürüm bilgisi
-      release: process.env.npm_package_version || '0.0.0',
+      release: process.env['npm_package_version'] || '0.0.0',
       // Ortam değişkenlerini filtrele
       beforeSend: (event: Event): Event | null => {
         // Hassas bilgileri filtrele
         if (event.request && event.request.headers) {
-          delete event.request.headers.authorization;
-          delete event.request.headers.cookie;
+          if (event.request.headers['authorization']) {
+            delete event.request.headers['authorization'];
+          }
+          if (event.request.headers['cookie']) {
+            delete event.request.headers['cookie'];
+          }
         }
 
         // Hassas ortam değişkenlerini filtrele
-        if (event.contexts && event.contexts.runtime && event.contexts.runtime.env) {
-          const env = event.contexts.runtime.env as Record<string, string>;
+        if (event.contexts && event.contexts['runtime'] && event.contexts['runtime']['env']) {
+          const env = event.contexts['runtime']['env'] as Record<string, string>;
           const sensitiveKeys = ['JWT_SECRET', 'MONGODB_URI', 'REDIS_PASSWORD'];
 
           sensitiveKeys.forEach((key) => {
@@ -83,7 +87,7 @@ export const sentryRequestHandler = Sentry.Handlers.requestHandler({
   // İstek gövdesini yakala
   request: ['data', 'method', 'query_string', 'url'],
   // Kullanıcı bilgilerini yakala
-  user: ['id', 'username', 'ip_address']
+  user: ['id', 'username', 'ip_address'],
   // İstek gövdesi boyutunu sınırla artık desteklenmiyor
 });
 

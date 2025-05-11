@@ -5,9 +5,10 @@
 import express, { Request, Response } from 'express';
 import { body } from 'express-validator';
 import { validateRequest } from '../middleware/validateRequest';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { requireAuth } from '../middleware/requireAuth';
 import * as authManager from '../modules/auth/authManager';
 import { logger } from '../utils/logger';
+import { createRouteHandler } from '../utils/express-helpers';
 
 const router = express.Router();
 
@@ -16,15 +17,23 @@ const router = express.Router();
  * @desc Kullanıcı kaydı
  * @access Public
  */
-router.post('/register', [
-  body('username').isString().isLength({ min: 3, max: 30 }).withMessage('Kullanıcı adı 3-30 karakter arasında olmalıdır'),
-  body('email').isEmail().withMessage('Geçerli bir e-posta adresi giriniz'),
-  body('password').isString().isLength({ min: 6 }).withMessage('Şifre en az 6 karakter olmalıdır'),
-  validateRequest
-], async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/register',
+  [
+    body('username')
+      .isString()
+      .isLength({ min: 3, max: 30 })
+      .withMessage('Kullanıcı adı 3-30 karakter arasında olmalıdır'),
+    body('email').isEmail().withMessage('Geçerli bir e-posta adresi giriniz'),
+    body('password')
+      .isString()
+      .isLength({ min: 6 })
+      .withMessage('Şifre en az 6 karakter olmalıdır'),
+    validateRequest,
+  ],
+  createRouteHandler(async (req: Request, res: Response) => {
     // Test ortamında özel davranış
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env['NODE_ENV'] === 'test') {
       // Sunucu hatası simülasyonu
       if (req.body.email === 'error@example.com') {
         throw new Error('Veritabanı hatası');
@@ -36,8 +45,8 @@ router.post('/register', [
         message: 'Kullanıcı başarıyla kaydedildi',
         data: {
           userId: '123456789',
-          username: 'testuser'
-        }
+          username: 'testuser',
+        },
       });
     }
 
@@ -49,7 +58,7 @@ router.post('/register', [
       email,
       password,
       name,
-      surname
+      surname,
     });
 
     return res.status(201).json({
@@ -57,37 +66,30 @@ router.post('/register', [
       message: 'Kullanıcı başarıyla kaydedildi',
       data: {
         userId: result.userId,
-        username: result.username
-      }
+        username: result.username,
+      },
     });
-  } catch (error) {
-    logger.error('Kullanıcı kaydı hatası', {
-      error: (error as Error).message,
-      username: req.body.username,
-      email: req.body.email
-    });
-
-    return res.status(500).json({
-      success: false,
-      message: 'Sunucu hatası',
-      code: 'SERVER_ERROR'
-    });
-  }
-});
+  })
+);
 
 /**
  * @route POST /api/auth/login
  * @desc Kullanıcı girişi
  * @access Public
  */
-router.post('/login', [
-  body('usernameOrEmail').isString().notEmpty().withMessage('Kullanıcı adı veya e-posta gereklidir'),
-  body('password').isString().notEmpty().withMessage('Şifre gereklidir'),
-  validateRequest
-], async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/login',
+  [
+    body('usernameOrEmail')
+      .isString()
+      .notEmpty()
+      .withMessage('Kullanıcı adı veya e-posta gereklidir'),
+    body('password').isString().notEmpty().withMessage('Şifre gereklidir'),
+    validateRequest,
+  ],
+  createRouteHandler(async (req: Request, res: Response) => {
     // Test ortamında özel davranış
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env['NODE_ENV'] === 'test') {
       const { usernameOrEmail, password } = req.body;
 
       // Hatalı şifre kontrolü
@@ -108,8 +110,8 @@ router.post('/login', [
           role: 'user',
           accessToken: 'access-token',
           refreshToken: 'refresh-token',
-          expiresIn: 3600
-        }
+          expiresIn: 3600,
+        },
       });
     }
 
@@ -130,35 +132,26 @@ router.post('/login', [
         role: result.role,
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-        expiresIn: result.expiresIn
-      }
+        expiresIn: result.expiresIn,
+      },
     });
-  } catch (error) {
-    logger.error('Kullanıcı girişi hatası', {
-      error: (error as Error).message,
-      usernameOrEmail: req.body.usernameOrEmail
-    });
-
-    return res.status(401).json({
-      success: false,
-      message: 'Geçersiz kullanıcı adı/e-posta veya şifre',
-      code: 'UNAUTHORIZED'
-    });
-  }
-});
+  })
+);
 
 /**
  * @route POST /api/auth/refresh
  * @desc Token yenileme
  * @access Public
  */
-router.post('/refresh', [
-  body('refreshToken').isString().notEmpty().withMessage('Refresh token gereklidir'),
-  validateRequest
-], async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/refresh',
+  [
+    body('refreshToken').isString().notEmpty().withMessage('Refresh token gereklidir'),
+    validateRequest,
+  ],
+  createRouteHandler(async (req: Request, res: Response) => {
     // Test ortamında özel davranış
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env['NODE_ENV'] === 'test') {
       const { refreshToken } = req.body;
 
       // Geçersiz token kontrolü
@@ -173,8 +166,8 @@ router.post('/refresh', [
         data: {
           accessToken: 'new-access-token',
           refreshToken: 'new-refresh-token',
-          expiresIn: 3600
-        }
+          expiresIn: 3600,
+        },
       });
     }
 
@@ -189,37 +182,29 @@ router.post('/refresh', [
       data: {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
-        expiresIn: result.expiresIn
-      }
+        expiresIn: result.expiresIn,
+      },
     });
-  } catch (error) {
-    logger.error('Token yenileme hatası', {
-      error: (error as Error).message
-    });
-
-    return res.status(401).json({
-      success: false,
-      message: 'Geçersiz refresh token',
-      code: 'UNAUTHORIZED'
-    });
-  }
-});
+  })
+);
 
 /**
  * @route POST /api/auth/logout
  * @desc Kullanıcı çıkışı
  * @access Private
  */
-router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
-  try {
+router.post(
+  '/logout',
+  requireAuth,
+  createRouteHandler(async (req: Request, res: Response) => {
     // Test ortamında özel davranış
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env['NODE_ENV'] === 'test') {
       const { refreshToken } = req.body;
 
       // Mock yanıt
       return res.status(200).json({
         success: true,
-        message: 'Çıkış başarılı'
+        message: 'Çıkış başarılı',
       });
     }
 
@@ -230,19 +215,9 @@ router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Çıkış başarılı'
+      message: 'Çıkış başarılı',
     });
-  } catch (error) {
-    logger.error('Kullanıcı çıkışı hatası', {
-      error: (error as Error).message
-    });
-
-    return res.status(500).json({
-      success: false,
-      message: 'Sunucu hatası',
-      code: 'SERVER_ERROR'
-    });
-  }
-});
+  })
+);
 
 export default router;

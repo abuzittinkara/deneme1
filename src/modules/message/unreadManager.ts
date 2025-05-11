@@ -16,7 +16,9 @@ import { redisClient } from '../../config/redis';
 
 // Model yardımcıları
 const MessageHelper = createModelHelper<MessageDocument, typeof Message>(Message);
-const DirectMessageHelper = createModelHelper<DirectMessageDocument, typeof DirectMessage>(DirectMessage);
+const DirectMessageHelper = createModelHelper<DirectMessageDocument, typeof DirectMessage>(
+  DirectMessage
+);
 const ChannelHelper = createModelHelper<ChannelDocument, typeof Channel>(Channel);
 const GroupHelper = createModelHelper<GroupDocument, typeof Group>(Group);
 const UserHelper = createModelHelper<UserDocument, typeof User>(User);
@@ -57,26 +59,28 @@ export async function getUnreadMessageCount(userId: string): Promise<UnreadCount
 
     // Kullanıcının üye olduğu kanalları bul
     const channels = await ChannelHelper.find({
-      members: toObjectId(userId)
+      members: toObjectId(userId),
     });
 
     // Kanal mesajlarını kontrol et
     const channelCounts: { [channelId: string]: number } = {};
     let totalChannelUnread = 0;
 
-    await Promise.all(channels.map(async (channel) => {
-      const count = await MessageHelper.countDocuments({
-        channel: channel._id,
-        'readReceipts.user': { $ne: toObjectId(userId) },
-        user: { $ne: toObjectId(userId) }, // Kendi mesajlarını sayma
-        isDeleted: false
-      });
+    await Promise.all(
+      channels.map(async (channel) => {
+        const count = await MessageHelper.countDocuments({
+          channel: channel._id,
+          'readReceipts.user': { $ne: toObjectId(userId) },
+          user: { $ne: toObjectId(userId) }, // Kendi mesajlarını sayma
+          isDeleted: false,
+        });
 
-      if (count > 0) {
-        channelCounts[channel._id.toString()] = count;
-        totalChannelUnread += count;
-      }
-    }));
+        if (count > 0) {
+          channelCounts[channel._id.toString()] = count;
+          totalChannelUnread += count;
+        }
+      })
+    );
 
     // Direkt mesajları kontrol et
     const dmCounts: { [userId: string]: number } = {};
@@ -86,13 +90,13 @@ export async function getUnreadMessageCount(userId: string): Promise<UnreadCount
       {
         recipient: toObjectId(userId),
         isRead: false,
-        isDeleted: false
+        isDeleted: false,
       },
       null,
       { populate: { path: 'sender', select: 'username' } }
     );
 
-    unreadDMs.forEach(dm => {
+    unreadDMs.forEach((dm) => {
       const senderId = dm.sender._id.toString();
       if (!dmCounts[senderId]) {
         dmCounts[senderId] = 0;
@@ -104,7 +108,7 @@ export async function getUnreadMessageCount(userId: string): Promise<UnreadCount
     const result: UnreadCountResult = {
       total: totalChannelUnread + totalDMUnread,
       channels: channelCounts,
-      directMessages: dmCounts
+      directMessages: dmCounts,
     };
 
     // Sonucu önbelleğe al (30 saniye TTL)
@@ -112,14 +116,14 @@ export async function getUnreadMessageCount(userId: string): Promise<UnreadCount
 
     logger.debug('Okunmamış mesaj sayısı getirildi', {
       userId,
-      total: result.total
+      total: result.total,
     });
 
     return result;
   } catch (error) {
     logger.error('Okunmamış mesaj sayısı getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -131,7 +135,10 @@ export async function getUnreadMessageCount(userId: string): Promise<UnreadCount
  * @param limit - Limit
  * @returns Okunmamış mesajlar
  */
-export async function getUnreadMessages(userId: string, limit: number = 50): Promise<UnreadMessagesResult> {
+export async function getUnreadMessages(
+  userId: string,
+  limit: number = 50
+): Promise<UnreadMessagesResult> {
   try {
     // Kullanıcıyı kontrol et
     const user = await UserHelper.findById(userId);
@@ -144,16 +151,16 @@ export async function getUnreadMessages(userId: string, limit: number = 50): Pro
       {
         'readReceipts.user': { $ne: toObjectId(userId) },
         user: { $ne: toObjectId(userId) },
-        isDeleted: false
+        isDeleted: false,
       },
       null,
       {
         limit,
         populate: [
           { path: 'user', select: 'username name surname profilePicture' },
-          { path: 'channel', select: 'name' }
+          { path: 'channel', select: 'name' },
         ],
-        lean: true
+        lean: true,
       }
     );
 
@@ -162,30 +169,30 @@ export async function getUnreadMessages(userId: string, limit: number = 50): Pro
       {
         recipient: toObjectId(userId),
         isRead: false,
-        isDeleted: false
+        isDeleted: false,
       },
       null,
       {
         limit,
         populate: { path: 'sender', select: 'username name surname profilePicture' },
-        lean: true
+        lean: true,
       }
     );
 
     logger.debug('Okunmamış mesajlar getirildi', {
       userId,
       channelCount: channelMessages.length,
-      dmCount: directMessages.length
+      dmCount: directMessages.length,
     });
 
     return {
       channelMessages,
-      directMessages
+      directMessages,
     };
   } catch (error) {
     logger.error('Okunmamış mesajları getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -209,13 +216,13 @@ export async function markChannelMessageAsRead(messageId: string, userId: string
 
     logger.debug('Kanal mesajı okundu olarak işaretlendi', {
       messageId,
-      userId
+      userId,
     });
   } catch (error) {
     logger.error('Kanal mesajını okundu olarak işaretleme hatası', {
       error: (error as Error).message,
       messageId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -239,13 +246,13 @@ export async function markDirectMessageAsRead(messageId: string, userId: string)
 
     logger.debug('Direkt mesaj okundu olarak işaretlendi', {
       messageId,
-      userId
+      userId,
     });
   } catch (error) {
     logger.error('Direkt mesajı okundu olarak işaretleme hatası', {
       error: (error as Error).message,
       messageId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -257,24 +264,29 @@ export async function markDirectMessageAsRead(messageId: string, userId: string)
  * @param userId - Kullanıcı ID'si
  * @returns İşaretlenen mesaj sayısı
  */
-export async function markAllChannelMessagesAsRead(channelId: string, userId: string): Promise<number> {
+export async function markAllChannelMessagesAsRead(
+  channelId: string,
+  userId: string
+): Promise<number> {
   try {
     // Okunmamış mesajları bul
     const unreadMessages = await MessageHelper.find({
       channel: toObjectId(channelId),
       'readReceipts.user': { $ne: toObjectId(userId) },
       user: { $ne: toObjectId(userId) }, // Kendi mesajlarını işaretleme
-      isDeleted: false
+      isDeleted: false,
     });
 
     // Her mesajı okundu olarak işaretle
-    await Promise.all(unreadMessages.map(async (message) => {
-      // Okundu bilgisini ekle
-      await MessageHelper.getModel().updateOne(
-        { _id: message._id },
-        { $addToSet: { readReceipts: { user: toObjectId(userId), readAt: new Date() } } }
-      );
-    }));
+    await Promise.all(
+      unreadMessages.map(async (message) => {
+        // Okundu bilgisini ekle
+        await MessageHelper.getModel().updateOne(
+          { _id: message._id },
+          { $addToSet: { readReceipts: { user: toObjectId(userId), readAt: new Date() } } }
+        );
+      })
+    );
 
     // Önbelleği temizle
     await redisClient.del(`unread:count:${userId}`);
@@ -282,7 +294,7 @@ export async function markAllChannelMessagesAsRead(channelId: string, userId: st
     logger.info('Kanaldaki tüm mesajlar okundu olarak işaretlendi', {
       channelId,
       userId,
-      count: unreadMessages.length
+      count: unreadMessages.length,
     });
 
     return unreadMessages.length;
@@ -290,7 +302,7 @@ export async function markAllChannelMessagesAsRead(channelId: string, userId: st
     logger.error('Kanaldaki tüm mesajları okundu olarak işaretleme hatası', {
       error: (error as Error).message,
       channelId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -302,7 +314,10 @@ export async function markAllChannelMessagesAsRead(channelId: string, userId: st
  * @param userId - Kullanıcı ID'si
  * @returns İşaretlenen mesaj sayısı
  */
-export async function markAllDirectMessagesAsRead(senderId: string, userId: string): Promise<number> {
+export async function markAllDirectMessagesAsRead(
+  senderId: string,
+  userId: string
+): Promise<number> {
   try {
     // Okunmamış mesajları bul
     const result = await DirectMessageHelper.updateMany(
@@ -310,13 +325,13 @@ export async function markAllDirectMessagesAsRead(senderId: string, userId: stri
         sender: toObjectId(senderId),
         recipient: toObjectId(userId),
         isRead: false,
-        isDeleted: false
+        isDeleted: false,
       },
       {
         $set: {
           isRead: true,
-          readAt: new Date()
-        }
+          readAt: new Date(),
+        },
       }
     );
 
@@ -326,7 +341,7 @@ export async function markAllDirectMessagesAsRead(senderId: string, userId: stri
     logger.info('Tüm direkt mesajlar okundu olarak işaretlendi', {
       senderId,
       userId,
-      count: result.modifiedCount
+      count: result.modifiedCount,
     });
 
     return result.modifiedCount;
@@ -334,7 +349,7 @@ export async function markAllDirectMessagesAsRead(senderId: string, userId: stri
     logger.error('Tüm direkt mesajları okundu olarak işaretleme hatası', {
       error: (error as Error).message,
       senderId,
-      userId
+      userId,
     });
     throw error;
   }
@@ -346,5 +361,5 @@ export default {
   markChannelMessageAsRead,
   markDirectMessageAsRead,
   markAllChannelMessagesAsRead,
-  markAllDirectMessagesAsRead
+  markAllDirectMessagesAsRead,
 };

@@ -25,7 +25,7 @@ const userManager = {
   // Block Manager'dan
   getUserBlocked: blockManager.getUserBlocked,
   blockUser: blockManager.blockUser,
-  unblockUser: blockManager.unblockUser
+  unblockUser: blockManager.unblockUser,
 };
 
 // Kullanım günlüğü

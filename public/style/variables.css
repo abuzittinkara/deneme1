@@ -1,5 +1,6 @@
 /* Fisqos Renk ve Stil Değişkenleri */
 
+/* Açık Tema (Varsayılan) */
 :root {
   /* Ana Renkler */
   --color-primary: #c61884; /* Pembe ana renk */
@@ -24,6 +25,18 @@
   --color-warning: #faa61a; /* Uyarı/Uzakta */
   --color-danger: #f04747; /* Hata/Rahatsız Etmeyin */
   --color-info: #7289da; /* Bilgi */
+
+  /* Durum Arka Plan Renkleri */
+  --color-success-bg: rgba(67, 181, 129, 0.1); /* Başarı arka plan */
+  --color-warning-bg: rgba(250, 166, 26, 0.1); /* Uyarı arka plan */
+  --color-danger-bg: rgba(240, 71, 71, 0.1); /* Hata arka plan */
+  --color-info-bg: rgba(114, 137, 218, 0.1); /* Bilgi arka plan */
+
+  /* Durum Metin Renkleri */
+  --color-success-text: #2e7d5b; /* Başarı metin */
+  --color-warning-text: #8f5e0f; /* Uyarı metin */
+  --color-danger-text: #a02c2c; /* Hata metin */
+  --color-info-text: #4e5d94; /* Bilgi metin */
 
   /* Kenarlık ve Ayırıcı Renkleri */
   --color-border: #4f545c; /* Kenarlık rengi */
@@ -56,10 +69,11 @@
   --spacing-xl: 2rem; /* 32px */
 
   /* Yuvarlak Köşeler */
-  --radius-sm: 3px;
-  --radius-md: 5px;
-  --radius-lg: 8px;
-  --radius-circle: 50%;
+  --radius-xs: 2px; /* Çok küçük */
+  --radius-sm: 3px; /* Küçük */
+  --radius-md: 5px; /* Orta */
+  --radius-lg: 8px; /* Büyük */
+  --radius-circle: 50%; /* Daire */
 
   /* Gölgeler */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -80,4 +94,97 @@
   --media-height-sm: 200px;
   --media-height-md: 300px;
   --media-height-lg: 400px;
+}
+
+/* Koyu Tema */
+[data-theme="dark"] {
+  /* Ana Renkler */
+  --color-primary: #c61884; /* Pembe ana renk */
+  --color-primary-dark: #a01368; /* Koyu pembe */
+  --color-primary-light: #e63da0; /* Açık pembe */
+
+  /* Gri Tonları */
+  --color-bg-darkest: #1a1a1a; /* En koyu gri (neredeyse siyah) */
+  --color-bg-darker: #202225; /* Çok koyu gri (sol panel) */
+  --color-bg-dark: #2d2d2d; /* Koyu gri (orta panel) */
+  --color-bg-medium: #36393f; /* Orta gri (ana içerik) */
+  --color-bg-light: #40444b; /* Açık gri (giriş alanları) */
+  --color-bg-lighter: #4f545c; /* Daha açık gri (vurgular) */
+
+  /* Metin Renkleri */
+  --color-text-brightest: #ffffff; /* En parlak metin */
+  --color-text-bright: #dcddde; /* Parlak metin */
+  --color-text-normal: #b9bbbe; /* Normal metin */
+  --color-text-muted: #72767d; /* Soluk metin */
+
+  /* Durum Arka Plan Renkleri */
+  --color-success-bg: rgba(67, 181, 129, 0.15); /* Başarı arka plan */
+  --color-warning-bg: rgba(250, 166, 26, 0.15); /* Uyarı arka plan */
+  --color-danger-bg: rgba(240, 71, 71, 0.15); /* Hata arka plan */
+  --color-info-bg: rgba(114, 137, 218, 0.15); /* Bilgi arka plan */
+
+  /* Durum Metin Renkleri */
+  --color-success-text: #43b581; /* Başarı metin */
+  --color-warning-text: #faa61a; /* Uyarı metin */
+  --color-danger-text: #f04747; /* Hata metin */
+  --color-info-text: #7289da; /* Bilgi metin */
+
+  /* Kenarlık ve Ayırıcı Renkleri */
+  --color-border: #4f545c; /* Kenarlık rengi */
+  --color-divider: #2c2f33; /* Ayırıcı rengi */
+
+  /* Gölge ve Katman Renkleri */
+  --color-shadow: rgba(0, 0, 0, 0.5); /* Gölge rengi */
+  --color-overlay: rgba(0, 0, 0, 0.8); /* Katman rengi */
+}
+
+/* Yüksek Kontrast Tema */
+[data-theme="high-contrast"] {
+  /* Ana Renkler */
+  --color-primary: #ff00aa; /* Daha parlak pembe */
+  --color-primary-dark: #cc0088; /* Daha koyu pembe */
+  --color-primary-light: #ff33bb; /* Daha açık pembe */
+
+  /* Gri Tonları */
+  --color-bg-darkest: #000000; /* Siyah */
+  --color-bg-darker: #121212; /* Çok koyu gri */
+  --color-bg-dark: #1a1a1a; /* Koyu gri */
+  --color-bg-medium: #242424; /* Orta gri */
+  --color-bg-light: #2a2a2a; /* Açık gri */
+  --color-bg-lighter: #333333; /* Daha açık gri */
+
+  /* Metin Renkleri */
+  --color-text-brightest: #ffffff; /* Beyaz */
+  --color-text-bright: #f0f0f0; /* Çok açık gri */
+  --color-text-normal: #e0e0e0; /* Açık gri */
+  --color-text-muted: #a0a0a0; /* Orta gri */
+
+  /* Kenarlık ve Ayırıcı Renkleri */
+  --color-border: #666666; /* Koyu gri */
+  --color-divider: #333333; /* Çok koyu gri */
+
+  /* Durum Renkleri */
+  --color-success: #00ff00; /* Parlak yeşil */
+  --color-warning: #ffff00; /* Parlak sarı */
+  --color-danger: #ff0000; /* Parlak kırmızı */
+  --color-info: #00ffff; /* Parlak mavi */
+
+  /* Durum Arka Plan Renkleri */
+  --color-success-bg: rgba(0, 255, 0, 0.2); /* Başarı arka plan */
+  --color-warning-bg: rgba(255, 255, 0, 0.2); /* Uyarı arka plan */
+  --color-danger-bg: rgba(255, 0, 0, 0.2); /* Hata arka plan */
+  --color-info-bg: rgba(0, 255, 255, 0.2); /* Bilgi arka plan */
+
+  /* Durum Metin Renkleri */
+  --color-success-text: #00ff00; /* Başarı metin */
+  --color-warning-text: #ffff00; /* Uyarı metin */
+  --color-danger-text: #ff0000; /* Hata metin */
+  --color-info-text: #00ffff; /* Bilgi metin */
+
+  /* Gölge ve Katman Renkleri */
+  --color-shadow: rgba(0, 0, 0, 0.8); /* Koyu gölge */
+  --color-overlay: rgba(0, 0, 0, 0.9); /* Koyu katman */
+
+  /* Erişilebilirlik için ek değişkenler */
+  --radius-xs: 2px; /* Daha küçük yuvarlak köşeler */
 }

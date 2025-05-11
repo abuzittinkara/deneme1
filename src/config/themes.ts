@@ -118,7 +118,7 @@ export const lightTheme: Theme = {
     border: '#dee2e6',
     divider: '#e9ecef',
     shadow: 'rgba(0, 0, 0, 0.1)',
-    overlay: 'rgba(0, 0, 0, 0.5)'
+    overlay: 'rgba(0, 0, 0, 0.5)',
   },
   fonts: {
     primary: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -130,15 +130,15 @@ export const lightTheme: Theme = {
       md: '1rem',
       lg: '1.25rem',
       xl: '1.5rem',
-      xxl: '2rem'
+      xxl: '2rem',
     },
     weights: {
       light: 300,
       regular: 400,
       medium: 500,
       semibold: 600,
-      bold: 700
-    }
+      bold: 700,
+    },
   },
   spacing: {
     xs: '0.25rem',
@@ -146,7 +146,7 @@ export const lightTheme: Theme = {
     md: '1rem',
     lg: '1.5rem',
     xl: '2rem',
-    xxl: '3rem'
+    xxl: '3rem',
   },
   radius: {
     xs: '0.125rem',
@@ -155,20 +155,20 @@ export const lightTheme: Theme = {
     lg: '0.5rem',
     xl: '1rem',
     pill: '50rem',
-    circle: '50%'
+    circle: '50%',
   },
   shadows: {
     xs: '0 1px 2px rgba(0, 0, 0, 0.05)',
     sm: '0 2px 4px rgba(0, 0, 0, 0.075)',
     md: '0 4px 6px rgba(0, 0, 0, 0.1)',
     lg: '0 8px 16px rgba(0, 0, 0, 0.125)',
-    xl: '0 12px 28px rgba(0, 0, 0, 0.15)'
+    xl: '0 12px 28px rgba(0, 0, 0, 0.15)',
   },
   transitions: {
     fast: '0.15s ease',
     normal: '0.3s ease',
-    slow: '0.5s ease'
-  }
+    slow: '0.5s ease',
+  },
 };
 
 // Koyu tema
@@ -191,7 +191,7 @@ export const darkTheme: Theme = {
     border: '#495057',
     divider: '#343a40',
     shadow: 'rgba(0, 0, 0, 0.3)',
-    overlay: 'rgba(0, 0, 0, 0.7)'
+    overlay: 'rgba(0, 0, 0, 0.7)',
   },
   fonts: {
     primary: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
@@ -203,15 +203,15 @@ export const darkTheme: Theme = {
       md: '1rem',
       lg: '1.25rem',
       xl: '1.5rem',
-      xxl: '2rem'
+      xxl: '2rem',
     },
     weights: {
       light: 300,
       regular: 400,
       medium: 500,
       semibold: 600,
-      bold: 700
-    }
+      bold: 700,
+    },
   },
   spacing: {
     xs: '0.25rem',
@@ -219,7 +219,7 @@ export const darkTheme: Theme = {
     md: '1rem',
     lg: '1.5rem',
     xl: '2rem',
-    xxl: '3rem'
+    xxl: '3rem',
   },
   radius: {
     xs: '0.125rem',
@@ -228,26 +228,26 @@ export const darkTheme: Theme = {
     lg: '0.5rem',
     xl: '1rem',
     pill: '50rem',
-    circle: '50%'
+    circle: '50%',
   },
   shadows: {
     xs: '0 1px 2px rgba(0, 0, 0, 0.2)',
     sm: '0 2px 4px rgba(0, 0, 0, 0.25)',
     md: '0 4px 6px rgba(0, 0, 0, 0.3)',
     lg: '0 8px 16px rgba(0, 0, 0, 0.35)',
-    xl: '0 12px 28px rgba(0, 0, 0, 0.4)'
+    xl: '0 12px 28px rgba(0, 0, 0, 0.4)',
   },
   transitions: {
     fast: '0.15s ease',
     normal: '0.3s ease',
-    slow: '0.5s ease'
-  }
+    slow: '0.5s ease',
+  },
 };
 
 // Tüm temalar
 export const themes: Record<string, Theme> = {
   light: lightTheme,
-  dark: darkTheme
+  dark: darkTheme,
 };
 
 // Varsayılan tema
@@ -262,10 +262,21 @@ export function getTheme(type: ThemeType = DEFAULT_THEME): Theme {
   if (type === 'system') {
     // Sistem temasını belirle (tarayıcı veya işletim sistemi)
     // Bu sadece istemci tarafında çalışır, sunucu tarafında varsayılan tema kullanılır
-    return themes[DEFAULT_THEME];
+    const defaultTheme = themes[DEFAULT_THEME];
+    if (!defaultTheme) {
+      throw new Error(`Varsayılan tema bulunamadı: ${DEFAULT_THEME}`);
+    }
+    return defaultTheme;
   }
-  
-  return themes[type] || themes[DEFAULT_THEME];
+
+  const selectedTheme = themes[type];
+  const fallbackTheme = themes[DEFAULT_THEME];
+
+  if (!selectedTheme && !fallbackTheme) {
+    throw new Error(`Tema bulunamadı: ${type} ve varsayılan tema de bulunamadı: ${DEFAULT_THEME}`);
+  }
+
+  return selectedTheme || fallbackTheme!;
 }
 
 /**
@@ -275,53 +286,55 @@ export function getTheme(type: ThemeType = DEFAULT_THEME): Theme {
  */
 export function generateCSSVariables(theme: Theme): string {
   try {
-    let css = `:root {\n`;
-    
+    let css = ':root {\n';
+
     // Renkler
     Object.entries(theme.colors).forEach(([key, value]) => {
       css += `  --color-${key}: ${value};\n`;
     });
-    
+
     // Yazı tipleri
     css += `  --font-primary: ${theme.fonts.primary};\n`;
     css += `  --font-secondary: ${theme.fonts.secondary};\n`;
     css += `  --font-monospace: ${theme.fonts.monospace};\n`;
-    
+
     // Yazı tipi boyutları
     Object.entries(theme.fonts.sizes).forEach(([key, value]) => {
       css += `  --font-size-${key}: ${value};\n`;
     });
-    
+
     // Yazı tipi ağırlıkları
     Object.entries(theme.fonts.weights).forEach(([key, value]) => {
       css += `  --font-weight-${key}: ${value};\n`;
     });
-    
+
     // Boşluklar
     Object.entries(theme.spacing).forEach(([key, value]) => {
       css += `  --spacing-${key}: ${value};\n`;
     });
-    
+
     // Yuvarlak köşeler
     Object.entries(theme.radius).forEach(([key, value]) => {
       css += `  --radius-${key}: ${value};\n`;
     });
-    
+
     // Gölgeler
     Object.entries(theme.shadows).forEach(([key, value]) => {
       css += `  --shadow-${key}: ${value};\n`;
     });
-    
+
     // Geçişler
     Object.entries(theme.transitions).forEach(([key, value]) => {
       css += `  --transition-${key}: ${value};\n`;
     });
-    
-    css += `}\n`;
-    
+
+    css += '}\n';
+
     return css;
   } catch (error) {
-    logger.error('CSS değişkenleri oluşturulurken hata oluştu', { error: (error as Error).message });
+    logger.error('CSS değişkenleri oluşturulurken hata oluştu', {
+      error: (error as Error).message,
+    });
     return '';
   }
 }
@@ -332,5 +345,5 @@ export default {
   themes,
   DEFAULT_THEME,
   getTheme,
-  generateCSSVariables
+  generateCSSVariables,
 };

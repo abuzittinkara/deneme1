@@ -16,7 +16,7 @@ export interface IGroupMember {
 }
 
 // Grup üyesi dokümanı arayüzü
-export interface GroupMemberDocument extends TypedDocument<IGroupMember> {}
+export type GroupMemberDocument = TypedDocument<IGroupMember>;
 
 // Grup üyesi modeli arayüzü
 export interface GroupMemberModel extends FullModelType<IGroupMember> {
@@ -31,11 +31,11 @@ const GroupMemberSchema = new Schema<GroupMemberDocument, GroupMemberModel>(
     group: { type: Schema.Types.ObjectId, ref: 'Group', required: true },
     roles: [{ type: Schema.Types.ObjectId, ref: 'Role' }],
     nickname: { type: String },
-    joinedAt: { type: Date, default: Date.now }
+    joinedAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -46,11 +46,14 @@ GroupMemberSchema.index({ user: 1 });
 GroupMemberSchema.index({ joinedAt: -1 });
 
 // Statik metodlar
-GroupMemberSchema.statics.findByUserAndGroup = function(
+GroupMemberSchema.statics['findByUserAndGroup'] = function (
   userId: ObjectId,
   groupId: ObjectId
 ): Promise<GroupMemberDocument | null> {
-  return this.findOne({ user: userId, group: groupId }) as unknown as Promise<GroupMemberDocument | null>;
+  return this.findOne({
+    user: userId,
+    group: groupId,
+  }) as unknown as Promise<GroupMemberDocument | null>;
 };
 
 // Grup üyesi modelini oluştur
@@ -71,7 +74,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as GroupMemberModel;
 } else {
   // Gerçek model
-  GroupMember = (mongoose.models.GroupMember as GroupMemberModel) ||
+  GroupMember =
+    (mongoose.models['GroupMember'] as GroupMemberModel) ||
     mongoose.model<GroupMemberDocument, GroupMemberModel>('GroupMember', GroupMemberSchema);
 }
 

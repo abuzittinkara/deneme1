@@ -36,7 +36,7 @@ router.get(
     query('type')
       .optional()
       .isIn(Object.values(NotificationType))
-      .withMessage('Geçersiz bildirim türü')
+      .withMessage('Geçersiz bildirim türü'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -67,16 +67,16 @@ router.get(
       return res.status(200).json({
         success: true,
         count: formattedNotifications.length,
-        data: formattedNotifications
+        data: formattedNotifications,
       });
     } catch (error) {
       logger.error('Bildirimleri getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirimler getirilirken bir hata oluştu'
+        message: 'Bildirimler getirilirken bir hata oluştu',
       });
     }
   })
@@ -99,16 +99,16 @@ router.get(
 
       return res.status(200).json({
         success: true,
-        count: notifications.length
+        count: notifications.length,
       });
     } catch (error) {
       logger.error('Bildirim sayısını getirme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirim sayısı getirilirken bir hata oluştu'
+        message: 'Bildirim sayısı getirilirken bir hata oluştu',
       });
     }
   })
@@ -123,37 +123,17 @@ router.post(
   '/',
   requireAuth,
   [
-    body('recipientId')
-      .isMongoId()
-      .withMessage('Geçersiz alıcı ID'),
-    body('type')
-      .isIn(Object.values(NotificationType))
-      .withMessage('Geçersiz bildirim türü'),
-    body('content')
-      .isString()
-      .notEmpty()
-      .withMessage('Bildirim içeriği gereklidir')
-      .trim(),
-    body('target')
-      .optional()
-      .isObject()
-      .withMessage('Hedef bir nesne olmalıdır'),
+    body('recipientId').isMongoId().withMessage('Geçersiz alıcı ID'),
+    body('type').isIn(Object.values(NotificationType)).withMessage('Geçersiz bildirim türü'),
+    body('content').isString().notEmpty().withMessage('Bildirim içeriği gereklidir').trim(),
+    body('target').optional().isObject().withMessage('Hedef bir nesne olmalıdır'),
     body('target.type')
       .if(body('target').exists())
       .isIn(['message', 'directMessage', 'user', 'group', 'channel'])
       .withMessage('Geçersiz hedef türü'),
-    body('target.id')
-      .if(body('target').exists())
-      .isMongoId()
-      .withMessage('Geçersiz hedef ID'),
-    body('priority')
-      .optional()
-      .isIn(['low', 'normal', 'high'])
-      .withMessage('Geçersiz öncelik'),
-    body('expiresIn')
-      .optional()
-      .isInt({ min: 0 })
-      .withMessage('Geçersiz son kullanma süresi')
+    body('target.id').if(body('target').exists()).isMongoId().withMessage('Geçersiz hedef ID'),
+    body('priority').optional().isIn(['low', 'normal', 'high']).withMessage('Geçersiz öncelik'),
+    body('expiresIn').optional().isInt({ min: 0 }).withMessage('Geçersiz son kullanma süresi'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
@@ -162,7 +142,7 @@ router.post(
       if (req.user!.role !== 'admin') {
         return res.status(403).json({
           success: false,
-          message: 'Bu işlem için yetkiniz yok'
+          message: 'Bu işlem için yetkiniz yok',
         });
       }
 
@@ -177,22 +157,22 @@ router.post(
         target,
         priority,
         expiresIn,
-        metadata
+        metadata,
       });
 
       return res.status(201).json({
         success: true,
-        data: dbNotificationManager.formatNotification(notification)
+        data: dbNotificationManager.formatNotification(notification),
       });
     } catch (error) {
       logger.error('Bildirim oluşturma hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        body: req.body
+        body: req.body,
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirim oluşturulurken bir hata oluştu'
+        message: 'Bildirim oluşturulurken bir hata oluştu',
       });
     }
   })
@@ -206,27 +186,23 @@ router.post(
 router.patch(
   '/:id/read',
   requireAuth,
-  [
-    param('id')
-      .isMongoId()
-      .withMessage('Geçersiz bildirim ID')
-  ],
+  [param('id').isMongoId().withMessage('Geçersiz bildirim ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const notificationId = req.params.id;
+      const notificationId = req.params['id'] || '';
       const userId = req.user!.id;
 
       // Bildirimin kullanıcıya ait olduğunu kontrol et
       const notification = await dbNotificationManager.Notification.findOne({
         _id: notificationId,
-        recipient: userId
+        recipient: userId,
       });
 
       if (!notification) {
         return res.status(404).json({
           success: false,
-          message: 'Bildirim bulunamadı'
+          message: 'Bildirim bulunamadı',
         });
       }
 
@@ -235,17 +211,17 @@ router.patch(
 
       return res.status(200).json({
         success: true,
-        message: 'Bildirim okundu olarak işaretlendi'
+        message: 'Bildirim okundu olarak işaretlendi',
       });
     } catch (error) {
       logger.error('Bildirimi okundu olarak işaretleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        notificationId: req.params.id
+        notificationId: req.params['id'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirim okundu olarak işaretlenirken bir hata oluştu'
+        message: 'Bildirim okundu olarak işaretlenirken bir hata oluştu',
       });
     }
   })
@@ -268,16 +244,16 @@ router.patch(
 
       return res.status(200).json({
         success: true,
-        message: `${result.count} bildirim okundu olarak işaretlendi`
+        message: `${result.count} bildirim okundu olarak işaretlendi`,
       });
     } catch (error) {
       logger.error('Tüm bildirimleri okundu olarak işaretleme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirimler okundu olarak işaretlenirken bir hata oluştu'
+        message: 'Bildirimler okundu olarak işaretlenirken bir hata oluştu',
       });
     }
   })
@@ -291,27 +267,23 @@ router.patch(
 router.delete(
   '/:id',
   requireAuth,
-  [
-    param('id')
-      .isMongoId()
-      .withMessage('Geçersiz bildirim ID')
-  ],
+  [param('id').isMongoId().withMessage('Geçersiz bildirim ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
-      const notificationId = req.params.id;
+      const notificationId = req.params['id'] || '';
       const userId = req.user!.id;
 
       // Bildirimin kullanıcıya ait olduğunu kontrol et
       const notification = await dbNotificationManager.Notification.findOne({
         _id: notificationId,
-        recipient: userId
+        recipient: userId,
       });
 
       if (!notification) {
         return res.status(404).json({
           success: false,
-          message: 'Bildirim bulunamadı'
+          message: 'Bildirim bulunamadı',
         });
       }
 
@@ -320,17 +292,17 @@ router.delete(
 
       return res.status(200).json({
         success: true,
-        message: 'Bildirim silindi'
+        message: 'Bildirim silindi',
       });
     } catch (error) {
       logger.error('Bildirim silme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        notificationId: req.params.id
+        notificationId: req.params['id'],
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirim silinirken bir hata oluştu'
+        message: 'Bildirim silinirken bir hata oluştu',
       });
     }
   })
@@ -350,21 +322,21 @@ router.delete(
 
       // Kullanıcının tüm bildirimlerini sil
       const result = await dbNotificationManager.Notification.deleteMany({
-        recipient: userId
+        recipient: userId,
       });
 
       return res.status(200).json({
         success: true,
-        message: `${result.deletedCount} bildirim silindi`
+        message: `${result.deletedCount} bildirim silindi`,
       });
     } catch (error) {
       logger.error('Tüm bildirimleri silme hatası', {
         error: (error as Error).message,
-        userId: req.user!.id
+        userId: req.user!.id,
       });
       return res.status(500).json({
         success: false,
-        message: 'Bildirimler silinirken bir hata oluştu'
+        message: 'Bildirimler silinirken bir hata oluştu',
       });
     }
   })

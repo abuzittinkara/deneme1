@@ -3,14 +3,14 @@
  * JWT yardımcı fonksiyonları için testler
  */
 import jwt from 'jsonwebtoken';
-import { 
-  generateToken, 
-  generateRefreshToken, 
-  generateTokenPair, 
-  verifyToken, 
+import {
+  generateToken,
+  generateRefreshToken,
+  generateTokenPair,
+  verifyToken,
   verifyRefreshToken,
   getTokenExpiration,
-  parseExpiresIn
+  parseExpiresIn,
 } from '../../utils/jwt';
 import { AuthError } from '../../middleware/authMiddleware';
 
@@ -20,8 +20,8 @@ jest.mock('../../config/env', () => ({
     JWT_SECRET: 'test-jwt-secret',
     JWT_REFRESH_SECRET: 'test-jwt-refresh-secret',
     JWT_EXPIRES_IN: '15m',
-    JWT_REFRESH_EXPIRES_IN: '7d'
-  }
+    JWT_REFRESH_EXPIRES_IN: '7d',
+  },
 }));
 
 // Mock logger
@@ -30,8 +30,8 @@ jest.mock('../../utils/logger', () => ({
     error: jest.fn(),
     warn: jest.fn(),
     info: jest.fn(),
-    debug: jest.fn()
-  }
+    debug: jest.fn(),
+  },
 }));
 
 describe('JWT Utils', () => {
@@ -39,7 +39,7 @@ describe('JWT Utils', () => {
     id: '123456789',
     username: 'testuser',
     role: 'user',
-    sub: '123456789'
+    sub: '123456789',
   };
 
   describe('generateToken', () => {
@@ -62,7 +62,7 @@ describe('JWT Utils', () => {
     it('should use the provided expiration time', () => {
       const token = generateToken(testPayload, '1h');
       const decoded = jwt.verify(token, 'test-jwt-secret') as any;
-      
+
       // 1 saat sonrası için exp değeri kontrol et (±5 saniye tolerans)
       const expectedExp = Math.floor(Date.now() / 1000) + 3600;
       expect(decoded.exp).toBeGreaterThan(expectedExp - 5);
@@ -90,17 +90,17 @@ describe('JWT Utils', () => {
   describe('generateTokenPair', () => {
     it('should generate both access and refresh tokens', () => {
       const tokenPair = generateTokenPair(testPayload);
-      
+
       expect(tokenPair).toBeDefined();
       expect(tokenPair.accessToken).toBeDefined();
       expect(tokenPair.refreshToken).toBeDefined();
       expect(tokenPair.expiresIn).toBeDefined();
       expect(tokenPair.refreshExpiresIn).toBeDefined();
-      
+
       // Access token'ı doğrula
       const decodedAccess = jwt.verify(tokenPair.accessToken, 'test-jwt-secret') as any;
       expect(decodedAccess.id).toBe(testPayload.id);
-      
+
       // Refresh token'ı doğrula
       const decodedRefresh = jwt.verify(tokenPair.refreshToken, 'test-jwt-refresh-secret') as any;
       expect(decodedRefresh.id).toBe(testPayload.id);
@@ -112,7 +112,7 @@ describe('JWT Utils', () => {
     it('should verify a valid token', async () => {
       const token = generateToken(testPayload);
       const decoded = await verifyToken(token);
-      
+
       expect(decoded).toBeDefined();
       expect(decoded.id).toBe(testPayload.id);
       expect(decoded.username).toBe(testPayload.username);
@@ -129,7 +129,7 @@ describe('JWT Utils', () => {
         { ...testPayload, exp: Math.floor(Date.now() / 1000) - 10 },
         'test-jwt-secret'
       );
-      
+
       await expect(verifyToken(expiredToken)).rejects.toThrow(AuthError);
     });
   });
@@ -138,7 +138,7 @@ describe('JWT Utils', () => {
     it('should verify a valid refresh token', async () => {
       const token = generateRefreshToken(testPayload);
       const decoded = await verifyRefreshToken(token);
-      
+
       expect(decoded).toBeDefined();
       expect(decoded.id).toBe(testPayload.id);
       expect(decoded.username).toBe(testPayload.username);
@@ -147,11 +147,8 @@ describe('JWT Utils', () => {
 
     it('should reject a token with missing type field', async () => {
       // type alanı olmayan token oluştur
-      const invalidToken = jwt.sign(
-        testPayload,
-        'test-jwt-refresh-secret'
-      );
-      
+      const invalidToken = jwt.sign(testPayload, 'test-jwt-refresh-secret');
+
       await expect(verifyRefreshToken(invalidToken)).rejects.toThrow(AuthError);
     });
   });
@@ -161,7 +158,7 @@ describe('JWT Utils', () => {
       // 1 saat geçerli token oluştur
       const token = generateToken(testPayload, '1h');
       const expiresIn = await getTokenExpiration(token);
-      
+
       // 1 saat = 3600 saniye (±5 saniye tolerans)
       expect(expiresIn).toBeGreaterThan(3595);
       expect(expiresIn).toBeLessThan(3605);

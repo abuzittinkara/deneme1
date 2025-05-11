@@ -5,23 +5,24 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile.distroless
+      dockerfile: Dockerfile.prod
     image: sesli-sohbet-api:latest
     container_name: sesli-sohbet-api
     restart: unless-stopped
     ports:
-      - "9999:9999"
+      - "9092:9092"
     environment:
-      - NODE_ENV=development
-      - PORT=9999
-      - MONGODB_URI=mongodb://mongodb:27017/sesli-sohbet
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - JWT_SECRET=supersecretkey123456789
-      - JWT_EXPIRES_IN=1d
-      - JWT_REFRESH_SECRET=supersecretrefreshkey123456789
-      - JWT_REFRESH_EXPIRES_IN=7d
-      - CORS_ORIGIN=*
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-9092}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/fisqos}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1d}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-7d}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - NODE_OPTIONS=${NODE_OPTIONS:---max-old-space-size=512}
     volumes:
       - ./logs:/app/logs
       - ./uploads:/app/uploads
@@ -31,7 +32,7 @@ services:
     networks:
       - sesli-sohbet-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9999/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-9092}/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,6 +62,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
     deploy:
       resources:
         limits:
@@ -84,10 +87,43 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=512
     deploy:
       resources:
         limits:
           cpus: '0.25'
+          memory: 256M
+
+  # Mediasoup Servisi
+  mediasoup:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: sesli-sohbet-mediasoup:latest
+    container_name: sesli-sohbet-mediasoup
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+      - "10000-10999:10000-10999/udp"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - MEDIASOUP_MIN_PORT=10000
+      - MEDIASOUP_MAX_PORT=10999
+      - NODE_OPTIONS=--max-old-space-size=512
+    networks:
+      - sesli-sohbet-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
           memory: 256M
 
 networks:

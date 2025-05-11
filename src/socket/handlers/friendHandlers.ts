@@ -11,10 +11,7 @@ import { measurePerformanceAsync } from '../../utils/performance';
  * @param socket - Socket.IO soketi
  * @param dependencies - Bağımlılıklar
  */
-export function registerFriendHandlers(
-  socket: TypedSocket,
-  dependencies: any
-): void {
+export function registerFriendHandlers(socket: TypedSocket, dependencies: any): void {
   const { friendManager, notificationManager, users } = dependencies;
   const userId = socket.data.userId;
   const username = socket.data.username;
@@ -28,12 +25,9 @@ export function registerFriendHandlers(
 
     try {
       // Arkadaşlık isteği gönder
-      const request = await measurePerformanceAsync(
-        async () => {
-          return await friendManager.sendFriendRequest(userId, receiverId);
-        },
-        'Arkadaşlık isteği gönderme'
-      );
+      const request = await measurePerformanceAsync(async () => {
+        return await friendManager.sendFriendRequest(userId, receiverId);
+      }, 'Arkadaşlık isteği gönderme');
 
       if (!request) {
         throw new Error('Arkadaşlık isteği gönderilemedi');
@@ -46,7 +40,7 @@ export function registerFriendHandlers(
           socket.to(socketId).emit('friend:request', {
             senderId: userId,
             senderUsername: username,
-            receiverId
+            receiverId,
           });
         }
       }
@@ -57,19 +51,19 @@ export function registerFriendHandlers(
       logger.debug('Arkadaşlık isteği gönderildi', {
         userId,
         username,
-        receiverId
+        receiverId,
       });
     } catch (error) {
       logger.error('Arkadaşlık isteği gönderme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        receiverId
+        receiverId,
       });
 
       socket.emit('error', {
         message: 'Arkadaşlık isteği gönderilemedi',
-        code: 'FRIEND_REQUEST_ERROR'
+        code: 'FRIEND_REQUEST_ERROR',
       });
     }
   });
@@ -83,12 +77,9 @@ export function registerFriendHandlers(
 
     try {
       // Arkadaşlık isteğini kabul et
-      const success = await measurePerformanceAsync(
-        async () => {
-          return await friendManager.acceptFriendRequest(senderId, userId);
-        },
-        'Arkadaşlık isteği kabul etme'
-      );
+      const success = await measurePerformanceAsync(async () => {
+        return await friendManager.acceptFriendRequest(senderId, userId);
+      }, 'Arkadaşlık isteği kabul etme');
 
       if (!success) {
         throw new Error('Arkadaşlık isteği kabul edilemedi');
@@ -100,7 +91,7 @@ export function registerFriendHandlers(
         for (const socketId of users[senderId]) {
           socket.to(socketId).emit('friend:accept', {
             senderId,
-            receiverId: userId
+            receiverId: userId,
           });
         }
       }
@@ -111,19 +102,19 @@ export function registerFriendHandlers(
       logger.debug('Arkadaşlık isteği kabul edildi', {
         userId,
         username,
-        senderId
+        senderId,
       });
     } catch (error) {
       logger.error('Arkadaşlık isteği kabul etme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        senderId
+        senderId,
       });
 
       socket.emit('error', {
         message: 'Arkadaşlık isteği kabul edilemedi',
-        code: 'FRIEND_ACCEPT_ERROR'
+        code: 'FRIEND_ACCEPT_ERROR',
       });
     }
   });
@@ -137,12 +128,9 @@ export function registerFriendHandlers(
 
     try {
       // Arkadaşlık isteğini reddet
-      const success = await measurePerformanceAsync(
-        async () => {
-          return await friendManager.rejectFriendRequest(senderId, userId);
-        },
-        'Arkadaşlık isteği reddetme'
-      );
+      const success = await measurePerformanceAsync(async () => {
+        return await friendManager.rejectFriendRequest(senderId, userId);
+      }, 'Arkadaşlık isteği reddetme');
 
       if (!success) {
         throw new Error('Arkadaşlık isteği reddedilemedi');
@@ -151,19 +139,19 @@ export function registerFriendHandlers(
       logger.debug('Arkadaşlık isteği reddedildi', {
         userId,
         username,
-        senderId
+        senderId,
       });
     } catch (error) {
       logger.error('Arkadaşlık isteği reddetme hatası', {
         error: (error as Error).message,
         userId,
         username,
-        senderId
+        senderId,
       });
 
       socket.emit('error', {
         message: 'Arkadaşlık isteği reddedilemedi',
-        code: 'FRIEND_REJECT_ERROR'
+        code: 'FRIEND_REJECT_ERROR',
       });
     }
   });
@@ -177,12 +165,9 @@ export function registerFriendHandlers(
 
     try {
       // Arkadaşlıktan çıkar
-      const success = await measurePerformanceAsync(
-        async () => {
-          return await friendManager.removeFriend(userId, friendId);
-        },
-        'Arkadaşlıktan çıkarma'
-      );
+      const success = await measurePerformanceAsync(async () => {
+        return await friendManager.removeFriend(userId, friendId);
+      }, 'Arkadaşlıktan çıkarma');
 
       if (!success) {
         throw new Error('Arkadaşlıktan çıkarılamadı');
@@ -195,7 +180,7 @@ export function registerFriendHandlers(
           // @ts-ignore - Tip uyumsuzluğunu geçici olarak görmezden gel
           socket.to(socketId).emit('friend:remove', {
             userId,
-            friendId
+            friendId,
           });
         }
       }
@@ -203,19 +188,19 @@ export function registerFriendHandlers(
       logger.debug('Arkadaşlıktan çıkarıldı', {
         userId,
         username,
-        friendId
+        friendId,
       });
     } catch (error) {
       logger.error('Arkadaşlıktan çıkarma hatası', {
         error: (error as Error).message,
         userId,
         username,
-        friendId
+        friendId,
       });
 
       socket.emit('error', {
         message: 'Arkadaşlıktan çıkarılamadı',
-        code: 'FRIEND_REMOVE_ERROR'
+        code: 'FRIEND_REMOVE_ERROR',
       });
     }
   });

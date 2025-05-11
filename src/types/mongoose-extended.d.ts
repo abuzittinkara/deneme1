@@ -15,16 +15,16 @@ declare module 'mongoose' {
   interface Model<T, TQueryHelpers = {}, TMethodsAndOverrides = {}, TVirtuals = {}> {
     // Mongoose 6.x'te find() metodunun dönüş tipi için düzeltme
     find(filter?: any, projection?: any, options?: any): Query<T[], T, TQueryHelpers, T>;
-    
+
     // Mongoose 6.x'te findOne() metodunun dönüş tipi için düzeltme
     findOne(filter?: any, projection?: any, options?: any): Query<T | null, T, TQueryHelpers, T>;
-    
+
     // Mongoose 6.x'te findById() metodunun dönüş tipi için düzeltme
     findById(id: any, projection?: any, options?: any): Query<T | null, T, TQueryHelpers, T>;
-    
+
     // Mongoose 6.x'te findByIdAndUpdate() metodunun dönüş tipi için düzeltme
     findByIdAndUpdate(id: any, update: any, options?: any): Query<T | null, T, TQueryHelpers, T>;
-    
+
     // Mongoose 6.x'te findByIdAndDelete() metodunun dönüş tipi için düzeltme
     findByIdAndDelete(id: any, options?: any): Query<T | null, T, TQueryHelpers, T>;
   }

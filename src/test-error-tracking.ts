@@ -36,7 +36,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
     id: '123456789',
     username: 'test-user',
     role: 'user',
-    sub: '123456789'
+    sub: '123456789',
   } as TokenPayload;
   next();
 });
@@ -78,7 +78,7 @@ app.get('/error/unhandled-rejection', (_req: Request, res: Response) => {
   });
 
   // Promise'i döndür ama yakala
-  promise.catch(error => {
+  promise.catch((error) => {
     logger.error('Promise reddi yakalandı', { error });
     sentryHandler.sentryReportError(error);
     res.status(500).json({ error: error.message });
@@ -142,6 +142,8 @@ app.listen(PORT, () => {
   logger.info(`- http://localhost:${PORT}/ - Ana sayfa`);
   logger.info(`- http://localhost:${PORT}/error/operational - Operasyonel hata testi`);
   logger.info(`- http://localhost:${PORT}/error/programming - Programlama hatası testi`);
-  logger.info(`- http://localhost:${PORT}/error/unhandled-rejection - Yakalanmamış promise reddi testi`);
+  logger.info(
+    `- http://localhost:${PORT}/error/unhandled-rejection - Yakalanmamış promise reddi testi`
+  );
   logger.info(`- http://localhost:${PORT}/debug-sentry - Sentry test rotası`);
 });

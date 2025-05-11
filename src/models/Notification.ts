@@ -43,14 +43,17 @@ export interface NotificationModel extends FullModelType<INotification> {
 }
 
 // Bildirim hedefi şeması
-const NotificationTargetSchema = new Schema({
-  type: {
-    type: String,
-    enum: ['message', 'directMessage', 'user', 'group', 'channel'],
-    required: true
+const NotificationTargetSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['message', 'directMessage', 'user', 'group', 'channel'],
+      required: true,
+    },
+    id: { type: Schema.Types.ObjectId, required: true },
   },
-  id: { type: Schema.Types.ObjectId, required: true }
-}, { _id: false });
+  { _id: false }
+);
 
 // Bildirim şeması
 const NotificationSchema = new Schema<NotificationDocument, NotificationModel>(
@@ -60,23 +63,23 @@ const NotificationSchema = new Schema<NotificationDocument, NotificationModel>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true
+      index: true,
     },
     // Bildirimin göndereni (isteğe bağlı)
     sender: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
     },
     // Bildirim türü
     type: {
       type: String,
       enum: Object.values(NotificationType),
-      required: true
+      required: true,
     },
     // Bildirim içeriği
     content: {
       type: String,
-      required: true
+      required: true,
     },
     // Bildirim hedefi (isteğe bağlı)
     target: NotificationTargetSchema,
@@ -84,28 +87,28 @@ const NotificationSchema = new Schema<NotificationDocument, NotificationModel>(
     isRead: {
       type: Boolean,
       default: false,
-      index: true
+      index: true,
     },
     readAt: {
-      type: Date
+      type: Date,
     },
     // Bildirim son kullanma tarihi (isteğe bağlı)
     expiresAt: {
-      type: Date
+      type: Date,
     },
     // Bildirim önceliği
     priority: {
       type: String,
       enum: ['low', 'normal', 'high'],
-      default: 'normal'
+      default: 'normal',
     },
     // Ek bilgiler
     metadata: {
-      type: Schema.Types.Mixed
-    }
+      type: Schema.Types.Mixed,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -119,22 +122,19 @@ NotificationSchema.index({ 'target.type': 1, 'target.id': 1 });
 NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 // Statik metodlar
-NotificationSchema.statics.findUnreadByUser = function(
+NotificationSchema.statics['findUnreadByUser'] = function (
   userId: mongoose.Types.ObjectId
 ): Promise<NotificationDocument[]> {
   return this.find({
     recipient: userId,
     isRead: false,
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: { $gt: new Date() } }
-    ]
+    $or: [{ expiresAt: { $exists: false } }, { expiresAt: { $gt: new Date() } }],
   })
     .sort({ createdAt: -1 })
     .populate('sender', 'username profilePicture') as unknown as Promise<NotificationDocument[]>;
 };
 
-NotificationSchema.statics.markAsRead = async function(
+NotificationSchema.statics['markAsRead'] = async function (
   notificationId: mongoose.Types.ObjectId
 ): Promise<void> {
   await this.updateOne(
@@ -142,13 +142,13 @@ NotificationSchema.statics.markAsRead = async function(
     {
       $set: {
         isRead: true,
-        readAt: new Date()
-      }
+        readAt: new Date(),
+      },
     }
   );
 };
 
-NotificationSchema.statics.markAllAsRead = async function(
+NotificationSchema.statics['markAllAsRead'] = async function (
   userId: mongoose.Types.ObjectId
 ): Promise<void> {
   await this.updateMany(
@@ -156,15 +156,15 @@ NotificationSchema.statics.markAllAsRead = async function(
     {
       $set: {
         isRead: true,
-        readAt: new Date()
-      }
+        readAt: new Date(),
+      },
     }
   );
 };
 
-NotificationSchema.statics.deleteExpired = async function(): Promise<void> {
+NotificationSchema.statics['deleteExpired'] = async function (): Promise<void> {
   await this.deleteMany({
-    expiresAt: { $lt: new Date() }
+    expiresAt: { $lt: new Date() },
   });
 };
 
@@ -189,7 +189,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as NotificationModel;
 } else {
   // Gerçek model
-  Notification = (mongoose.models.Notification as NotificationModel) ||
+  Notification =
+    (mongoose.models['Notification'] as NotificationModel) ||
     mongoose.model<NotificationDocument, NotificationModel>('Notification', NotificationSchema);
 }
 

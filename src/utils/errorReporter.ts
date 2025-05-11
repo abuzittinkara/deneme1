@@ -48,10 +48,10 @@ function createErrorFingerprint(error: Error, context?: Record<string, any>): st
   const errorName = error.name || 'UnknownError';
   const errorMessage = error.message || 'No message';
   const errorStack = error.stack || '';
-  
+
   // Hata yığınından ilk satırı al
   const stackFirstLine = errorStack.split('\n')[1] || '';
-  
+
   // Parmak izi oluştur
   return `${errorName}:${errorMessage}:${stackFirstLine}`;
 }
@@ -59,41 +59,46 @@ function createErrorFingerprint(error: Error, context?: Record<string, any>): st
 // Hata grubunu belirle
 function determineErrorGroup(error: Error): string {
   const errorName = error.name || 'UnknownError';
-  
+
   // Hata türüne göre gruplandır
   if (errorName.includes('Validation')) return 'ValidationError';
   if (errorName.includes('Auth') || errorName.includes('Token')) return 'AuthenticationError';
-  if (errorName.includes('Permission') || errorName.includes('Forbidden')) return 'AuthorizationError';
+  if (errorName.includes('Permission') || errorName.includes('Forbidden'))
+    return 'AuthorizationError';
   if (errorName.includes('NotFound')) return 'NotFoundError';
   if (errorName.includes('Timeout') || errorName.includes('ETIMEDOUT')) return 'TimeoutError';
   if (errorName.includes('Connection') || errorName.includes('Network')) return 'NetworkError';
   if (errorName.includes('Database') || errorName.includes('Mongo')) return 'DatabaseError';
   if (errorName.includes('Redis')) return 'RedisError';
   if (errorName.includes('Syntax') || errorName.includes('Reference')) return 'CodeError';
-  
+
   // Hata mesajına göre gruplandır
   const errorMessage = error.message || '';
   if (errorMessage.includes('validation')) return 'ValidationError';
   if (errorMessage.includes('auth') || errorMessage.includes('token')) return 'AuthenticationError';
-  if (errorMessage.includes('permission') || errorMessage.includes('forbidden')) return 'AuthorizationError';
+  if (errorMessage.includes('permission') || errorMessage.includes('forbidden'))
+    return 'AuthorizationError';
   if (errorMessage.includes('not found') || errorMessage.includes('404')) return 'NotFoundError';
   if (errorMessage.includes('timeout')) return 'TimeoutError';
   if (errorMessage.includes('connect') || errorMessage.includes('network')) return 'NetworkError';
   if (errorMessage.includes('database') || errorMessage.includes('mongo')) return 'DatabaseError';
   if (errorMessage.includes('redis')) return 'RedisError';
-  
+
   return 'OtherError';
 }
 
 // Hata seviyesini belirle
-function determineErrorSeverity(error: Error, context?: Record<string, any>): 'critical' | 'error' | 'warning' | 'info' {
+function determineErrorSeverity(
+  error: Error,
+  context?: Record<string, any>
+): 'critical' | 'error' | 'warning' | 'info' {
   const errorName = error.name || 'UnknownError';
   const errorMessage = error.message || '';
-  const statusCode = context?.statusCode || 500;
-  
+  const statusCode = context && 'statusCode' in context ? context['statusCode'] : 500;
+
   // Kritik hatalar
   if (
-    errorName.includes('OutOfMemory') || 
+    errorName.includes('OutOfMemory') ||
     errorName.includes('Fatal') ||
     errorMessage.includes('crash') ||
     errorMessage.includes('fatal') ||
@@ -101,10 +106,10 @@ function determineErrorSeverity(error: Error, context?: Record<string, any>): 'c
   ) {
     return 'critical';
   }
-  
+
   // Önemli hatalar
   if (
-    errorName.includes('Database') || 
+    errorName.includes('Database') ||
     errorName.includes('Mongo') ||
     errorName.includes('Redis') ||
     errorName.includes('Connection') ||
@@ -116,7 +121,7 @@ function determineErrorSeverity(error: Error, context?: Record<string, any>): 'c
   ) {
     return 'error';
   }
-  
+
   // Uyarılar
   if (
     errorName.includes('Validation') ||
@@ -124,11 +129,11 @@ function determineErrorSeverity(error: Error, context?: Record<string, any>): 'c
     errorName.includes('Token') ||
     errorName.includes('Permission') ||
     errorName.includes('Forbidden') ||
-    statusCode >= 400 && statusCode < 500
+    (statusCode >= 400 && statusCode < 500)
   ) {
     return 'warning';
   }
-  
+
   return 'info';
 }
 
@@ -142,96 +147,97 @@ export function trackError(error: Error, path?: string, context?: Record<string,
   try {
     // Hata parmak izini oluştur
     const errorFingerprint = createErrorFingerprint(error, context);
-    
+
     // Hata grubunu belirle
     const errorGroup = determineErrorGroup(error);
-    
+
     // Hata seviyesini belirle
     const errorSeverity = determineErrorSeverity(error, context);
-    
+
     // Hata grubunu güncelle
     if (!errorGroups[errorGroup]) {
       errorGroups[errorGroup] = {
         count: 0,
         fingerprints: new Set(),
         firstSeen: new Date(),
-        lastSeen: new Date()
+        lastSeen: new Date(),
       };
     }
-    
+
     errorGroups[errorGroup].count++;
     errorGroups[errorGroup].fingerprints.add(errorFingerprint);
     errorGroups[errorGroup].lastSeen = new Date();
-    
+
     // Hata sayısını güncelle
     if (!errorCounts[errorFingerprint]) {
       errorCounts[errorFingerprint] = {
         count: 0,
         firstSeen: new Date(),
         lastSeen: new Date(),
-        samples: []
+        samples: [],
       };
     }
-    
+
     errorCounts[errorFingerprint].count++;
     errorCounts[errorFingerprint].lastSeen = new Date();
-    
+
     // Örnek hata bilgilerini sakla (en fazla 5 örnek)
     if (errorCounts[errorFingerprint].samples.length < 5) {
       errorCounts[errorFingerprint].samples.push({
         message: error.message,
         stack: error.stack,
         context,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
-    
+
     // Son dakikadaki hata sayısını güncelle
     errorCountLastMinute++;
-    
+
     // Dakika geçtiyse sayacı sıfırla
     const now = Date.now();
     if (now - lastMinuteTimestamp > 60000) {
       lastMinuteTimestamp = now;
-      
+
       // Önceki dakikadaki hata sayısını logla
       if (errorCountLastMinute > 0) {
         logger.warn(`Son dakikada ${errorCountLastMinute} hata oluştu`);
-        
+
         // Hata oranı yüksekse uyarı gönder
         if (errorCountLastMinute > 10) {
           logger.error('Yüksek hata oranı tespit edildi', {
             errorCount: errorCountLastMinute,
-            timeFrame: '1 dakika'
+            timeFrame: '1 dakika',
           });
-          
+
           // Hata olayını yayınla
           errorEmitter.emit('high_error_rate', {
             errorCount: errorCountLastMinute,
             timeFrame: '1 dakika',
-            timestamp: new Date()
+            timestamp: new Date(),
           });
         }
       }
-      
+
       errorCountLastMinute = 0;
     }
-    
+
     // Tekrarlayan hataları tespit et
     if (errorCounts[errorFingerprint].count > 10) {
-      const timeDiff = errorCounts[errorFingerprint].lastSeen.getTime() - 
-                      errorCounts[errorFingerprint].firstSeen.getTime();
-      
+      const timeDiff =
+        errorCounts[errorFingerprint].lastSeen.getTime() -
+        errorCounts[errorFingerprint].firstSeen.getTime();
+
       // Son 5 dakika içinde 10'dan fazla aynı hata
       if (timeDiff < 5 * 60 * 1000) {
-        logger.error('Tekrarlayan hata tespit edildi', { 
-          error: error.message, 
+        logger.error('Tekrarlayan hata tespit edildi', {
+          error: error.message,
           name: error.name,
           count: errorCounts[errorFingerprint].count,
           timeSpan: `${Math.round(timeDiff / 1000)} saniye`,
-          severity: errorSeverity
+          severity: errorSeverity,
         });
-        
+
         // Hata olayını yayınla
         errorEmitter.emit('repeated_error', {
           error: error.message,
@@ -240,11 +246,11 @@ export function trackError(error: Error, path?: string, context?: Record<string,
           count: errorCounts[errorFingerprint].count,
           timeSpan: `${Math.round(timeDiff / 1000)} saniye`,
           severity: errorSeverity,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       }
     }
-    
+
     // Kritik hataları hemen bildir
     if (errorSeverity === 'critical') {
       logger.error('Kritik hata tespit edildi', {
@@ -252,9 +258,9 @@ export function trackError(error: Error, path?: string, context?: Record<string,
         name: error.name,
         path,
         context,
-        severity: errorSeverity
+        severity: errorSeverity,
       });
-      
+
       // Hata olayını yayınla
       errorEmitter.emit('critical_error', {
         error: error.message,
@@ -262,14 +268,14 @@ export function trackError(error: Error, path?: string, context?: Record<string,
         path,
         context,
         severity: errorSeverity,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
     }
   } catch (trackingError) {
     // Hata izleme sırasında oluşan hatayı logla
     logger.error('Hata izleme sırasında hata oluştu', {
       originalError: error.message,
-      trackingError: trackingError instanceof Error ? trackingError.message : 'Bilinmeyen hata'
+      trackingError: trackingError instanceof Error ? trackingError.message : 'Bilinmeyen hata',
     });
   }
 }
@@ -284,11 +290,11 @@ export function reportToSentry(error: Error, context?: Record<string, any>): voi
   if (!env.FEATURE_SENTRY) {
     return;
   }
-  
+
   try {
     // Hata seviyesini belirle
     const errorSeverity = determineErrorSeverity(error, context);
-    
+
     // Sentry kapsamı oluştur
     Sentry.configureScope((scope) => {
       // Bağlam bilgilerini ekle
@@ -297,15 +303,21 @@ export function reportToSentry(error: Error, context?: Record<string, any>): voi
           scope.setExtra(key, value);
         });
       }
-      
+
       // Hata seviyesini ayarla
-      scope.setLevel(errorSeverity === 'critical' ? 'fatal' : 
-                    errorSeverity === 'error' ? 'error' : 
-                    errorSeverity === 'warning' ? 'warning' : 'info');
-      
+      scope.setLevel(
+        errorSeverity === 'critical'
+          ? 'fatal'
+          : errorSeverity === 'error'
+            ? 'error'
+            : errorSeverity === 'warning'
+              ? 'warning'
+              : 'info'
+      );
+
       // Parmak izi ekle
       scope.setFingerprint([createErrorFingerprint(error, context)]);
-      
+
       // Etiketler ekle
       scope.setTags({
         errorGroup: determineErrorGroup(error),
@@ -313,17 +325,17 @@ export function reportToSentry(error: Error, context?: Record<string, any>): voi
         environment: env.NODE_ENV,
         nodeVersion: process.version,
         platform: process.platform,
-        hostname: os.hostname()
+        hostname: os.hostname(),
       });
     });
-    
+
     // Hatayı Sentry'ye gönder
     Sentry.captureException(error);
   } catch (sentryError) {
     // Sentry raporlama sırasında oluşan hatayı logla
     logger.error('Sentry raporlama sırasında hata oluştu', {
       originalError: error.message,
-      sentryError: sentryError instanceof Error ? sentryError.message : 'Bilinmeyen hata'
+      sentryError: sentryError instanceof Error ? sentryError.message : 'Bilinmeyen hata',
     });
   }
 }
@@ -343,7 +355,7 @@ export function createRequestContext(req: Request): Record<string, any> {
     userAgent: req.headers['user-agent'],
     userId: (req as any).user?.id,
     username: (req as any).user?.username,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
 
@@ -361,9 +373,9 @@ export async function getErrorStats(): Promise<any> {
         count: data.count,
         uniqueErrors: data.fingerprints.size,
         firstSeen: data.firstSeen,
-        lastSeen: data.lastSeen
+        lastSeen: data.lastSeen,
       }));
-      
+
       // En sık görülen hataları hesapla
       const topErrors = Object.entries(errorCounts)
         .map(([fingerprint, data]) => ({
@@ -371,17 +383,17 @@ export async function getErrorStats(): Promise<any> {
           count: data.count,
           firstSeen: data.firstSeen,
           lastSeen: data.lastSeen,
-          samples: data.samples
+          samples: data.samples,
         }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
-      
+
       // Son 1 saatteki hataları hesapla
       const now = Date.now();
       const lastHourErrors = Object.entries(errorCounts)
         .filter(([_, data]) => now - data.lastSeen.getTime() <= 60 * 60 * 1000)
         .reduce((count, [_, data]) => count + data.count, 0);
-      
+
       return {
         totalErrors: Object.values(errorCounts).reduce((sum, data) => sum + data.count, 0),
         uniqueErrors: Object.keys(errorCounts).length,
@@ -389,7 +401,7 @@ export async function getErrorStats(): Promise<any> {
         topErrors,
         lastHourErrors,
         errorCountLastMinute,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
     },
     { ttl: 60, staleWhileRevalidate: true }
@@ -405,95 +417,100 @@ export function startErrorTracking(): void {
     logger.error('Yakalanmamış istisna', {
       error: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     // Hatayı izleme sistemine ekle
     trackError(error, 'uncaughtException', {
       processId: process.pid,
       memoryUsage: process.memoryUsage(),
-      uptime: process.uptime()
+      uptime: process.uptime(),
     });
-    
+
     // Hatayı Sentry'ye bildir
     reportToSentry(error, {
       context: 'Yakalanmamış istisna',
       processId: process.pid,
       memoryUsage: JSON.stringify(process.memoryUsage()),
-      uptime: process.uptime()
+      uptime: process.uptime(),
     });
-    
+
     // Hata olayını yayınla
     errorEmitter.emit('uncaught_exception', {
       error: error.message,
       name: error.name,
       stack: error.stack,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
-    
+
     // Kritik hatalardan sonra uygulamayı güvenli bir şekilde kapat
     if (env.isProduction) {
       logger.error('Kritik hata nedeniyle uygulama kapatılıyor');
-      
+
       // Temizlik işlemleri için biraz bekle
       setTimeout(() => {
         process.exit(1);
       }, 1000);
     }
   });
-  
+
   // İşlenmeyen reddetmeleri izle
   process.on('unhandledRejection', (reason, promise) => {
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    
+
     logger.error('İşlenmeyen reddetme', {
       error: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     // Hatayı izleme sistemine ekle
     trackError(error, 'unhandledRejection', {
       processId: process.pid,
       memoryUsage: process.memoryUsage(),
-      uptime: process.uptime()
+      uptime: process.uptime(),
     });
-    
+
     // Hatayı Sentry'ye bildir
     reportToSentry(error, {
       context: 'İşlenmeyen reddetme',
       processId: process.pid,
       memoryUsage: JSON.stringify(process.memoryUsage()),
-      uptime: process.uptime()
+      uptime: process.uptime(),
     });
-    
+
     // Hata olayını yayınla
     errorEmitter.emit('unhandled_rejection', {
       error: error.message,
       name: error.name,
       stack: error.stack,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   });
-  
+
   // Periyodik olarak hata istatistiklerini logla
-  setInterval(() => {
-    getErrorStats().then((stats) => {
-      if (stats.totalErrors > 0) {
-        logger.info('Hata istatistikleri', { stats });
-      }
-    }).catch((error) => {
-      logger.error('Hata istatistikleri alınırken hata oluştu', {
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      });
-    });
-  }, 60 * 60 * 1000); // Her saat
-  
+  setInterval(
+    () => {
+      getErrorStats()
+        .then((stats) => {
+          if (stats.totalErrors > 0) {
+            logger.info('Hata istatistikleri', { stats });
+          }
+        })
+        .catch((error) => {
+          logger.error('Hata istatistikleri alınırken hata oluştu', {
+            error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+          });
+        });
+    },
+    60 * 60 * 1000
+  ); // Her saat
+
   logger.info('Hata izleme sistemi başlatıldı');
 }
 
 // Hata olaylarını dinle
-errorEmitter.on('critical_error', (data) => {
+errorEmitter.on('critical_error', (_data) => {
   // Kritik hata durumunda yapılacak işlemler
   // Örneğin: Bildirim gönder, alarm oluştur, vb.
   if (env.isProduction) {
@@ -501,7 +518,7 @@ errorEmitter.on('critical_error', (data) => {
   }
 });
 
-errorEmitter.on('high_error_rate', (data) => {
+errorEmitter.on('high_error_rate', (_data) => {
   // Yüksek hata oranı durumunda yapılacak işlemler
   // Örneğin: Bildirim gönder, alarm oluştur, vb.
   if (env.isProduction) {
@@ -515,5 +532,5 @@ export default {
   createRequestContext,
   getErrorStats,
   startErrorTracking,
-  errorEmitter
+  errorEmitter,
 };

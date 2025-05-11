@@ -3,9 +3,18 @@
  * Kimlik doğrulama işlemleri
  */
 import bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { User, IUser, UserDocument } from '../../models/User';
 import { logger } from '../../utils/logger';
-import { generateTokens, verifyToken, refreshAccessToken, invalidateAllUserTokens, invalidateRefreshToken, TokenPayload, TokenResponse } from '../../config/jwt';
+import {
+  generateTokens,
+  verifyToken,
+  refreshAccessToken,
+  invalidateAllUserTokens,
+  invalidateRefreshToken,
+  TokenPayload,
+  TokenResponse,
+} from '../../config/jwt';
 import { NotFoundError, ValidationError, AuthenticationError } from '../../utils/errors';
 import * as sessionManager from '../session/sessionManager';
 
@@ -82,17 +91,14 @@ export async function registerUser(userData: UserRegistrationData): Promise<Regi
           success: true,
           userId: '123456789012345678901234',
           username: 'test',
-          message: 'Kullanıcı başarıyla kaydedildi (geliştirme modu)'
+          message: 'Kullanıcı başarıyla kaydedildi (geliştirme modu)',
         };
       }
     }
 
     // Kullanıcı adı ve e-posta benzersiz mi kontrol et
     const existingUser = await User.findOne({
-      $or: [
-        { username: username.toLowerCase() },
-        { email: email.toLowerCase() }
-      ]
+      $or: [{ username: username.toLowerCase() }, { email: email.toLowerCase() }],
     });
 
     if (existingUser) {
@@ -124,19 +130,22 @@ export async function registerUser(userData: UserRegistrationData): Promise<Regi
       isActive: true,
       role: 'user',
       groups: [],
-      friends: []
+      friends: [],
     });
 
     // Kullanıcıyı kaydet
     await newUser.save();
 
-    logger.info('Yeni kullanıcı kaydedildi', { username: newUser.username, userId: newUser._id });
+    logger.info('Yeni kullanıcı kaydedildi', {
+      username: newUser.username,
+      userId: newUser._id ? newUser._id.toString() : '',
+    });
 
     return {
       success: true,
-      userId: newUser._id.toString(),
+      userId: newUser._id ? newUser._id.toString() : '',
       username: newUser.username,
-      message: 'Kullanıcı başarıyla kaydedildi'
+      message: 'Kullanıcı başarıyla kaydedildi',
     };
   } catch (error) {
     logger.error('Kullanıcı kaydı hatası', { error: (error as Error).message, userData });
@@ -150,7 +159,11 @@ export async function registerUser(userData: UserRegistrationData): Promise<Regi
  * @param password - Şifre
  * @returns Giriş sonucu
  */
-export async function loginUser(usernameOrEmail: string, password: string, rememberMe: boolean = false): Promise<LoginResult> {
+export async function loginUser(
+  usernameOrEmail: string,
+  password: string,
+  rememberMe: boolean = false
+): Promise<LoginResult> {
   try {
     // Zorunlu alanları kontrol et
     if (!usernameOrEmail || !password) {
@@ -159,40 +172,48 @@ export async function loginUser(usernameOrEmail: string, password: string, remem
 
     // GELİŞTİRME MODU: MongoDB bağlantısı olmadığında test kullanıcısı kullan
     if (process.env.NODE_ENV !== 'production') {
-      // Test kullanıcısı için sabit şifre: "Password123"
-      if (usernameOrEmail === 'test' && password === 'Password123') {
-        logger.info('Test kullanıcısı girişi (geliştirme modu)');
+      // Test kullanıcısı için güvenli bir şifre kontrolü
+      if (usernameOrEmail === 'test') {
+        // Test kullanıcısı için şifre kontrolü - geliştirme ortamında bile güvenli olmalı
+        const testUserPasswordHash =
+          process.env.TEST_USER_PASSWORD_HASH ||
+          '$2b$10$XFE/O0y0TRqMQzeY1y.Wt.YLKbUwVISpO6VcvwS39RZcCQTiRnW4W'; // "Password123" için hash
 
-        // Sahte token oluştur
-        const mockTokens = {
-          accessToken: 'test-access-token',
-          refreshToken: 'test-refresh-token',
-          expiresIn: 3600
-        };
+        // Şifreyi doğrula
+        const isPasswordValid = await bcrypt.compare(password, testUserPasswordHash);
 
-        return {
-          success: true,
-          userId: '123456789012345678901234',
-          username: 'test',
-          name: 'Test',
-          surname: 'User',
-          email: 'test@example.com',
-          role: 'user',
-          profilePicture: undefined,
-          isEmailVerified: true,
-          accessToken: mockTokens.accessToken,
-          refreshToken: mockTokens.refreshToken,
-          expiresIn: mockTokens.expiresIn
-        };
+        if (isPasswordValid) {
+          logger.info('Test kullanıcısı girişi (geliştirme modu)');
+
+          // Sahte token oluştur - her seferinde benzersiz olmalı
+          const jti = crypto.randomBytes(16).toString('hex');
+          const mockTokens = {
+            accessToken: `test-access-token-${jti}`,
+            refreshToken: `test-refresh-token-${jti}`,
+            expiresIn: 3600,
+          };
+
+          return {
+            success: true,
+            userId: '123456789012345678901234',
+            username: 'test',
+            name: 'Test',
+            surname: 'User',
+            email: 'test@example.com',
+            role: 'user',
+            profilePicture: undefined,
+            isEmailVerified: true,
+            accessToken: mockTokens.accessToken,
+            refreshToken: mockTokens.refreshToken,
+            expiresIn: mockTokens.expiresIn,
+          };
+        }
       }
     }
 
     // Kullanıcıyı bul
     const user = await User.findOne({
-      $or: [
-        { username: usernameOrEmail.toLowerCase() },
-        { email: usernameOrEmail.toLowerCase() }
-      ]
+      $or: [{ username: usernameOrEmail.toLowerCase() }, { email: usernameOrEmail.toLowerCase() }],
     });
 
     if (!user) {
@@ -228,11 +249,14 @@ export async function loginUser(usernameOrEmail: string, password: string, remem
     const profilePicture = user.get('profilePicture');
     const emailVerified = user.get('emailVerified');
 
-    logger.info('Kullanıcı girişi başarılı', { username, userId: user._id });
+    logger.info('Kullanıcı girişi başarılı', {
+      username,
+      userId: user._id ? user._id.toString() : '',
+    });
 
     return {
       success: true,
-      userId: user._id.toString(),
+      userId: user._id ? user._id.toString() : '',
       username,
       name,
       surname,
@@ -242,7 +266,7 @@ export async function loginUser(usernameOrEmail: string, password: string, remem
       isEmailVerified: emailVerified,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      expiresIn: tokens.expiresIn
+      expiresIn: tokens.expiresIn,
     };
   } catch (error) {
     logger.error('Kullanıcı girişi hatası', { error: (error as Error).message, usernameOrEmail });
@@ -293,7 +317,7 @@ export async function changePassword(
 
     return {
       success: true,
-      message: 'Şifre başarıyla değiştirildi'
+      message: 'Şifre başarıyla değiştirildi',
     };
   } catch (error) {
     logger.error('Şifre değiştirme hatası', { error: (error as Error).message, userId });
@@ -328,7 +352,7 @@ export async function logoutUser(
 
     return {
       success: true,
-      message: 'Çıkış başarılı'
+      message: 'Çıkış başarılı',
     };
   } catch (error) {
     logger.error('Kullanıcı çıkışı hatası', { error: (error as Error).message, userId, sessionId });
@@ -353,7 +377,7 @@ export async function logoutAllDevices(userId: string): Promise<LogoutResult> {
 
     return {
       success: true,
-      message: 'Tüm cihazlardan çıkış başarılı'
+      message: 'Tüm cihazlardan çıkış başarılı',
     };
   } catch (error) {
     logger.error('Tüm cihazlardan çıkış hatası', { error: (error as Error).message, userId });
@@ -369,15 +393,27 @@ export async function logoutAllDevices(userId: string): Promise<LogoutResult> {
 export async function refreshToken(refreshToken: string): Promise<TokenRefreshResult> {
   try {
     // GELİŞTİRME MODU: Test token'ı için özel durum
-    if (process.env.NODE_ENV !== 'production' && refreshToken === 'test-refresh-token') {
-      logger.info('Test refresh token yenileme (geliştirme modu)');
+    if (process.env.NODE_ENV !== 'production' && refreshToken.startsWith('test-refresh-token-')) {
+      // Token formatını kontrol et (test-refresh-token-{jti})
+      const parts = refreshToken.split('-');
+      if (parts.length >= 4) {
+        const jti = parts.slice(3).join('-');
 
-      return {
-        success: true,
-        accessToken: 'test-access-token-renewed',
-        refreshToken: 'test-refresh-token-renewed',
-        expiresIn: 3600
-      };
+        // Geçerli bir jti olmalı (en az 16 karakter)
+        if (jti && jti.length >= 16) {
+          logger.info('Test refresh token yenileme (geliştirme modu)');
+
+          // Yeni benzersiz jti oluştur
+          const newJti = crypto.randomBytes(16).toString('hex');
+
+          return {
+            success: true,
+            accessToken: `test-access-token-${newJti}`,
+            refreshToken: `test-refresh-token-${newJti}`,
+            expiresIn: 3600,
+          };
+        }
+      }
     }
 
     // Refresh token ile yeni token oluştur
@@ -387,7 +423,7 @@ export async function refreshToken(refreshToken: string): Promise<TokenRefreshRe
       success: true,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
-      expiresIn: tokens.expiresIn
+      expiresIn: tokens.expiresIn,
     };
   } catch (error) {
     logger.error('Token yenileme hatası', { error: (error as Error).message });
@@ -402,12 +438,22 @@ export async function refreshToken(refreshToken: string): Promise<TokenRefreshRe
  */
 export function verifyAccessToken(token: string): TokenPayload | null {
   // GELİŞTİRME MODU: Test token'ı için özel durum
-  if (process.env.NODE_ENV !== 'production' && token === 'test-access-token') {
-    return {
-      sub: '123456789012345678901234',
-      username: 'test',
-      role: 'user'
-    };
+  if (process.env.NODE_ENV !== 'production' && token.startsWith('test-access-token-')) {
+    // Token formatını kontrol et (test-access-token-{jti})
+    const parts = token.split('-');
+    if (parts.length >= 4) {
+      const jti = parts.slice(3).join('-');
+
+      // Geçerli bir jti olmalı (en az 16 karakter)
+      if (jti && jti.length >= 16) {
+        return {
+          sub: '123456789012345678901234',
+          username: 'test',
+          role: 'user',
+          jti: jti,
+        };
+      }
+    }
   }
 
   return verifyToken(token);
@@ -421,7 +467,10 @@ export function verifyAccessToken(token: string): TokenPayload | null {
 export async function createSession(sessionData: any): Promise<any> {
   try {
     // GELİŞTİRME MODU: Test kullanıcısı için özel durum
-    if (process.env.NODE_ENV !== 'production' && sessionData.userId === '123456789012345678901234') {
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      sessionData.userId === '123456789012345678901234'
+    ) {
       logger.info('Test kullanıcısı oturumu oluşturuldu (geliştirme modu)');
 
       return {
@@ -431,7 +480,7 @@ export async function createSession(sessionData: any): Promise<any> {
         ipAddress: sessionData.ipAddress || '127.0.0.1',
         createdAt: new Date(),
         lastActive: new Date(),
-        isActive: true
+        isActive: true,
       };
     }
 
@@ -444,14 +493,14 @@ export async function createSession(sessionData: any): Promise<any> {
 
     logger.info('Oturum oluşturuldu', {
       userId: sessionData.userId,
-      sessionId: session
+      sessionId: session,
     });
 
     return session;
   } catch (error) {
     logger.error('Oturum oluşturma hatası', {
       error: (error as Error).message,
-      userId: sessionData.userId
+      userId: sessionData.userId,
     });
     throw error;
   }
@@ -473,7 +522,7 @@ export async function endSession(userId: string, sessionId: string): Promise<boo
     }
 
     // Kullanıcının kendi oturumu mu kontrol et
-    if (session.user.toString() !== userId) {
+    if (!session.user || session.user.toString() !== userId) {
       throw new AuthenticationError('Bu oturumu sonlandırma yetkiniz yok');
     }
 
@@ -482,7 +531,7 @@ export async function endSession(userId: string, sessionId: string): Promise<boo
 
     logger.info('Oturum sonlandırıldı', {
       userId,
-      sessionId
+      sessionId,
     });
 
     return true;
@@ -490,7 +539,7 @@ export async function endSession(userId: string, sessionId: string): Promise<boo
     logger.error('Oturum sonlandırma hatası', {
       error: (error as Error).message,
       userId,
-      sessionId
+      sessionId,
     });
     throw error;
   }
@@ -502,14 +551,17 @@ export async function endSession(userId: string, sessionId: string): Promise<boo
  * @param currentSessionId - Mevcut oturum ID'si
  * @returns İşlem sonucu
  */
-export async function endAllSessionsExcept(userId: string, currentSessionId: string): Promise<boolean> {
+export async function endAllSessionsExcept(
+  userId: string,
+  currentSessionId: string
+): Promise<boolean> {
   try {
     // Tüm oturumları sonlandır (mevcut oturum hariç)
     await sessionManager.endAllSessionsExcept(userId, currentSessionId);
 
     logger.info('Tüm diğer oturumlar sonlandırıldı', {
       userId,
-      currentSessionId
+      currentSessionId,
     });
 
     return true;
@@ -517,7 +569,7 @@ export async function endAllSessionsExcept(userId: string, currentSessionId: str
     logger.error('Tüm diğer oturumları sonlandırma hatası', {
       error: (error as Error).message,
       userId,
-      currentSessionId
+      currentSessionId,
     });
     throw error;
   }
@@ -535,14 +587,14 @@ export async function getUserSessions(userId: string): Promise<any[]> {
 
     logger.debug('Kullanıcı oturumları getirildi', {
       userId,
-      sessionCount: sessions.length
+      sessionCount: sessions.length,
     });
 
     return sessions;
   } catch (error) {
     logger.error('Kullanıcı oturumlarını getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -559,5 +611,5 @@ export default {
   createSession,
   endSession,
   endAllSessionsExcept,
-  getUserSessions
+  getUserSessions,
 };

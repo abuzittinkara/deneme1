@@ -9,6 +9,7 @@ import { EventEmitter } from 'events';
 import { getCachedData } from '../config/redis';
 import os from 'os';
 import v8 from 'v8';
+import crypto from 'crypto';
 
 // Performans olayları için EventEmitter
 export const performanceEmitter = new EventEmitter();
@@ -24,7 +25,7 @@ export enum PerformanceMetricType {
   SOCKET_EVENT = 'socket_event',
   RENDER_OPERATION = 'render_operation',
   BACKGROUND_TASK = 'background_task',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 // Performans ölçüm kaydı
@@ -69,7 +70,7 @@ const SLOW_THRESHOLD = {
   [PerformanceMetricType.SOCKET_EVENT]: 100,
   [PerformanceMetricType.RENDER_OPERATION]: 50,
   [PerformanceMetricType.BACKGROUND_TASK]: 1000,
-  [PerformanceMetricType.OTHER]: 200
+  [PerformanceMetricType.OTHER]: 200,
 };
 
 // Kritik işlem eşikleri (ms)
@@ -83,7 +84,7 @@ const CRITICAL_THRESHOLD = {
   [PerformanceMetricType.SOCKET_EVENT]: 500,
   [PerformanceMetricType.RENDER_OPERATION]: 200,
   [PerformanceMetricType.BACKGROUND_TASK]: 5000,
-  [PerformanceMetricType.OTHER]: 1000
+  [PerformanceMetricType.OTHER]: 1000,
 };
 
 /**
@@ -91,8 +92,7 @@ const CRITICAL_THRESHOLD = {
  * @returns Benzersiz ID
  */
 function generateId(): string {
-  return Math.random().toString(36).substring(2, 15) +
-         Math.random().toString(36).substring(2, 15);
+  return crypto.randomBytes(16).toString('hex');
 }
 
 /**
@@ -110,7 +110,7 @@ function calculatePercentile(values: number[], percentile: number): number {
   // Yüzdelik indeksini hesapla
   const index = Math.ceil((percentile / 100) * sorted.length) - 1;
 
-  return sorted[Math.max(0, index)];
+  return sorted.length > 0 ? sorted[Math.max(0, index)] : 0;
 }
 
 /**
@@ -128,7 +128,7 @@ function updatePerformanceStats(name: string, duration: number): void {
     maxDuration: 0,
     p95Duration: 0,
     p99Duration: 0,
-    lastExecuted: new Date()
+    lastExecuted: new Date(),
   };
 
   // İstatistikleri güncelle
@@ -143,9 +143,9 @@ function updatePerformanceStats(name: string, duration: number): void {
   if (stats.count >= 10) {
     // Son 100 kaydı al
     const recentRecords = performanceRecords
-      .filter(record => record.name === name)
+      .filter((record) => record.name === name)
       .slice(-100)
-      .map(record => record.duration);
+      .map((record) => record.duration);
 
     stats.p95Duration = calculatePercentile(recentRecords, 95);
     stats.p99Duration = calculatePercentile(recentRecords, 99);
@@ -177,7 +177,7 @@ export function startMeasure(
     type,
     startTime,
     metadata,
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 
   return id;
@@ -194,7 +194,7 @@ export function endMeasure(
   additionalMetadata: Record<string, any> = {}
 ): number | null {
   // Başlangıç kaydını bul
-  const startEvent = performanceRecords.find(record => record.id === id && !record.endTime);
+  const startEvent = performanceRecords.find((record) => record.id === id && !record.endTime);
 
   if (!startEvent) {
     logger.warn(`Performans ölçümü bulunamadı: ${id}`);
@@ -208,7 +208,7 @@ export function endMeasure(
   // Metadata'yı birleştir
   const metadata = {
     ...startEvent.metadata,
-    ...additionalMetadata
+    ...additionalMetadata,
   };
 
   // Kaydı güncelle
@@ -227,34 +227,34 @@ export function endMeasure(
     logger.warn(`Kritik yavaş işlem: ${startEvent.name} (${startEvent.type})`, {
       duration: `${duration.toFixed(2)}ms`,
       threshold: `${criticalThreshold}ms`,
-      ...metadata
+      ...metadata,
     });
 
     // Kritik yavaş işlem olayını yayınla
     performanceEmitter.emit('critical_slow_operation', {
       ...startEvent,
       threshold: criticalThreshold,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   } else if (duration > slowThreshold) {
     logger.debug(`Yavaş işlem: ${startEvent.name} (${startEvent.type})`, {
       duration: `${duration.toFixed(2)}ms`,
       threshold: `${slowThreshold}ms`,
-      ...metadata
+      ...metadata,
     });
 
     // Yavaş işlem olayını yayınla
     performanceEmitter.emit('slow_operation', {
       ...startEvent,
       threshold: slowThreshold,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
   }
 
   // Bitiş olayını yayınla
   performanceEmitter.emit('measure_end', {
     ...startEvent,
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 
   // Performans kaydını ekle
@@ -297,7 +297,7 @@ export async function measure<T>(
     // Hata durumunda ölçümü bitir
     endMeasure(id, {
       success: false,
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
 
     throw error;
@@ -333,7 +333,7 @@ export function measureSync<T>(
     // Hata durumunda ölçümü bitir
     endMeasure(id, {
       success: false,
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
     });
 
     throw error;
@@ -433,31 +433,33 @@ export async function getPerformanceStats(): Promise<any> {
       const cpuCount = os.cpus().length;
 
       // İşlem istatistiklerini hesapla
-      const operationStats = Object.entries(performanceStats).map(([name, stats]) => ({
-        name,
-        count: stats.count,
-        avgDuration: stats.avgDuration.toFixed(2),
-        minDuration: stats.minDuration === Infinity ? 0 : stats.minDuration.toFixed(2),
-        maxDuration: stats.maxDuration.toFixed(2),
-        p95Duration: stats.p95Duration.toFixed(2),
-        p99Duration: stats.p99Duration.toFixed(2),
-        lastExecuted: stats.lastExecuted
-      })).sort((a, b) => b.count - a.count);
+      const operationStats = Object.entries(performanceStats)
+        .map(([name, stats]) => ({
+          name,
+          count: stats.count,
+          avgDuration: stats.avgDuration.toFixed(2),
+          minDuration: stats.minDuration === Infinity ? 0 : stats.minDuration.toFixed(2),
+          maxDuration: stats.maxDuration.toFixed(2),
+          p95Duration: stats.p95Duration.toFixed(2),
+          p99Duration: stats.p99Duration.toFixed(2),
+          lastExecuted: stats.lastExecuted,
+        }))
+        .sort((a, b) => b.count - a.count);
 
       // Yavaş işlemleri hesapla
       const slowOperations = performanceRecords
-        .filter(record => {
+        .filter((record) => {
           const threshold = SLOW_THRESHOLD[record.type];
           return record.duration > threshold;
         })
         .slice(-10)
-        .map(record => ({
+        .map((record) => ({
           name: record.name,
           type: record.type,
           duration: record.duration.toFixed(2),
           threshold: SLOW_THRESHOLD[record.type],
           timestamp: new Date(record.timestamp),
-          metadata: record.metadata
+          metadata: record.metadata,
         }));
 
       return {
@@ -470,26 +472,28 @@ export async function getPerformanceStats(): Promise<any> {
             external: Math.round(memoryUsage.external / 1024 / 1024),
             arrayBuffers: Math.round((memoryUsage.arrayBuffers || 0) / 1024 / 1024),
             heapSizeLimit: Math.round(heapStats.heap_size_limit / 1024 / 1024),
-            heapUsagePercentage: ((memoryUsage.heapUsed / heapStats.heap_size_limit) * 100).toFixed(2)
+            heapUsagePercentage: ((memoryUsage.heapUsed / heapStats.heap_size_limit) * 100).toFixed(
+              2
+            ),
           },
           cpu: {
             user: cpuUsage.user,
             system: cpuUsage.system,
             loadAvg: loadAvg,
-            cpuCount: cpuCount
+            cpuCount: cpuCount,
           },
           os: {
             freeMem: Math.round(freeMem / 1024 / 1024),
             totalMem: Math.round(totalMem / 1024 / 1024),
             memUsagePercentage: ((1 - freeMem / totalMem) * 100).toFixed(2),
-            uptime: Math.floor(os.uptime() / 60) // dakika cinsinden
-          }
+            uptime: Math.floor(os.uptime() / 60), // dakika cinsinden
+          },
         },
         operations: {
           stats: operationStats,
           slowOperations: slowOperations,
-          totalCount: performanceRecords.length
-        }
+          totalCount: performanceRecords.length,
+        },
       };
     },
     { ttl: 60, staleWhileRevalidate: true }
@@ -510,15 +514,20 @@ export function startPerformanceTracking(): void {
   });
 
   // Periyodik olarak performans istatistiklerini logla
-  setInterval(() => {
-    getPerformanceStats().then((stats) => {
-      logger.info('Performans istatistikleri', { stats });
-    }).catch((error) => {
-      logger.error('Performans istatistikleri alınırken hata oluştu', {
-        error: error instanceof Error ? error.message : 'Bilinmeyen hata'
-      });
-    });
-  }, 60 * 60 * 1000); // Her saat
+  setInterval(
+    () => {
+      getPerformanceStats()
+        .then((stats) => {
+          logger.info('Performans istatistikleri', { stats });
+        })
+        .catch((error) => {
+          logger.error('Performans istatistikleri alınırken hata oluştu', {
+            error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+          });
+        });
+    },
+    60 * 60 * 1000
+  ); // Her saat
 
   logger.info('Performans izleme sistemi başlatıldı');
 }
@@ -533,5 +542,5 @@ export default {
   measureApiCall,
   getPerformanceStats,
   startPerformanceTracking,
-  performanceEmitter
+  performanceEmitter,
 };

@@ -20,26 +20,26 @@ const swaggerOptions = {
       contact: {
         name: 'API Destek',
         url: 'https://fisqos.com/support',
-        email: 'support@fisqos.com'
+        email: 'support@fisqos.com',
       },
       license: {
         name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT'
-      }
+        url: 'https://opensource.org/licenses/MIT',
+      },
     },
     servers: [
       {
         url: `${env.API_URL}/api`,
-        description: 'API Sunucusu'
+        description: 'API Sunucusu',
       },
       {
-        url: `http://localhost:${env.PORT || '9092'}/api`,
-        description: 'Yerel Geliştirme Sunucusu'
-      }
+        url: `http://localhost:${env.PORT || '3013'}/api`,
+        description: 'Yerel Geliştirme Sunucusu',
+      },
     ],
     externalDocs: {
       description: 'API Kullanım Kılavuzu',
-      url: 'https://fisqos.com/docs'
+      url: 'https://fisqos.com/docs',
     },
     components: {
       securitySchemes: {
@@ -47,8 +47,8 @@ const swaggerOptions = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'JWT kimlik doğrulama token\'ı. Format: Bearer [token]'
-        }
+          description: 'JWT kimlik doğrulama token\'ı. Format: Bearer [token]',
+        },
       },
       schemas: {
         Error: {
@@ -58,7 +58,7 @@ const swaggerOptions = {
             success: {
               type: 'boolean',
               example: false,
-              description: 'İşlem başarı durumu'
+              description: 'İşlem başarı durumu',
             },
             error: {
               type: 'object',
@@ -67,32 +67,32 @@ const swaggerOptions = {
                 message: {
                   type: 'string',
                   example: 'Bir hata oluştu',
-                  description: 'Hata mesajı'
+                  description: 'Hata mesajı',
                 },
                 code: {
                   type: 'string',
                   example: 'ERROR_CODE',
-                  description: 'Hata kodu'
+                  description: 'Hata kodu',
                 },
                 statusCode: {
                   type: 'integer',
                   example: 400,
-                  description: 'HTTP durum kodu'
+                  description: 'HTTP durum kodu',
                 },
                 details: {
                   type: 'object',
                   description: 'Hata detayları',
-                  additionalProperties: true
+                  additionalProperties: true,
                 },
                 timestamp: {
                   type: 'string',
                   format: 'date-time',
                   example: '2023-01-01T12:00:00.000Z',
-                  description: 'Hata zamanı'
-                }
-              }
-            }
-          }
+                  description: 'Hata zamanı',
+                },
+              },
+            },
+          },
         },
         ValidationError: {
           type: 'object',
@@ -100,7 +100,7 @@ const swaggerOptions = {
           properties: {
             success: {
               type: 'boolean',
-              example: false
+              example: false,
             },
             error: {
               type: 'object',
@@ -108,15 +108,15 @@ const swaggerOptions = {
               properties: {
                 message: {
                   type: 'string',
-                  example: 'Doğrulama hatası'
+                  example: 'Doğrulama hatası',
                 },
                 code: {
                   type: 'string',
-                  example: 'VALIDATION_ERROR'
+                  example: 'VALIDATION_ERROR',
                 },
                 statusCode: {
                   type: 'integer',
-                  example: 400
+                  example: 400,
                 },
                 details: {
                   type: 'array',
@@ -125,18 +125,18 @@ const swaggerOptions = {
                     properties: {
                       field: {
                         type: 'string',
-                        example: 'email'
+                        example: 'email',
                       },
                       message: {
                         type: 'string',
-                        example: 'Geçerli bir e-posta adresi girilmelidir'
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+                        example: 'Geçerli bir e-posta adresi girilmelidir',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
         SuccessResponse: {
           type: 'object',
@@ -145,25 +145,25 @@ const swaggerOptions = {
             success: {
               type: 'boolean',
               example: true,
-              description: 'İşlem başarı durumu'
+              description: 'İşlem başarı durumu',
             },
             data: {
               type: 'object',
               description: 'Yanıt verisi',
-              additionalProperties: true
+              additionalProperties: true,
             },
             message: {
               type: 'string',
               example: 'İşlem başarıyla tamamlandı',
-              description: 'Başarı mesajı'
+              description: 'Başarı mesajı',
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
               example: '2023-01-01T12:00:00.000Z',
-              description: 'İşlem zamanı'
-            }
-          }
+              description: 'İşlem zamanı',
+            },
+          },
         },
         PaginatedResponse: {
           type: 'object',
@@ -171,14 +171,14 @@ const swaggerOptions = {
           properties: {
             success: {
               type: 'boolean',
-              example: true
+              example: true,
             },
             data: {
               type: 'array',
               items: {
                 type: 'object',
-                additionalProperties: true
-              }
+                additionalProperties: true,
+              },
             },
             pagination: {
               type: 'object',
@@ -186,99 +186,99 @@ const swaggerOptions = {
                 total: {
                   type: 'integer',
                   example: 100,
-                  description: 'Toplam öğe sayısı'
+                  description: 'Toplam öğe sayısı',
                 },
                 page: {
                   type: 'integer',
                   example: 1,
-                  description: 'Mevcut sayfa'
+                  description: 'Mevcut sayfa',
                 },
                 limit: {
                   type: 'integer',
                   example: 10,
-                  description: 'Sayfa başına öğe sayısı'
+                  description: 'Sayfa başına öğe sayısı',
                 },
                 pages: {
                   type: 'integer',
                   example: 10,
-                  description: 'Toplam sayfa sayısı'
+                  description: 'Toplam sayfa sayısı',
                 },
                 hasNext: {
                   type: 'boolean',
                   example: true,
-                  description: 'Sonraki sayfa var mı'
+                  description: 'Sonraki sayfa var mı',
                 },
                 hasPrev: {
                   type: 'boolean',
                   example: false,
-                  description: 'Önceki sayfa var mı'
-                }
-              }
-            }
-          }
+                  description: 'Önceki sayfa var mı',
+                },
+              },
+            },
+          },
         },
         User: {
           type: 'object',
           properties: {
             _id: {
               type: 'string',
-              example: '60d21b4667d0d8992e610c85'
+              example: '60d21b4667d0d8992e610c85',
             },
             username: {
               type: 'string',
-              example: 'johndoe'
+              example: 'johndoe',
             },
             email: {
               type: 'string',
-              example: 'john@example.com'
+              example: 'john@example.com',
             },
             displayName: {
               type: 'string',
-              example: 'John Doe'
+              example: 'John Doe',
             },
             avatar: {
               type: 'string',
-              example: 'https://example.com/avatar.jpg'
+              example: 'https://example.com/avatar.jpg',
             },
             role: {
               type: 'string',
               enum: ['user', 'admin', 'moderator'],
-              example: 'user'
+              example: 'user',
             },
             status: {
               type: 'string',
               enum: ['active', 'inactive', 'banned', 'suspended'],
-              example: 'active'
+              example: 'active',
             },
             createdAt: {
               type: 'string',
               format: 'date-time',
-              example: '2023-01-01T12:00:00.000Z'
+              example: '2023-01-01T12:00:00.000Z',
             },
             updatedAt: {
               type: 'string',
               format: 'date-time',
-              example: '2023-01-01T12:00:00.000Z'
-            }
-          }
+              example: '2023-01-01T12:00:00.000Z',
+            },
+          },
         },
         Token: {
           type: 'object',
           properties: {
             accessToken: {
               type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
             },
             refreshToken: {
               type: 'string',
-              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+              example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
             },
             expiresIn: {
               type: 'integer',
-              example: 900
-            }
-          }
-        }
+              example: 900,
+            },
+          },
+        },
       },
       parameters: {
         limitParam: {
@@ -289,8 +289,8 @@ const swaggerOptions = {
             type: 'integer',
             default: 10,
             minimum: 1,
-            maximum: 100
-          }
+            maximum: 100,
+          },
         },
         pageParam: {
           name: 'page',
@@ -299,17 +299,17 @@ const swaggerOptions = {
           schema: {
             type: 'integer',
             default: 1,
-            minimum: 1
-          }
+            minimum: 1,
+          },
         },
         sortParam: {
           name: 'sort',
           in: 'query',
           description: 'Sıralama alanı ve yönü (örn: createdAt:desc)',
           schema: {
-            type: 'string'
-          }
-        }
+            type: 'string',
+          },
+        },
       },
       responses: {
         UnauthorizedError: {
@@ -317,57 +317,57 @@ const swaggerOptions = {
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Error'
-              }
-            }
-          }
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
         },
         ForbiddenError: {
           description: 'Yetkisiz erişim hatası',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Error'
-              }
-            }
-          }
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
         },
         ValidationError: {
           description: 'Doğrulama hatası',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Error'
-              }
-            }
-          }
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
         },
         NotFoundError: {
           description: 'Kaynak bulunamadı hatası',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Error'
-              }
-            }
-          }
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
         },
         ServerError: {
           description: 'Sunucu hatası',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Error'
-              }
-            }
-          }
-        }
-      }
+                $ref: '#/components/schemas/Error',
+              },
+            },
+          },
+        },
+      },
     },
     security: [
       {
-        bearerAuth: [] as string[]
-      }
+        bearerAuth: [] as string[],
+      },
     ],
     tags: [
       {
@@ -375,114 +375,122 @@ const swaggerOptions = {
         description: 'Kimlik doğrulama ve yetkilendirme işlemleri',
         externalDocs: {
           description: 'Kimlik Doğrulama Kılavuzu',
-          url: 'https://fisqos.com/docs/auth'
-        }
+          url: 'https://fisqos.com/docs/auth',
+        },
       },
       {
         name: 'Users',
         description: 'Kullanıcı yönetimi işlemleri',
         externalDocs: {
           description: 'Kullanıcı Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/users'
-        }
+          url: 'https://fisqos.com/docs/users',
+        },
       },
       {
         name: 'Groups',
         description: 'Grup yönetimi işlemleri',
         externalDocs: {
           description: 'Grup Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/groups'
-        }
+          url: 'https://fisqos.com/docs/groups',
+        },
       },
       {
         name: 'Channels',
         description: 'Kanal yönetimi işlemleri',
         externalDocs: {
           description: 'Kanal Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/channels'
-        }
+          url: 'https://fisqos.com/docs/channels',
+        },
       },
       {
         name: 'Messages',
         description: 'Mesaj yönetimi işlemleri',
         externalDocs: {
           description: 'Mesaj Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/messages'
-        }
+          url: 'https://fisqos.com/docs/messages',
+        },
       },
       {
         name: 'Files',
         description: 'Dosya yönetimi işlemleri',
         externalDocs: {
           description: 'Dosya Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/files'
-        }
+          url: 'https://fisqos.com/docs/files',
+        },
       },
       {
         name: 'Notifications',
         description: 'Bildirim yönetimi işlemleri',
         externalDocs: {
           description: 'Bildirim Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/notifications'
-        }
+          url: 'https://fisqos.com/docs/notifications',
+        },
       },
       {
         name: 'Search',
         description: 'Arama işlemleri',
         externalDocs: {
           description: 'Arama Kılavuzu',
-          url: 'https://fisqos.com/docs/search'
-        }
+          url: 'https://fisqos.com/docs/search',
+        },
       },
       {
         name: 'Diagnostics',
         description: 'Tanılama ve izleme işlemleri',
         externalDocs: {
           description: 'Tanılama Kılavuzu',
-          url: 'https://fisqos.com/docs/diagnostics'
-        }
+          url: 'https://fisqos.com/docs/diagnostics',
+        },
       },
       {
         name: 'Performance',
         description: 'Performans izleme işlemleri',
         externalDocs: {
           description: 'Performans İzleme Kılavuzu',
-          url: 'https://fisqos.com/docs/performance'
-        }
+          url: 'https://fisqos.com/docs/performance',
+        },
       },
       {
         name: 'Database',
         description: 'Veritabanı yönetimi işlemleri',
         externalDocs: {
           description: 'Veritabanı Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/database'
-        }
+          url: 'https://fisqos.com/docs/database',
+        },
       },
       {
         name: 'Memory',
         description: 'Bellek yönetimi işlemleri',
         externalDocs: {
           description: 'Bellek Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/memory'
-        }
+          url: 'https://fisqos.com/docs/memory',
+        },
       },
       {
         name: 'Config',
         description: 'Yapılandırma yönetimi işlemleri',
         externalDocs: {
           description: 'Yapılandırma Yönetimi Kılavuzu',
-          url: 'https://fisqos.com/docs/config'
-        }
+          url: 'https://fisqos.com/docs/config',
+        },
       },
       {
         name: 'Errors',
         description: 'Hata izleme işlemleri',
         externalDocs: {
           description: 'Hata İzleme Kılavuzu',
-          url: 'https://fisqos.com/docs/errors'
-        }
-      }
-    ]
+          url: 'https://fisqos.com/docs/errors',
+        },
+      },
+      {
+        name: 'Atlas SQL',
+        description: 'MongoDB Atlas SQL işlemleri',
+        externalDocs: {
+          description: 'Atlas SQL Kılavuzu',
+          url: 'https://fisqos.com/docs/atlas-sql',
+        },
+      },
+    ],
   },
   apis: [
     './src/routes/**/*.ts',
@@ -491,8 +499,8 @@ const swaggerOptions = {
     './src/types/**/*.ts',
     './src/middleware/**/*.ts',
     './src/utils/**/*.ts',
-    './src/config/**/*.ts'
-  ]
+    './src/config/**/*.ts',
+  ],
 };
 
 // Swagger dokümantasyonunu oluştur
@@ -533,14 +541,14 @@ export function setupSwagger(app: Express): void {
         deepLinking: true,
         syntaxHighlight: {
           activate: true,
-          theme: 'agate'
+          theme: 'agate',
         },
         tryItOutEnabled: env.isDevelopment,
         requestSnippetsEnabled: true,
         displayOperationId: false,
         tagsSorter: 'alpha',
-        operationsSorter: 'alpha'
-      }
+        operationsSorter: 'alpha',
+      },
     };
 
     // Swagger UI
@@ -558,18 +566,18 @@ export function setupSwagger(app: Express): void {
     });
 
     logger.info('Swagger API dokümantasyonu yapılandırıldı', {
-      url: `${env.API_URL}/api-docs`,
-      jsonUrl: `${env.API_URL}/api-docs.json`
+      url: `http://localhost:${env.PORT || '3013'}/api-docs`,
+      jsonUrl: `http://localhost:${env.PORT || '3013'}/api-docs.json`,
     });
   } catch (error) {
     logger.error('Swagger yapılandırma hatası', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
   }
 }
 
 export default {
   setupSwagger,
-  swaggerSpec
+  swaggerSpec,
 };

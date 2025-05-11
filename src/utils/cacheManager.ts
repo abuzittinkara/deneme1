@@ -61,7 +61,7 @@ export class LRUCache<T = any> {
     }
 
     // Anahtarı en sona taşı (en son kullanılan)
-    this.keys = this.keys.filter(k => k !== key);
+    this.keys = this.keys.filter((k) => k !== key);
     this.keys.push(key);
 
     this.hits++;
@@ -87,13 +87,13 @@ export class LRUCache<T = any> {
 
     // Eğer anahtar zaten varsa, listeden çıkar
     if (this.cache.has(key)) {
-      this.keys = this.keys.filter(k => k !== key);
+      this.keys = this.keys.filter((k) => k !== key);
     }
 
     // Yeni değeri ekle
     this.cache.set(key, {
       value,
-      expiry: Date.now() + (customTtl || this.ttl)
+      expiry: Date.now() + (customTtl || this.ttl),
     });
 
     // Anahtarı en sona ekle (en son kullanılan)
@@ -108,7 +108,7 @@ export class LRUCache<T = any> {
    */
   delete(key: string): void {
     this.cache.delete(key);
-    this.keys = this.keys.filter(k => k !== key);
+    this.keys = this.keys.filter((k) => k !== key);
 
     logger.debug('Önbellekten öğe silindi', { key });
   }
@@ -154,9 +154,7 @@ export class LRUCache<T = any> {
    * @returns Önbellek istatistikleri
    */
   getStats(): Record<string, any> {
-    const hitRate = this.hits + this.misses > 0
-      ? this.hits / (this.hits + this.misses)
-      : 0;
+    const hitRate = this.hits + this.misses > 0 ? this.hits / (this.hits + this.misses) : 0;
 
     return {
       size: this.cache.size,
@@ -166,7 +164,7 @@ export class LRUCache<T = any> {
       misses: this.misses,
       hitRate: hitRate,
       hitRateFormatted: `${(hitRate * 100).toFixed(2)}%`,
-      memoryUsage: process.memoryUsage().heapUsed
+      memoryUsage: process.memoryUsage().heapUsed,
     };
   }
 
@@ -198,14 +196,12 @@ export class LRUCache<T = any> {
    * Önbellek istatistiklerini döndürür
    */
   get stats(): { hits: number; misses: number; hitRate: number } {
-    const hitRate = this.hits + this.misses > 0
-      ? this.hits / (this.hits + this.misses)
-      : 0;
+    const hitRate = this.hits + this.misses > 0 ? this.hits / (this.hits + this.misses) : 0;
 
     return {
       hits: this.hits,
       misses: this.misses,
-      hitRate
+      hitRate,
     };
   }
 }
@@ -243,7 +239,7 @@ const CACHE_CONFIG = {
   file: {
     max: 100, // Maksimum 100 dosya
     ttl: 60 * 60 * 1000, // 1 saat
-  }
+  },
 };
 
 // Önbellek türleri
@@ -288,7 +284,7 @@ export const caches: Record<CacheType, LRUCache<any>> = {
   channel: channelCache,
   message: messageCache,
   api: apiCache,
-  file: fileCache
+  file: fileCache,
 };
 
 /**
@@ -311,7 +307,7 @@ export function setCache<T>(type: CacheType, key: string, value: T, ttl?: number
     logger.error('Önbelleğe veri eklenirken hata oluştu', {
       error: (error as Error).message,
       type,
-      key
+      key,
     });
   }
 }
@@ -335,7 +331,7 @@ export function getCache<T>(type: CacheType, key: string): T | undefined {
     logger.error('Önbellekten veri getirilirken hata oluştu', {
       error: (error as Error).message,
       type,
-      key
+      key,
     });
     return undefined;
   }
@@ -359,7 +355,7 @@ export function deleteCache(type: CacheType, key: string): void {
     logger.error('Önbellekten veri silinirken hata oluştu', {
       error: (error as Error).message,
       type,
-      key
+      key,
     });
   }
 }
@@ -381,7 +377,7 @@ export function clearCache(type?: CacheType): void {
       logger.info(`Önbellek temizlendi: ${type}`);
     } else {
       // Tüm önbellekleri temizle
-      Object.keys(caches).forEach(type => {
+      Object.keys(caches).forEach((type) => {
         caches[type as CacheType].clear();
       });
 
@@ -390,7 +386,7 @@ export function clearCache(type?: CacheType): void {
   } catch (error) {
     logger.error('Önbellek temizlenirken hata oluştu', {
       error: (error as Error).message,
-      type
+      type,
     });
   }
 }
@@ -409,7 +405,7 @@ export function logCacheStats(): void {
     logger.debug('Önbellek istatistikleri', { stats });
   } catch (error) {
     logger.error('Önbellek istatistikleri loglanırken hata oluştu', {
-      error: (error as Error).message
+      error: (error as Error).message,
     });
   }
 }
@@ -424,7 +420,7 @@ export function logMemoryUsage(): void {
     rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
     heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
     heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
-    external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`
+    external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`,
   });
 }
 
@@ -448,5 +444,5 @@ export default {
   deleteCache,
   clearCache,
   logCacheStats,
-  logMemoryUsage
+  logMemoryUsage,
 };

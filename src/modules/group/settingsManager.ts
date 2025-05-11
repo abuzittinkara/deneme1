@@ -56,12 +56,12 @@ export async function getGroupSettings(groupId: string): Promise<GroupSettings> 
       type: group.type,
       rules: group.rules,
       icon: (group.icon as any)?.url,
-      defaultRole: group.defaultRole ? (group.defaultRole as any)._id.toString() : undefined
+      defaultRole: group.defaultRole ? (group.defaultRole as any)._id.toString() : undefined,
     };
   } catch (error) {
     logger.error('Grup ayarlarını getirme hatası', {
       error: (error as Error).message,
-      groupId
+      groupId,
     });
     throw error;
   }
@@ -72,7 +72,9 @@ export async function getGroupSettings(groupId: string): Promise<GroupSettings> 
  * @param params - Güncelleme parametreleri
  * @returns Güncellenmiş grup ayarları
  */
-export async function updateGroupSettings(params: UpdateGroupSettingsParams): Promise<GroupSettings> {
+export async function updateGroupSettings(
+  params: UpdateGroupSettingsParams
+): Promise<GroupSettings> {
   try {
     const { groupId, userId, settings } = params;
 
@@ -88,14 +90,16 @@ export async function updateGroupSettings(params: UpdateGroupSettingsParams): Pr
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('MANAGE_GROUP')
       );
 
@@ -143,7 +147,7 @@ export async function updateGroupSettings(params: UpdateGroupSettingsParams): Pr
     logger.info('Grup ayarları güncellendi', {
       groupId,
       userId,
-      updatedFields: Object.keys(settings)
+      updatedFields: Object.keys(settings),
     });
 
     // Güncellenmiş ayarları döndür
@@ -152,7 +156,7 @@ export async function updateGroupSettings(params: UpdateGroupSettingsParams): Pr
     logger.error('Grup ayarlarını güncelleme hatası', {
       error: (error as Error).message,
       groupId: params.groupId,
-      userId: params.userId
+      userId: params.userId,
     });
     throw error;
   }
@@ -165,7 +169,11 @@ export async function updateGroupSettings(params: UpdateGroupSettingsParams): Pr
  * @param fileId - Dosya ID'si
  * @returns Güncellenmiş grup ayarları
  */
-export async function updateGroupIcon(groupId: string, userId: string, fileId: string): Promise<GroupSettings> {
+export async function updateGroupIcon(
+  groupId: string,
+  userId: string,
+  fileId: string
+): Promise<GroupSettings> {
   try {
     // Grubu bul
     const group = await GroupHelper.findOne({ groupId }).exec();
@@ -179,14 +187,16 @@ export async function updateGroupIcon(groupId: string, userId: string, fileId: s
       // Yönetici rolü kontrolü
       const membership = await GroupMemberHelper.findOne({
         group: group._id,
-        user: toObjectId(userId)
-      }).populate('roles').exec();
+        user: toObjectId(userId),
+      })
+        .populate('roles')
+        .exec();
 
       if (!membership) {
         throw new ForbiddenError('Bu grupta üye değilsiniz');
       }
 
-      const hasAdminPermission = (membership.roles as any[]).some(role =>
+      const hasAdminPermission = (membership.roles as any[]).some((role) =>
         role.permissions.includes('MANAGE_GROUP')
       );
 
@@ -202,7 +212,7 @@ export async function updateGroupIcon(groupId: string, userId: string, fileId: s
     logger.info('Grup ikonu güncellendi', {
       groupId,
       userId,
-      fileId
+      fileId,
     });
 
     // Güncellenmiş ayarları döndür
@@ -212,7 +222,7 @@ export async function updateGroupIcon(groupId: string, userId: string, fileId: s
       error: (error as Error).message,
       groupId,
       userId,
-      fileId
+      fileId,
     });
     throw error;
   }
@@ -251,7 +261,7 @@ export async function transferGroupOwnership(
     // Yeni sahibin grupta olduğunu kontrol et
     const isMember = await GroupMemberHelper.findOne({
       group: group._id,
-      user: toObjectId(newOwnerId)
+      user: toObjectId(newOwnerId),
     }).exec();
 
     if (!isMember) {
@@ -265,7 +275,7 @@ export async function transferGroupOwnership(
     logger.info('Grup sahipliği transfer edildi', {
       groupId,
       previousOwnerId: currentOwnerId,
-      newOwnerId
+      newOwnerId,
     });
 
     return { success: true };
@@ -274,7 +284,7 @@ export async function transferGroupOwnership(
       error: (error as Error).message,
       groupId,
       currentOwnerId,
-      newOwnerId
+      newOwnerId,
     });
     throw error;
   }
@@ -284,5 +294,5 @@ export default {
   getGroupSettings,
   updateGroupSettings,
   updateGroupIcon,
-  transferGroupOwnership
+  transferGroupOwnership,
 };

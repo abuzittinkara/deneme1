@@ -16,7 +16,7 @@ export function showMicrophoneHelp(): void {
   modal.innerHTML = `
     <div class="modal-content microphone-help-modal">
       <h2>Mikrofon Sorunları</h2>
-      
+
       <div class="help-section">
         <h3>Mikrofon Bulunamadı</h3>
         <p>Sistem mikrofonunuza erişemiyor. Lütfen şu adımları kontrol edin:</p>
@@ -34,7 +34,7 @@ export function showMicrophoneHelp(): void {
           <li>Tarayıcınızı yeniden başlatın ve tekrar deneyin.</li>
         </ol>
       </div>
-      
+
       <div class="help-section">
         <h3>Mikrofon İzni Reddedildi</h3>
         <p>Tarayıcınızda mikrofon izinlerini kontrol edin:</p>
@@ -44,13 +44,13 @@ export function showMicrophoneHelp(): void {
           <li><strong>Edge:</strong> Adres çubuğundaki kilit simgesine tıklayın > Site İzinleri > Mikrofon</li>
         </ol>
       </div>
-      
+
       <div class="help-section">
         <h3>Mikrofonsuz Kullanım</h3>
         <p>Mikrofonunuz yoksa veya çalışmıyorsa, uygulamayı "Salt Dinleme" modunda kullanabilirsiniz:</p>
         <button id="enableListenOnlyMode" class="btn primary">Salt Dinleme Modunu Etkinleştir</button>
       </div>
-      
+
       <div class="modal-buttons">
         <button id="closeMicHelpModal" class="btn secondary">Kapat</button>
       </div>
@@ -145,6 +145,49 @@ export async function checkMicrophoneAvailability(): Promise<boolean> {
     return devices.length > 0;
   } catch (err) {
     console.error('Mikrofon kontrolü sırasında hata:', err);
+    return false;
+  }
+}
+
+/**
+ * Mikrofon izinlerini kontrol eder ve gerekirse izin ister
+ * @returns Mikrofon izni verildi mi
+ */
+export async function requestMicrophonePermission(): Promise<boolean> {
+  try {
+    // Önce mikrofon var mı kontrol et
+    const hasMicrophone = await checkMicrophoneAvailability();
+    if (!hasMicrophone) {
+      console.warn('Kullanılabilir mikrofon bulunamadı');
+      return false;
+    }
+
+    // Mikrofon izni iste
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+
+    // İzin alındı, akışı kapat
+    stream.getTracks().forEach(track => track.stop());
+    return true;
+  } catch (err) {
+    console.error('Mikrofon izni alınamadı:', err);
+
+    // Hata türüne göre farklı işlem yap
+    if (err instanceof DOMException) {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        // Kullanıcı izin vermedi
+        showMicrophoneHelp();
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        // Mikrofon bulunamadı
+        showMicrophoneHelp();
+      }
+    }
+
     return false;
   }
 }

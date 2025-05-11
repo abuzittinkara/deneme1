@@ -58,7 +58,7 @@ export const config = {
   // Yardımcı fonksiyonlar
   isDevelopment: env.isDevelopment,
   isProduction: env.isProduction,
-  isTest: env.isTest
+  isTest: env.isTest,
 };
 
 export default config;

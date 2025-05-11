@@ -8,14 +8,23 @@ dotenv.config();
 // Path alias desteğini yükle
 import './paths';
 
+// Güvenlik yardımcı fonksiyonlarını içe aktar
+import { validateFilePath } from './utils/securityUtils';
+
 import http from 'http';
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
+import fs from 'fs';
+import cookieParser from 'cookie-parser';
 import { v4 as uuidv4 } from 'uuid';
 // Loglama ve hata izleme
 import { logger, requestLogger } from './utils/logger';
-import { errorHandler, notFoundHandler, setupUncaughtExceptionHandlers } from './middleware/advancedErrorHandler';
+import {
+  errorHandler,
+  notFoundHandler,
+  setupUncaughtExceptionHandlers,
+} from './middleware/advancedErrorHandler';
 import sentryHandler from './middleware/sentryHandler';
 import { startErrorTracking } from './utils/errorReporter';
 
@@ -48,6 +57,14 @@ import * as messageManager from './modules/message/messageManager';
 import * as profileManager from './modules/profileManager';
 import * as richTextFormatter from './modules/richTextFormatter';
 import registerTextChannelEvents from './modules/textChannel';
+import { CallManager } from './services/callManager';
+
+// Servisler
+import { userService } from './services/userService';
+import { groupService } from './services/groupService';
+import { channelService } from './services/channelService';
+import { messageService } from './services/messageService';
+import { WebRTCService } from './services/webrtcService';
 
 // Yeni modüller
 import * as passwordReset from './modules/passwordReset';
@@ -87,6 +104,8 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use(sentryHandler.sentryRequestHandler);
 app.use(sentryHandler.sentryTracingHandler);
 
+// Cookie parser middleware'i artık security.ts içinde yapılandırılıyor
+
 // İzleme middleware'leri
 import monitoringMiddleware from './middleware/monitoringMiddleware';
 monitoringMiddleware.setupMonitoringMiddleware(app);
@@ -96,7 +115,7 @@ import maintenanceMode from './middleware/maintenanceMode';
 app.use((req, res, next) => {
   maintenanceMode.maintenanceModeMiddleware({
     allowedIPs: ['127.0.0.1', '::1'], // Localhost IP'leri
-    allowedPaths: ['/api/health', '/api/health/detailed', '/api/auth/login'] // Her zaman erişilebilir yollar
+    allowedPaths: ['/api/health', '/api/health/detailed', '/api/auth/login'], // Her zaman erişilebilir yollar
   })(req, res, next);
 });
 
@@ -117,6 +136,7 @@ app.use(requestLogger);
 // Performans izleme
 import { setupPerformanceMiddleware } from './middleware/performanceMiddleware';
 import { startPerformanceTracking } from './utils/performanceTracker';
+import performanceMonitorService from './services/performanceMonitorService';
 
 // Performans middleware'lerini yapılandır
 setupPerformanceMiddleware(app);
@@ -124,38 +144,152 @@ setupPerformanceMiddleware(app);
 // Performans izlemeyi başlat
 startPerformanceTracking();
 
-// CORS middleware'i
-import cors from 'cors';
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Auth-Token']
-}));
+// Performans izleme servisini başlat
+performanceMonitorService.startMonitoring({
+  samplingInterval: 60000, // 1 dakika
+  metricsLimit: 10000, // 10000 metrik
+});
+
+// CORS middleware'i artık security.ts içinde yapılandırılıyor
 
 // Middleware'ler
-app.use(express.static(path.join(__dirname, '../public'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    }
+// Güvenli statik dosya sunumu
+const publicPath = path.resolve(path.join(__dirname, '../public'));
+// Yol güvenliği kontrolü
+if (!fs.existsSync(publicPath)) {
+  logger.error('Public dizini bulunamadı', { path: publicPath });
+  throw new Error('Public dizini bulunamadı');
+}
+app.use(
+  express.static(publicPath, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    },
+  })
+);
+
+// Derlenen dosyaları sun
+const distPublicPath = path.resolve(path.join(__dirname, '../dist/public'));
+// Yol güvenliği kontrolü
+if (!fs.existsSync(distPublicPath)) {
+  logger.warn('Dist/public dizini bulunamadı, derleme yapılmamış olabilir', {
+    path: distPublicPath,
+  });
+  // Kritik bir hata değil, devam et
+} else {
+  app.use(
+    express.static(distPublicPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        }
+      },
+    })
+  );
+}
+
+// Güvenli uploads dizini sunumu
+const uploadsPath = path.resolve(path.join(__dirname, '../uploads'));
+// Yol güvenliği kontrolü
+if (!fs.existsSync(uploadsPath)) {
+  logger.warn('Uploads dizini bulunamadı, oluşturuluyor', { path: uploadsPath });
+  try {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  } catch (error) {
+    logger.error('Uploads dizini oluşturulamadı', { error: (error as Error).message });
   }
-}));
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+}
+
+app.use(
+  '/uploads',
+  (req: express.Request, res: express.Response, next: express.NextFunction): void => {
+    try {
+      // Kullanıcı tarafından sağlanan yolu doğrula
+      const requestedPath = req.path;
+
+      // Yol geçişi saldırılarına karşı kontrol et
+      if (
+        requestedPath.includes('..') ||
+        requestedPath.includes('~') ||
+        requestedPath.includes('%2e')
+      ) {
+        logger.warn('Uploads dizinine şüpheli erişim girişimi', {
+          path: requestedPath,
+          ip: req.ip,
+        });
+        res.status(403).send('Geçersiz dosya yolu');
+        return;
+      }
+
+      // Tam dosya yolunu oluştur ve doğrula
+      const fullPath = path.join(uploadsPath, requestedPath);
+      if (!fullPath.startsWith(uploadsPath)) {
+        logger.warn('Uploads dizini dışına erişim girişimi', {
+          path: requestedPath,
+          fullPath,
+          ip: req.ip,
+        });
+        res.status(403).send('Geçersiz dosya yolu');
+        return;
+      }
+
+      next();
+    } catch (error) {
+      logger.error('Uploads dizini erişim hatası', {
+        error: (error as Error).message,
+        path: req.path,
+      });
+      res.status(403).send('Geçersiz dosya yolu');
+      return;
+    }
+  },
+  express.static(uploadsPath)
+);
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Yardım sayfası için özel rota
-app.get('/help', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/help.html'));
-});
+// Yardım sayfası için özel rotalar
+const helpRouteHandler = (req: express.Request, res: express.Response): void => {
+  try {
+    // Güvenli bir şekilde dosya yolunu oluştur
+    const helpFilePath = path.resolve(path.join(__dirname, '../public/help.html'));
+
+    // Dosya yolunu doğrula
+    if (!helpFilePath.startsWith(publicPath)) {
+      logger.error('Geçersiz yardım dosyası yolu', { path: helpFilePath, publicPath });
+      res.status(404).send('Sayfa bulunamadı');
+      return;
+    }
+
+    // Dosyanın varlığını kontrol et
+    if (!fs.existsSync(helpFilePath)) {
+      logger.error('Yardım dosyası bulunamadı', { path: helpFilePath });
+      res.status(404).send('Sayfa bulunamadı');
+      return;
+    }
+
+    res.sendFile(helpFilePath);
+  } catch (error) {
+    logger.error('Yardım sayfası erişim hatası', { error: (error as Error).message });
+    res.status(500).send('Sunucu hatası');
+  }
+};
+
+// Her iki URL için de aynı işleyiciyi kullan
+app.get('/help', helpRouteHandler);
+app.get('/help.html', helpRouteHandler);
 
 // Sanitizasyon middleware'leri
 import { sanitizeRequest } from './middleware/sanitizationMiddleware';
 app.use(sanitizeRequest);
 
 // Güvenlik middleware'leri
-import securityMiddleware from './middleware/securityMiddleware';
-securityMiddleware.setupSecurityMiddleware(app);
+import { setupSecurityMiddleware } from './middleware/security';
+
+// Güvenlik middleware'lerini uygula
+setupSecurityMiddleware(app);
 
 // Sentry kullanıcı bağlamı middleware'i (kimlik doğrulama middleware'inden sonra kullanılmalı)
 app.use(sentryHandler.sentryUserContext);
@@ -186,9 +320,47 @@ app.use(databaseRoutes);
 import configRoutes from './routes/config';
 app.use(configRoutes);
 
+// Profilleme rotaları
+import profilingRoutes from './routes/profiling';
+app.use(profilingRoutes);
+
+// Güvenlik denetimi rotaları
+import securityRoutes from './routes/security';
+app.use(securityRoutes);
+
 // Socket.IO sunucusu oluştur
 import { configureSocketServer } from './socket/socketConfig';
+import { registerSocketHandlers } from './socket/socketHandlers';
 const io = configureSocketServer(server);
+
+// Görüntülü görüşme yöneticisini oluştur
+const callManager = new CallManager(io);
+
+// WebRTC servisini oluştur
+import { WebRTCService } from './services/webrtcService';
+const webRTCService = new WebRTCService(io);
+
+// Servisleri uygulamaya ekle
+app.locals.userService = userService;
+app.locals.groupService = groupService;
+app.locals.channelService = channelService;
+app.locals.messageService = messageService;
+app.locals.callManager = callManager;
+app.locals.webRTCService = webRTCService;
+
+// Socket.IO olay işleyicilerini kaydet
+registerSocketHandlers(io, {
+  callManager,
+  sfu,
+  userManager,
+  groupManager,
+  channelManager,
+  userService,
+  groupService,
+  channelService,
+  messageService,
+  webRTCService,
+});
 
 // Bellek içi veri yapıları
 import { memoryStore } from './utils/memoryStore';
@@ -200,79 +372,82 @@ const friendRequests = memoryStore.getFriendRequests();
 // Zamanlanmış görevler
 import { startScheduledTasks, stopScheduledTasks } from './modules/scheduler/scheduledTasks';
 
-// MongoDB bağlantısı
-import database from './config/database';
+// Veritabanı bağlantıları
+import databaseService from './services/databaseService';
+import atlasSQL from './config/atlasSQL';
+import { atlasSQLService } from './services/atlasSQLService';
 
-// Veritabanına bağlan - geçici olarak devre dışı bırakıldı
-// database.connectToDatabase()
-//   .then(async (connection) => {
-//     logger.info("MongoDB bağlantısı başarılı!");
-//   })
-//   .catch(err => {
-//     logger.error("MongoDB bağlantı hatası", { error: err });
-//     sentryHandler.sentryReportError(err as Error, { context: 'MongoDB connection' });
-//   });
 // MongoDB bağlantısını kur
 if (process.env.NODE_ENV === 'production') {
-  database.connectToDatabase().catch(err => {
+  databaseService.connect().catch((err) => {
     logger.error('MongoDB bağlantı hatası', { error: err.message });
+    sentryHandler.sentryReportError(err as Error, { context: 'MongoDB connection' });
   });
 } else {
   // Geliştirme modunda MongoDB bağlantısını kur
-  const MONGODB_URI = 'mongodb+srv://graguclu:iCe5NKEDhvfAK1sI@clus.hd9fi5h.mongodb.net/';
-
-  if (MONGODB_URI) {
-    logger.info('Geliştirme modunda MongoDB bağlantısı kuruluyor...');
-    database.connectToDatabase().then(() => {
+  logger.info('Geliştirme modunda MongoDB bağlantısı kuruluyor...');
+  databaseService
+    .connect()
+    .then(() => {
       logger.info('Geliştirme modunda MongoDB bağlantısı başarılı!');
-    }).catch(err => {
+    })
+    .catch((err) => {
       logger.error('Geliştirme modunda MongoDB bağlantı hatası', { error: err.message });
 
       // Bağlantı başarısız olursa mongoose bağlantısını mockla
-      logger.info('MongoDB bağlantısı mocklanıyor...');
-      // @ts-ignore - readyState özelliği salt okunur olarak tanımlanmış, ancak test için değiştiriyoruz
-      mongoose.connection.readyState = 1; // 1 = connected
+      if (process.env.NODE_ENV === 'development') {
+        logger.info('MongoDB bağlantısı mocklanıyor...');
+        // @ts-ignore - readyState özelliği salt okunur olarak tanımlanmış, ancak test için değiştiriyoruz
+        mongoose.connection.readyState = 1; // 1 = connected
+      }
     });
-  } else {
-    logger.info('MongoDB bağlantısı atlandı (geliştirme/test modu)');
-
-    // Test ve geliştirme ortamında mongoose bağlantısını mockla
-    // @ts-ignore - readyState özelliği salt okunur olarak tanımlanmış, ancak test için değiştiriyoruz
-    mongoose.connection.readyState = 1; // 1 = connected
-  }
 }
 
-  // Geliştirme modunda sahte veri oluştur
-  if (process.env.NODE_ENV === 'development') {
-    // Sahte veri modülünü içe aktar
-    import('./utils/mockData').then(mockData => {
+// Geliştirme modunda sahte veri oluştur
+if (process.env.NODE_ENV === 'development') {
+  // Sahte veri modülünü içe aktar
+  import('./utils/mockData')
+    .then((mockData) => {
       // Sahte verileri oluştur
       const { users: mockUsers, groups: mockGroups } = mockData.createAllMockData();
 
       // Sahte kullanıcıları ekle
-      Object.keys(mockUsers).forEach(userId => {
-        users[userId] = mockUsers[userId];
+      Object.keys(mockUsers).forEach((userId) => {
+        const mockUser = mockUsers[userId];
+        if (mockUser) {
+          users[userId] = mockUser;
+        }
       });
 
       // Sahte grupları ekle
-      Object.keys(mockGroups).forEach(groupId => {
-        groups[groupId] = mockGroups[groupId];
+      Object.keys(mockGroups).forEach((groupId) => {
+        const mockGroup = mockGroups[groupId];
+        if (mockGroup) {
+          groups[groupId] = mockGroup;
+        }
       });
 
       logger.info('Geliştirme modu için sahte veriler oluşturuldu');
-    }).catch(err => {
+    })
+    .catch((err) => {
       logger.error('Sahte veri oluşturulurken hata oluştu', { error: err.message });
     });
-  }
+}
 
 // Mediasoup işçilerini oluştur
 async function initMediasoup() {
   try {
+    // Eski SFU modülü
     await sfu.createWorkers();
-    logger.info("Mediasoup Workers hazır!");
+    logger.info('Mediasoup Workers (SFU) hazır!');
+
+    // Yeni WebRTC servisi
+    await webRTCService.createWorkers();
+    logger.info('Mediasoup Workers (WebRTC) hazır!');
+
     return true;
   } catch (error) {
-    logger.warn("Mediasoup Workers oluşturulamadı", { error: (error as Error).message });
+    logger.warn('Mediasoup Workers oluşturulamadı', { error: (error as Error).message });
     return false;
   }
 }
@@ -280,23 +455,25 @@ async function initMediasoup() {
 // Grupları ve kanalları yükle
 async function loadGroupsAndChannels() {
   try {
-    logger.info("Gruplar ve kanallar yükleniyor...");
+    logger.info('Gruplar ve kanallar yükleniyor...');
 
     // Önce bellek içi veri yapılarını veritabanından yükle
     await memoryStore.loadFromDatabase();
 
     // Grupları yükle (tip güvenli şekilde)
     await groupManager.loadGroupsFromDB(memoryStore.getGroupsInternal());
-    logger.info("Gruplar yüklendi");
+    logger.info('Gruplar yüklendi');
 
     // Kanalları yükle (tip güvenli şekilde)
     await channelManager.loadChannelsFromDB(memoryStore.getGroupsInternal());
-    logger.info("Kanallar yüklendi");
+    logger.info('Kanallar yüklendi');
 
-    logger.info("Gruplar ve kanallar başarıyla yüklendi");
+    logger.info('Gruplar ve kanallar başarıyla yüklendi');
     return true;
   } catch (error) {
-    logger.error("Gruplar ve kanallar yüklenirken hata oluştu", { error: (error as Error).message });
+    logger.error('Gruplar ve kanallar yüklenirken hata oluştu', {
+      error: (error as Error).message,
+    });
     return false;
   }
 }
@@ -304,7 +481,7 @@ async function loadGroupsAndChannels() {
 // Redis bağlantısını kontrol et - geçici olarak devre dışı bırakıldı
 async function initRedis() {
   // Geliştirme modunda Redis'i atla
-  logger.info("Geliştirme/test modunda Redis devre dışı bırakıldı, sahte istemci kullanılıyor");
+  logger.info('Geliştirme/test modunda Redis devre dışı bırakıldı, sahte istemci kullanılıyor');
   return true;
 
   /* Redis bağlantısı gerektiğinde bu kodu aktif edin
@@ -335,13 +512,14 @@ const appInitState = {
   startTime: 0,
   initSteps: {
     database: false,
+    atlasSQL: false,
     mediasoup: false,
     groups: false,
     redis: false,
     scheduledTasks: false,
-    performance: false
+    performance: false,
   },
-  errors: [] as { step: string, error: string }[]
+  errors: [] as { step: string; error: string }[],
 };
 
 /**
@@ -352,12 +530,12 @@ async function initializeApp() {
   try {
     // Eğer zaten başlatılıyorsa veya başlatılmışsa, tekrar başlatma
     if (appInitState.isInitializing) {
-      logger.info("Uygulama zaten başlatılıyor...");
+      logger.info('Uygulama zaten başlatılıyor...');
       return true;
     }
 
     if (appInitState.isInitialized) {
-      logger.info("Uygulama zaten başlatılmış.");
+      logger.info('Uygulama zaten başlatılmış.');
       return true;
     }
 
@@ -366,25 +544,39 @@ async function initializeApp() {
     appInitState.startTime = Date.now();
     appInitState.errors = [];
 
-    logger.info("Uygulama başlatılıyor...");
+    logger.info('Uygulama başlatılıyor...');
 
-    // 1. Veritabanı bağlantısını kur (üretim modunda)
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        await database.connectToDatabase();
-        appInitState.initSteps.database = true;
-        logger.info("Veritabanı bağlantısı kuruldu");
-      } catch (error) {
-        appInitState.errors.push({
-          step: 'database',
-          error: (error as Error).message
-        });
-        logger.error("Veritabanı bağlantısı kurulamadı", { error: (error as Error).message });
-        // Veritabanı hatası kritik değil, devam et
-      }
-    } else {
+    // 1. Veritabanı bağlantısını kur
+    try {
+      await databaseService.connect();
       appInitState.initSteps.database = true;
-      logger.info("Geliştirme modunda veritabanı bağlantısı atlandı");
+      logger.info('Veritabanı bağlantısı kuruldu');
+    } catch (error) {
+      appInitState.errors.push({
+        step: 'database',
+        error: (error as Error).message,
+      });
+      logger.error('Veritabanı bağlantısı kurulamadı', { error: (error as Error).message });
+      // Veritabanı hatası kritik değil, devam et
+    }
+
+    // 1.1. Atlas SQL bağlantısını kur
+    try {
+      if (process.env.ATLAS_SQL_ENABLED === 'true') {
+        await atlasSQLService.connect();
+        appInitState.initSteps.atlasSQL = true;
+        logger.info('Atlas SQL bağlantısı kuruldu');
+      } else {
+        logger.info('Atlas SQL devre dışı bırakıldı, bağlantı kurulmayacak');
+        appInitState.initSteps.atlasSQL = true;
+      }
+    } catch (error) {
+      appInitState.errors.push({
+        step: 'atlasSQL',
+        error: (error as Error).message,
+      });
+      logger.error('Atlas SQL bağlantısı kurulamadı', { error: (error as Error).message });
+      // Atlas SQL hatası kritik değil, devam et
     }
 
     // 2. Mediasoup işçilerini oluştur
@@ -394,9 +586,9 @@ async function initializeApp() {
     } catch (error) {
       appInitState.errors.push({
         step: 'mediasoup',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      logger.error("Mediasoup işçileri oluşturulamadı", { error: (error as Error).message });
+      logger.error('Mediasoup işçileri oluşturulamadı', { error: (error as Error).message });
       // Mediasoup hatası kritik değil, devam et
     }
 
@@ -407,9 +599,9 @@ async function initializeApp() {
     } catch (error) {
       appInitState.errors.push({
         step: 'groups',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      logger.error("Gruplar ve kanallar yüklenemedi", { error: (error as Error).message });
+      logger.error('Gruplar ve kanallar yüklenemedi', { error: (error as Error).message });
       // Grup yükleme hatası kritik değil, devam et
     }
 
@@ -420,9 +612,9 @@ async function initializeApp() {
     } catch (error) {
       appInitState.errors.push({
         step: 'redis',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      logger.error("Redis bağlantısı kurulamadı", { error: (error as Error).message });
+      logger.error('Redis bağlantısı kurulamadı', { error: (error as Error).message });
       // Redis hatası kritik değil, devam et
     }
 
@@ -430,13 +622,13 @@ async function initializeApp() {
     try {
       startScheduledTasks();
       appInitState.initSteps.scheduledTasks = true;
-      logger.info("Zamanlanmış görevler başlatıldı!");
+      logger.info('Zamanlanmış görevler başlatıldı!');
     } catch (error) {
       appInitState.errors.push({
         step: 'scheduledTasks',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      logger.error("Zamanlanmış görevler başlatılamadı", { error: (error as Error).message });
+      logger.error('Zamanlanmış görevler başlatılamadı', { error: (error as Error).message });
       // Zamanlanmış görev hatası kritik değil, devam et
     }
 
@@ -447,9 +639,9 @@ async function initializeApp() {
     } catch (error) {
       appInitState.errors.push({
         step: 'performance',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      logger.error("Performans izleme başlatılamadı", { error: (error as Error).message });
+      logger.error('Performans izleme başlatılamadı', { error: (error as Error).message });
       // Performans izleme hatası kritik değil, devam et
     }
 
@@ -461,15 +653,15 @@ async function initializeApp() {
     const initDuration = Date.now() - appInitState.startTime;
     logger.info(`Uygulama başlangıç yüklemeleri tamam (${initDuration}ms).`, {
       steps: appInitState.initSteps,
-      errors: appInitState.errors.length > 0 ? appInitState.errors : undefined
+      errors: appInitState.errors.length > 0 ? appInitState.errors : undefined,
     });
 
     return appInitState.errors.length === 0;
   } catch (error) {
     appInitState.isInitializing = false;
-    logger.error("Uygulama başlatma hatası", {
+    logger.error('Uygulama başlatma hatası', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     return false;
   }
@@ -482,7 +674,7 @@ async function initializeApp() {
 export function getAppInitState() {
   return {
     ...appInitState,
-    uptime: appInitState.startTime > 0 ? Date.now() - appInitState.startTime : 0
+    uptime: appInitState.startTime > 0 ? Date.now() - appInitState.startTime : 0,
   };
 }
 
@@ -493,7 +685,7 @@ initializeApp();
 sentryHandler.sentryAddBreadcrumb({
   category: 'app',
   message: 'Uygulama başarıyla başlatıldı',
-  level: 'info'
+  level: 'info',
 });
 
 // Hata işleme middleware'leri app.use ile kuruldu
@@ -534,7 +726,10 @@ socketEvents(io, {
   emailNotifications,
   scheduledMessageManager,
   sessionManager,
-  reportManager
+  reportManager,
+  // WebRTC ve görüşme servisleri
+  webRTCService,
+  callManager,
 });
 
 // Zamanlanmış mesajları yönetmek için modülü başlat
@@ -555,12 +750,51 @@ app.use('/api', apiRoutes);
 // Dil değiştirme rotası
 import { changeLanguageMiddleware } from './middleware/i18nMiddleware';
 // TypeScript ile Express 4.x'te middleware kullanımı için düzeltme
-app.post('/api/language', createRouteHandler(changeLanguageMiddleware));
+app.post(
+  '/api/language',
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    changeLanguageMiddleware(req, res, next);
+  }
+);
 
 // Tema değiştirme rotası
 import { changeThemeMiddleware } from './middleware/themeMiddleware';
 // TypeScript ile Express 4.x'te middleware kullanımı için düzeltme
-app.post('/api/theme', createRouteHandler(changeThemeMiddleware));
+app.post(
+  '/api/theme',
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    changeThemeMiddleware(req, res, next);
+  }
+);
+
+// Ana sayfa için özel rota
+app.get('/', (req: express.Request, res: express.Response): void => {
+  try {
+    // Güvenli bir şekilde dosya yolunu oluştur
+    const indexFilePath = path.resolve(path.join(__dirname, '../public/index.html'));
+
+    // Dosya yolunu doğrula
+    if (!indexFilePath.startsWith(publicPath)) {
+      logger.error('Geçersiz index dosyası yolu', { path: indexFilePath, publicPath });
+      res.status(404).send('Sayfa bulunamadı');
+      return;
+    }
+
+    // Dosyanın varlığını kontrol et
+    if (!fs.existsSync(indexFilePath)) {
+      logger.error('Index dosyası bulunamadı', { path: indexFilePath });
+      res.status(404).send('Sayfa bulunamadı');
+      return;
+    }
+
+    res.sendFile(indexFilePath);
+  } catch (error) {
+    logger.error('Ana sayfa erişim hatası', { error: (error as Error).message });
+    res.status(500).send('Sunucu hatası');
+  }
+});
+
+// Yardım sayfası rotası daha önce tanımlandı (satır 254-282)
 
 // 404 hatası için middleware
 app.use(notFoundHandler);
@@ -572,28 +806,29 @@ app.use(sentryHandler.sentryErrorHandler);
 app.use(errorHandler);
 
 // Sunucuyu başlat
-const PORT = parseInt(process.env.PORT || '8888', 10);
-logger.info(`PORT değeri: ${PORT}, process.env.PORT: ${process.env.PORT}`);
+const PORT = parseInt(process.env['PORT'] || '8888', 10);
+logger.info(`PORT değeri: ${PORT}, process.env.PORT: ${process.env['PORT']}`);
 
-try {
-  server.listen(PORT, () => {
-    logger.info(`Sunucu çalışıyor: http://localhost:${PORT}`);
+// Prevent server from starting in test environment
+if (process.env['NODE_ENV'] !== 'test') {
+  try {
+    server.listen(PORT, () => {
+      logger.info(`Sunucu çalışıyor: http://localhost:${PORT}`);
 
-    // Geliştirme modunda konsola da yazdır
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Sunucu başarıyla başlatıldı: http://localhost:${PORT}`);
-    }
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log(`Sunucu başarıyla başlatıldı: http://localhost:${PORT}`);
+      }
 
-    // Sentry'ye sunucu başlangıç bilgisini ekle
-    sentryHandler.sentryAddBreadcrumb({
-      category: 'server',
-      message: `Sunucu ${PORT} portunda başlatıldı`,
-      level: 'info'
+      sentryHandler.sentryAddBreadcrumb({
+        category: 'server',
+        message: `Sunucu ${PORT} portunda başlatıldı`,
+        level: 'info',
+      });
     });
-  });
-} catch (error) {
-  logger.error('Sunucu başlatılırken hata oluştu', { error });
-  sentryHandler.sentryReportError(error as Error, { context: 'Server startup' });
+  } catch (error) {
+    logger.error('Sunucu başlatılırken hata oluştu', { error });
+    sentryHandler.sentryReportError(error as Error, { context: 'Server startup' });
+  }
 }
 
 /**
@@ -610,10 +845,11 @@ const shutdownState = {
     httpServer: false,
     redis: false,
     database: false,
+    atlasSQL: false,
     mediasoup: false,
-    sentry: false
+    sentry: false,
   },
-  errors: [] as { step: string, error: string }[]
+  errors: [] as { step: string; error: string }[],
 };
 
 /**
@@ -638,7 +874,7 @@ async function gracefulShutdown(signal: string) {
   sentryHandler.sentryAddBreadcrumb({
     category: 'app',
     message: `Graceful shutdown başlatıldı: ${signal}`,
-    level: 'info'
+    level: 'info',
   });
 
   // Uygulamanın hazır olmadığını işaretle
@@ -659,7 +895,7 @@ async function gracefulShutdown(signal: string) {
     } catch (error) {
       shutdownState.errors.push({
         step: 'scheduledTasks',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.error('Zamanlanmış görevleri durdurma hatası', { error: (error as Error).message });
     }
@@ -672,9 +908,11 @@ async function gracefulShutdown(signal: string) {
     } catch (error) {
       shutdownState.errors.push({
         step: 'scheduledMessages',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
-      logger.error('Zamanlanmış mesaj yöneticisini durdurma hatası', { error: (error as Error).message });
+      logger.error('Zamanlanmış mesaj yöneticisini durdurma hatası', {
+        error: (error as Error).message,
+      });
     }
 
     // 3. Socket.IO bağlantılarını kapat
@@ -682,7 +920,7 @@ async function gracefulShutdown(signal: string) {
       // Tüm istemcilere kapatma bildirimi gönder
       io.emit('server:shutdown', {
         message: 'Sunucu kapatılıyor, lütfen daha sonra tekrar bağlanın',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Tüm Socket.IO bağlantılarını kapat
@@ -692,7 +930,7 @@ async function gracefulShutdown(signal: string) {
     } catch (error) {
       shutdownState.errors.push({
         step: 'socketIO',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.error('Socket.IO bağlantılarını kapatma hatası', { error: (error as Error).message });
     }
@@ -709,7 +947,7 @@ async function gracefulShutdown(signal: string) {
     } catch (error) {
       shutdownState.errors.push({
         step: 'httpServer',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.error('HTTP sunucusunu kapatma hatası', { error: (error as Error).message });
     }
@@ -723,14 +961,14 @@ async function gracefulShutdown(signal: string) {
     } catch (error) {
       shutdownState.errors.push({
         step: 'redis',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.error('Redis bağlantısını kapatma hatası', { error: (error as Error).message });
     }
 
     // 6. MongoDB bağlantısını kapat
     try {
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env['NODE_ENV'] === 'production') {
         await database.disconnectFromDatabase();
         logger.info('MongoDB bağlantısı kapatıldı');
       } else {
@@ -740,35 +978,53 @@ async function gracefulShutdown(signal: string) {
     } catch (error) {
       shutdownState.errors.push({
         step: 'database',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.error('MongoDB bağlantısını kapatma hatası', { error: (error as Error).message });
     }
 
+    // 6.1. Atlas SQL bağlantısını kapat
+    try {
+      await atlasSQLService.disconnect();
+      logger.info('Atlas SQL bağlantısı kapatıldı');
+      shutdownState.shutdownSteps.atlasSQL = true;
+    } catch (error) {
+      shutdownState.errors.push({
+        step: 'atlasSQL',
+        error: (error as Error).message,
+      });
+      logger.error('Atlas SQL bağlantısını kapatma hatası', { error: (error as Error).message });
+    }
+
     // 7. Mediasoup worker'larını kapat
     try {
+      // Eski SFU modülü
       await sfu.closeWorkers();
+
+      // Yeni WebRTC servisi
+      await webRTCService.close();
+
       shutdownState.shutdownSteps.mediasoup = true;
       logger.info('Mediasoup worker\'ları kapatıldı');
     } catch (error) {
       shutdownState.errors.push({
         step: 'mediasoup',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.warn('Mediasoup worker\'ları kapatılamadı', { error: (error as Error).message });
     }
 
     // 8. Sentry'yi kapat (son işlem olarak)
     try {
-      if (process.env.SENTRY_DSN) {
+      if (process.env['SENTRY_DSN']) {
         logger.info('Sentry kapatılıyor...');
-        await import('@sentry/node').then(Sentry => Sentry.close(2000)); // 2 saniye bekle
+        await import('@sentry/node').then((Sentry) => Sentry.close(2000)); // 2 saniye bekle
       }
       shutdownState.shutdownSteps.sentry = true;
     } catch (error) {
       shutdownState.errors.push({
         step: 'sentry',
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       logger.error('Sentry\'yi kapatma hatası', { error: (error as Error).message });
     }
@@ -779,7 +1035,7 @@ async function gracefulShutdown(signal: string) {
     const shutdownDuration = Date.now() - shutdownState.shutdownStartTime;
     logger.info(`Uygulama güvenli bir şekilde kapatıldı (${shutdownDuration}ms)`, {
       steps: shutdownState.shutdownSteps,
-      errors: shutdownState.errors.length > 0 ? shutdownState.errors : undefined
+      errors: shutdownState.errors.length > 0 ? shutdownState.errors : undefined,
     });
 
     // Tüm logların yazılmasını bekle
@@ -792,7 +1048,7 @@ async function gracefulShutdown(signal: string) {
 
     logger.error('Graceful shutdown sırasında hata', {
       error: (error as Error).message,
-      stack: (error as Error).stack
+      stack: (error as Error).stack,
     });
     sentryHandler.sentryReportError(error as Error, { context: 'Graceful shutdown' });
 

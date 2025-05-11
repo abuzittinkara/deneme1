@@ -4,17 +4,24 @@
  */
 import mongoose from 'mongoose';
 import { Message, MessageDocument } from '../../models/Message';
-import { DirectMessage, DirectMessageDocument } from '../../models/DirectMessage';
-import { Session, SessionDocument } from '../../models/Session';
-import { FileAttachment, FileAttachmentDocument } from '../../models/FileAttachment';
+import DirectMessage from '../../models/DirectMessage';
+import { DirectMessageDocument } from '../../models/DirectMessage';
+import Session from '../../models/Session';
+import { SessionDocument } from '../../models/Session';
+import FileAttachment from '../../models/FileAttachment';
+import { FileAttachmentDocument } from '../../models/FileAttachment';
 import { logger } from '../../utils/logger';
 import { createModelHelper } from '../../utils/mongoose-helpers';
 
 // Tip güvenli model yardımcıları
 const MessageHelper = createModelHelper<MessageDocument, typeof Message>(Message);
-const DirectMessageHelper = createModelHelper<DirectMessageDocument, typeof DirectMessage>(DirectMessage);
+const DirectMessageHelper = createModelHelper<DirectMessageDocument, typeof DirectMessage>(
+  DirectMessage
+);
 const SessionHelper = createModelHelper<SessionDocument, typeof Session>(Session);
-const FileAttachmentHelper = createModelHelper<FileAttachmentDocument, typeof FileAttachment>(FileAttachment);
+const FileAttachmentHelper = createModelHelper<FileAttachmentDocument, typeof FileAttachment>(
+  FileAttachment
+);
 
 /**
  * Arşivleme sonucu arayüzü
@@ -46,8 +53,10 @@ export async function archiveOldMessages(days: number = 90): Promise<ArchiveResu
     const messagesToArchive = await MessageHelper.find({
       timestamp: { $lt: cutoffDate },
       isArchived: { $ne: true },
-      isDeleted: { $ne: true }
-    }).limit(1000).exec();
+      isDeleted: { $ne: true },
+    })
+      .limit(1000)
+      .exec();
 
     if (messagesToArchive.length === 0) {
       logger.info('Arşivlenecek mesaj bulunamadı');
@@ -56,6 +65,9 @@ export async function archiveOldMessages(days: number = 90): Promise<ArchiveResu
 
     // Arşiv koleksiyonunu oluştur (yoksa)
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Veritabanı bağlantısı bulunamadı');
+    }
     const collections = await db.listCollections({ name: 'messages_archive' }).toArray();
 
     if (collections.length === 0) {
@@ -69,21 +81,21 @@ export async function archiveOldMessages(days: number = 90): Promise<ArchiveResu
 
     // Mesajları arşiv koleksiyonuna ekle
     const archiveResult = await db.collection('messages_archive').insertMany(
-      messagesToArchive.map(msg => ({
+      messagesToArchive.map((msg) => ({
         ...msg.toObject(),
-        archivedAt: new Date()
+        archivedAt: new Date(),
       }))
     );
 
     // Arşivlenen mesajları işaretle
     const updateResult = await MessageHelper.getModel().updateMany(
-      { _id: { $in: messagesToArchive.map(msg => msg._id) } },
+      { _id: { $in: messagesToArchive.map((msg) => msg._id) } },
       { $set: { isArchived: true } }
     );
 
     logger.info('Eski mesajlar arşivlendi', {
       archivedCount: archiveResult.insertedCount,
-      updatedCount: updateResult.modifiedCount
+      updatedCount: updateResult.modifiedCount,
     });
 
     return { archivedCount: archiveResult.insertedCount };
@@ -108,8 +120,10 @@ export async function archiveOldDirectMessages(days: number = 90): Promise<Archi
     const messagesToArchive = await DirectMessageHelper.find({
       timestamp: { $lt: cutoffDate },
       isArchived: { $ne: true },
-      isDeleted: { $ne: true }
-    }).limit(1000).exec();
+      isDeleted: { $ne: true },
+    })
+      .limit(1000)
+      .exec();
 
     if (messagesToArchive.length === 0) {
       logger.info('Arşivlenecek direkt mesaj bulunamadı');
@@ -118,6 +132,9 @@ export async function archiveOldDirectMessages(days: number = 90): Promise<Archi
 
     // Arşiv koleksiyonunu oluştur (yoksa)
     const db = mongoose.connection.db;
+    if (!db) {
+      throw new Error('Veritabanı bağlantısı bulunamadı');
+    }
     const collections = await db.listCollections({ name: 'direct_messages_archive' }).toArray();
 
     if (collections.length === 0) {
@@ -131,21 +148,21 @@ export async function archiveOldDirectMessages(days: number = 90): Promise<Archi
 
     // Mesajları arşiv koleksiyonuna ekle
     const archiveResult = await db.collection('direct_messages_archive').insertMany(
-      messagesToArchive.map(msg => ({
+      messagesToArchive.map((msg) => ({
         ...msg.toObject(),
-        archivedAt: new Date()
+        archivedAt: new Date(),
       }))
     );
 
     // Arşivlenen mesajları işaretle
     const updateResult = await DirectMessageHelper.getModel().updateMany(
-      { _id: { $in: messagesToArchive.map(msg => msg._id) } },
+      { _id: { $in: messagesToArchive.map((msg) => msg._id) } },
       { $set: { isArchived: true } }
     );
 
     logger.info('Eski direkt mesajlar arşivlendi', {
       archivedCount: archiveResult.insertedCount,
-      updatedCount: updateResult.modifiedCount
+      updatedCount: updateResult.modifiedCount,
     });
 
     return { archivedCount: archiveResult.insertedCount };
@@ -169,11 +186,11 @@ export async function cleanupOldSessions(days: number = 30): Promise<CleanupResu
     // Eski oturumları sil
     const result = await SessionHelper.getModel().deleteMany({
       lastActivity: { $lt: cutoffDate },
-      isActive: false
+      isActive: false,
     });
 
     logger.info('Eski oturumlar temizlendi', {
-      cleanedCount: result.deletedCount
+      cleanedCount: result.deletedCount,
     });
 
     return { cleanedCount: result.deletedCount || 0 };
@@ -198,11 +215,10 @@ export async function cleanupUnusedFiles(days: number = 365): Promise<CleanupRes
     const unusedFiles = await FileAttachmentHelper.find({
       uploadDate: { $lt: cutoffDate },
       // Mesaj veya DM mesajı olmayan dosyaları bul
-      $and: [
-        { message: { $exists: false } },
-        { dmMessage: { $exists: false } }
-      ]
-    }).limit(100).exec();
+      $and: [{ message: { $exists: false } }, { dmMessage: { $exists: false } }],
+    })
+      .limit(100)
+      .exec();
 
     if (unusedFiles.length === 0) {
       logger.info('Temizlenecek dosya bulunamadı');
@@ -210,11 +226,11 @@ export async function cleanupUnusedFiles(days: number = 365): Promise<CleanupRes
     }
 
     // Dosyaları sil
-    const fileIds = unusedFiles.map(file => file._id);
+    const fileIds = unusedFiles.map((file) => file._id);
     const result = await FileAttachmentHelper.getModel().deleteMany({ _id: { $in: fileIds } });
 
     logger.info('Kullanılmayan dosyalar temizlendi', {
-      cleanedCount: result.deletedCount
+      cleanedCount: result.deletedCount,
     });
 
     return { cleanedCount: result.deletedCount || 0 };
@@ -251,14 +267,14 @@ export async function runArchiveTasks(): Promise<{
       archivedMessages: messagesResult.archivedCount,
       archivedDirectMessages: directMessagesResult.archivedCount,
       cleanedSessions: sessionsResult.cleanedCount,
-      cleanedFiles: filesResult.cleanedCount
+      cleanedFiles: filesResult.cleanedCount,
     });
 
     return {
       archivedMessages: messagesResult.archivedCount,
       archivedDirectMessages: directMessagesResult.archivedCount,
       cleanedSessions: sessionsResult.cleanedCount,
-      cleanedFiles: filesResult.cleanedCount
+      cleanedFiles: filesResult.cleanedCount,
     };
   } catch (error) {
     logger.error('Arşivleme görevleri hatası', { error: (error as Error).message });
@@ -271,5 +287,5 @@ export default {
   archiveOldDirectMessages,
   cleanupOldSessions,
   cleanupUnusedFiles,
-  runArchiveTasks
+  runArchiveTasks,
 };

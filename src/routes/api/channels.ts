@@ -24,11 +24,7 @@ const router = express.Router();
 router.get(
   '/:channelId',
   requireAuth,
-  [
-    param('channelId')
-      .isMongoId()
-      .withMessage('Geçersiz kanal ID')
-  ],
+  [param('channelId').isMongoId().withMessage('Geçersiz kanal ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
@@ -42,7 +38,7 @@ router.get(
       logger.error('Kanal detayları getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId
+        channelId: req.params['channelId'],
       });
 
       // Hata mesajını belirle
@@ -74,9 +70,7 @@ router.patch(
   '/:channelId',
   requireAuth,
   [
-    param('channelId')
-      .isMongoId()
-      .withMessage('Geçersiz kanal ID'),
+    param('channelId').isMongoId().withMessage('Geçersiz kanal ID'),
     body('name')
       .optional()
       .isString()
@@ -89,27 +83,26 @@ router.patch(
       .isLength({ max: 500 })
       .withMessage('Kanal açıklaması en fazla 500 karakter olabilir')
       .trim(),
-    body('isPrivate')
-      .optional()
-      .isBoolean()
-      .withMessage('isPrivate bir boolean değer olmalıdır')
+    body('isPrivate').optional().isBoolean().withMessage('isPrivate bir boolean değer olmalıdır'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
       const updates = req.body;
 
       const updatedChannel = await channelManager.updateChannel(channelId, updates, userId);
 
-      return res.status(200).json(createSuccessResponse(updatedChannel, 'Kanal başarıyla güncellendi'));
+      return res
+        .status(200)
+        .json(createSuccessResponse(updatedChannel, 'Kanal başarıyla güncellendi'));
     } catch (error) {
       logger.error('Kanal güncelleme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId,
-        updates: req.body
+        channelId: req.params['channelId'],
+        updates: req.body,
       });
 
       // Hata mesajını belirle
@@ -144,16 +137,12 @@ router.patch(
 router.delete(
   '/:channelId',
   requireAuth,
-  [
-    param('channelId')
-      .isMongoId()
-      .withMessage('Geçersiz kanal ID')
-  ],
+  [param('channelId').isMongoId().withMessage('Geçersiz kanal ID')],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
 
       await channelManager.deleteChannel(channelId, userId);
 
@@ -162,7 +151,7 @@ router.delete(
       logger.error('Kanal silme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId
+        channelId: req.params['channelId'],
       });
 
       // Hata mesajını belirle
@@ -194,42 +183,31 @@ router.get(
   '/:channelId/messages',
   requireAuth,
   [
-    param('channelId')
-      .isMongoId()
-      .withMessage('Geçersiz kanal ID'),
+    param('channelId').isMongoId().withMessage('Geçersiz kanal ID'),
     query('limit')
       .optional()
       .isInt({ min: 1, max: 100 })
       .withMessage('Limit 1-100 arasında olmalıdır')
       .toInt(),
-    query('before')
-      .optional()
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID'),
-    query('after')
-      .optional()
-      .isMongoId()
-      .withMessage('Geçersiz mesaj ID')
+    query('before').optional().isMongoId().withMessage('Geçersiz mesaj ID'),
+    query('after').optional().isMongoId().withMessage('Geçersiz mesaj ID'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
       const { limit = 50, before, after } = req.query;
 
-      const messages = await messageManager.getChannelMessages(
-        channelId,
-        { limit: Number(limit) }
-      );
+      const messages = await messageManager.getChannelMessages(channelId, { limit: Number(limit) });
 
       return res.status(200).json(createSuccessResponse(messages));
     } catch (error) {
       logger.error('Kanal mesajlarını getirme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId,
-        query: req.query
+        channelId: req.params['channelId'],
+        query: req.query,
       });
 
       // Hata mesajını belirle
@@ -261,49 +239,37 @@ router.post(
   '/:channelId/messages',
   requireAuth,
   [
-    param('channelId')
-      .isMongoId()
-      .withMessage('Geçersiz kanal ID'),
-    body('content')
-      .isString()
-      .notEmpty()
-      .withMessage('Mesaj içeriği gereklidir')
-      .trim(),
+    param('channelId').isMongoId().withMessage('Geçersiz kanal ID'),
+    body('content').isString().notEmpty().withMessage('Mesaj içeriği gereklidir').trim(),
     body('type')
       .optional()
       .isIn(['text', 'image', 'file', 'system'])
       .withMessage('Geçersiz mesaj türü')
       .default('text'),
-    body('attachments')
-      .optional()
-      .isArray()
-      .withMessage('Ekler bir dizi olmalıdır')
+    body('attachments').optional().isArray().withMessage('Ekler bir dizi olmalıdır'),
   ],
   validateRequest,
   createAuthRouteHandler(async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
-      const { channelId } = req.params;
+      const channelId = req.params['channelId'] || '';
       const { content, type = 'text', attachments = [] } = req.body;
 
       // Mesaj oluşturma işlemi
-      // Not: Mesaj gönderme fonksiyonu henüz tam olarak uygulanmadı
-      // Geçici olarak boş bir nesne döndürüyoruz
-      const message = {
-        _id: new mongoose.Types.ObjectId(),
+      const message = await messageManager.sendChannelMessage(
+        channelId,
+        userId,
         content,
-        channel: channelId,
-        author: userId,
-        createdAt: new Date()
-      };
+        attachments
+      );
 
       return res.status(201).json(createSuccessResponse(message, 'Mesaj başarıyla gönderildi'));
     } catch (error) {
       logger.error('Mesaj gönderme hatası', {
         error: (error as Error).message,
         userId: req.user!.id,
-        channelId: req.params.channelId,
-        content: req.body.content
+        channelId: req.params['channelId'],
+        content: req.body.content,
       });
 
       // Hata mesajını belirle

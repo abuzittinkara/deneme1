@@ -8,7 +8,7 @@ import {
   SUPPORTED_LANGUAGES,
   DEFAULT_LANGUAGE,
   changeLanguage,
-  getCurrentLanguage
+  getCurrentLanguage,
 } from '../utils/i18n';
 
 /**
@@ -23,8 +23,8 @@ export function i18nMiddleware(req: Request, res: Response, next: NextFunction):
     let lang = DEFAULT_LANGUAGE;
 
     // 1. URL parametresinden dil kodu
-    if (req.query.lang && typeof req.query.lang === 'string') {
-      const queryLang = req.query.lang.toLowerCase();
+    if (req.query['lang'] && typeof req.query['lang'] === 'string') {
+      const queryLang = req.query['lang'].toLowerCase();
 
       if (SUPPORTED_LANGUAGES.includes(queryLang)) {
         lang = queryLang;
@@ -34,7 +34,7 @@ export function i18nMiddleware(req: Request, res: Response, next: NextFunction):
           maxAge: 365 * 24 * 60 * 60 * 1000, // 1 yıl
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
+          sameSite: 'strict',
         });
       }
     }
@@ -49,7 +49,10 @@ export function i18nMiddleware(req: Request, res: Response, next: NextFunction):
     // 3. Accept-Language başlığından dil kodu
     else if (req.headers['accept-language']) {
       const acceptLanguage = req.headers['accept-language'];
-      const languages = acceptLanguage.split(',').map(lang => lang.split(';')[0].trim().toLowerCase());
+      const languages = acceptLanguage.split(',').map((lang) => {
+        const parts = lang.split(';');
+        return parts && parts.length > 0 ? parts[0].trim().toLowerCase() : '';
+      });
 
       for (const language of languages) {
         if (SUPPORTED_LANGUAGES.includes(language)) {
@@ -88,7 +91,11 @@ export function i18nMiddleware(req: Request, res: Response, next: NextFunction):
  * @param res Express yanıtı
  * @param next Sonraki middleware
  */
-export function changeLanguageMiddleware(req: Request, res: Response, next: NextFunction): Response | void {
+export function changeLanguageMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Response | void {
   try {
     const { lang } = req.body;
 
@@ -97,8 +104,8 @@ export function changeLanguageMiddleware(req: Request, res: Response, next: Next
         success: false,
         error: {
           message: 'Dil kodu gerekli',
-          statusCode: 400
-        }
+          statusCode: 400,
+        },
       });
     }
 
@@ -110,8 +117,8 @@ export function changeLanguageMiddleware(req: Request, res: Response, next: Next
         error: {
           message: `Desteklenmeyen dil: ${language}`,
           statusCode: 400,
-          supportedLanguages: SUPPORTED_LANGUAGES
-        }
+          supportedLanguages: SUPPORTED_LANGUAGES,
+        },
       });
     }
 
@@ -123,15 +130,15 @@ export function changeLanguageMiddleware(req: Request, res: Response, next: Next
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 yıl
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict'
+      sameSite: 'strict',
     });
 
     return res.status(200).json({
       success: true,
       data: {
         language,
-        message: 'Dil başarıyla değiştirildi'
-      }
+        message: 'Dil başarıyla değiştirildi',
+      },
     });
   } catch (error) {
     logger.error('Dil değiştirme middleware\'inde hata oluştu', { error: (error as Error).message });
@@ -140,13 +147,13 @@ export function changeLanguageMiddleware(req: Request, res: Response, next: Next
       success: false,
       error: {
         message: 'Dil değiştirme başarısız',
-        statusCode: 500
-      }
+        statusCode: 500,
+      },
     });
   }
 }
 
 export default {
   i18nMiddleware,
-  changeLanguageMiddleware
+  changeLanguageMiddleware,
 };

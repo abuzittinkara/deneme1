@@ -20,10 +20,10 @@ export interface IFileAttachment {
 }
 
 // Dosya eki dokümanı arayüzü
-export interface FileAttachmentDocument extends TypedDocument<IFileAttachment> {}
+export type FileAttachmentDocument = TypedDocument<IFileAttachment>;
 
 // Dosya eki modeli arayüzü
-export interface FileAttachmentModel extends FullModelType<IFileAttachment> {}
+export type FileAttachmentModel = FullModelType<IFileAttachment>;
 
 // Dosya eki şeması
 const FileAttachmentSchema = new Schema<FileAttachmentDocument, FileAttachmentModel>(
@@ -45,11 +45,11 @@ const FileAttachmentSchema = new Schema<FileAttachmentDocument, FileAttachmentMo
     // DM message this file is attached to (optional)
     dmMessage: { type: Schema.Types.ObjectId, ref: 'DMMessage' },
     // Path where the file is stored on the server
-    path: { type: String, required: true }
+    path: { type: String, required: true },
   },
   {
     timestamps: true,
-    versionKey: false
+    versionKey: false,
   }
 );
 
@@ -76,8 +76,12 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as FileAttachmentModel;
 } else {
   // Gerçek model
-  FileAttachment = (mongoose.models.FileAttachment as FileAttachmentModel) ||
-    mongoose.model<FileAttachmentDocument, FileAttachmentModel>('FileAttachment', FileAttachmentSchema);
+  FileAttachment =
+    (mongoose.models['FileAttachment'] as FileAttachmentModel) ||
+    mongoose.model<FileAttachmentDocument, FileAttachmentModel>(
+      'FileAttachment',
+      FileAttachmentSchema
+    );
 }
 
 export default FileAttachment;

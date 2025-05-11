@@ -11,13 +11,13 @@ import os from 'os';
 const metrics = {
   requestCount: 0,
   requestDurations: [] as number[],
-  slowRequests: [] as { path: string, method: string, duration: number, timestamp: Date }[],
+  slowRequests: [] as { path: string; method: string; duration: number; timestamp: Date }[],
   startTime: Date.now(),
   lastGcTime: Date.now(),
   memoryUsage: {
     current: process.memoryUsage(),
-    peak: process.memoryUsage()
-  }
+    peak: process.memoryUsage(),
+  },
 };
 
 // Node.js'de global performance nesnesi
@@ -47,7 +47,8 @@ export const performance = {
       });
 
       // Sentry'ye performans verilerini gönder
-      if (duration > 1000) { // 1 saniyeden uzun süren işlemler için
+      if (duration > 1000) {
+        // 1 saniyeden uzun süren işlemler için
         Sentry.addBreadcrumb({
           category: 'performance',
           message: `Yavaş DB sorgusu: ${queryName}`,
@@ -84,7 +85,8 @@ export const performance = {
       });
 
       // Sentry'ye performans verilerini gönder
-      if (duration > 500) { // 500ms'den uzun süren işlemler için
+      if (duration > 500) {
+        // 500ms'den uzun süren işlemler için
         Sentry.addBreadcrumb({
           category: 'performance',
           message: `Yavaş Redis işlemi: ${operationName}`,
@@ -121,7 +123,8 @@ export const performance = {
       });
 
       // Sentry'ye performans verilerini gönder
-      if (duration > 2000) { // 2 saniyeden uzun süren işlemler için
+      if (duration > 2000) {
+        // 2 saniyeden uzun süren işlemler için
         Sentry.addBreadcrumb({
           category: 'performance',
           message: `Yavaş API çağrısı: ${apiName}`,
@@ -133,7 +136,7 @@ export const performance = {
         });
       }
     }
-  }
+  },
 };
 
 /**
@@ -159,7 +162,8 @@ export function measurePerformance<T>(
     });
 
     // Sentry'ye performans verilerini gönder
-    if (duration > 1000) { // 1 saniyeden uzun süren işlemler için
+    if (duration > 1000) {
+      // 1 saniyeden uzun süren işlemler için
       Sentry.addBreadcrumb({
         category: 'performance',
         message: `Yavaş işlem: ${name}`,
@@ -196,7 +200,8 @@ export async function measurePerformanceAsync<T>(
     });
 
     // Sentry'ye performans verilerini gönder
-    if (duration > 1000) { // 1 saniyeden uzun süren işlemler için
+    if (duration > 1000) {
+      // 1 saniyeden uzun süren işlemler için
       Sentry.addBreadcrumb({
         category: 'performance',
         message: `Yavaş işlem: ${name}`,
@@ -242,7 +247,7 @@ export function performanceMiddleware() {
           status,
           query: JSON.stringify(req.query),
           params: JSON.stringify(req.params),
-          ip: req.ip
+          ip: req.ip,
         });
       }
       // Çok yavaş istekler için error log
@@ -255,7 +260,7 @@ export function performanceMiddleware() {
           query: JSON.stringify(req.query),
           params: JSON.stringify(req.params),
           ip: req.ip,
-          userAgent: req.headers['user-agent']
+          userAgent: req.headers['user-agent'],
         });
       }
 
@@ -270,7 +275,7 @@ export function performanceMiddleware() {
             path,
             status,
             query: JSON.stringify(req.query),
-            params: JSON.stringify(req.params)
+            params: JSON.stringify(req.params),
           },
           level: 'warning',
         });
@@ -283,8 +288,8 @@ export function performanceMiddleware() {
               method,
               path,
               status: status.toString(),
-              duration: Math.round(duration).toString()
-            }
+              duration: Math.round(duration).toString(),
+            },
           });
         }
       }
@@ -347,9 +352,11 @@ export function logMetrics(): void {
   const heapStats = v8.getHeapStatistics();
 
   // Ortalama istek süresini hesapla
-  const avgRequestDuration = metrics.requestDurations.length > 0
-    ? metrics.requestDurations.reduce((sum, duration) => sum + duration, 0) / metrics.requestDurations.length
-    : 0;
+  const avgRequestDuration =
+    metrics.requestDurations.length > 0
+      ? metrics.requestDurations.reduce((sum, duration) => sum + duration, 0) /
+        metrics.requestDurations.length
+      : 0;
 
   // Metrikleri logla
   logger.info('Performans metrikleri', {
@@ -362,26 +369,26 @@ export function logMetrics(): void {
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
       rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
       heapSizeLimit: `${Math.round(heapStats.heap_size_limit / 1024 / 1024)} MB`,
-      heapUsagePercentage: `${((memoryUsage.heapUsed / heapStats.heap_size_limit) * 100).toFixed(2)}%`
+      heapUsagePercentage: `${((memoryUsage.heapUsed / heapStats.heap_size_limit) * 100).toFixed(2)}%`,
     },
     system: {
       loadAvg: os.loadavg(),
       freeMem: `${Math.round(os.freemem() / 1024 / 1024)} MB`,
       totalMem: `${Math.round(os.totalmem() / 1024 / 1024)} MB`,
-      cpus: os.cpus().length
-    }
+      cpus: os.cpus().length,
+    },
   });
 
   // Yavaş istekleri logla
   if (metrics.slowRequests.length > 0) {
     logger.warn('Yavaş istekler', {
       count: metrics.slowRequests.length,
-      requests: metrics.slowRequests.slice(0, 5).map(req => ({
+      requests: metrics.slowRequests.slice(0, 5).map((req) => ({
         path: req.path,
         method: req.method,
         duration: `${req.duration}ms`,
-        timestamp: req.timestamp
-      }))
+        timestamp: req.timestamp,
+      })),
     });
   }
 
@@ -406,11 +413,12 @@ export function startMemoryMonitoring(interval = 60000): NodeJS.Timeout {
         heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
         heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
         heapSizeLimit: `${Math.round(heapStats.heap_size_limit / 1024 / 1024)} MB`,
-        heapUsagePercentage: `${((memoryUsage.heapUsed / heapStats.heap_size_limit) * 100).toFixed(2)}%`
+        heapUsagePercentage: `${((memoryUsage.heapUsed / heapStats.heap_size_limit) * 100).toFixed(2)}%`,
       });
 
       // Garbage collection'ı zorla
-      if (Date.now() - metrics.lastGcTime > 300000) { // 5 dakikada bir
+      if (Date.now() - metrics.lastGcTime > 300000) {
+        // 5 dakikada bir
         if (global.gc) {
           logger.info('Manuel garbage collection başlatılıyor');
           global.gc();

@@ -9,7 +9,7 @@ const router = express.Router();
 // Placeholder route
 router.get('/', (req, res) => {
   res.json({
-    message: 'Direct Messages API'
+    message: 'Direct Messages API',
   });
 });
 

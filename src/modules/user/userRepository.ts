@@ -25,13 +25,14 @@ export class UserRepository {
    */
   async findById(userId: string): Promise<UserDocument | null> {
     try {
-      const user = await User.findById(userId)
-        .select('-passwordHash -twoFactorSecret -backupCodes');
+      const user = await User.findById(userId).select(
+        '-passwordHash -twoFactorSecret -backupCodes'
+      );
       return user as unknown as UserDocument;
     } catch (error) {
       logger.error('Kullanıcı bulma hatası', {
         error: (error as Error).message,
-        userId
+        userId,
       });
       throw error;
     }
@@ -44,13 +45,14 @@ export class UserRepository {
    */
   async findByUsername(username: string): Promise<UserDocument | null> {
     try {
-      const user = await User.findOne({ username })
-        .select('-passwordHash -twoFactorSecret -backupCodes');
+      const user = await User.findOne({ username }).select(
+        '-passwordHash -twoFactorSecret -backupCodes'
+      );
       return user as unknown as UserDocument;
     } catch (error) {
       logger.error('Kullanıcı adına göre kullanıcı bulma hatası', {
         error: (error as Error).message,
-        username
+        username,
       });
       throw error;
     }
@@ -73,7 +75,7 @@ export class UserRepository {
     } catch (error) {
       logger.error('Kullanıcı güncelleme hatası', {
         error: (error as Error).message,
-        userId
+        userId,
       });
       throw error;
     }
@@ -86,18 +88,26 @@ export class UserRepository {
    * @param limit Sayfa başına öğe sayısı
    * @returns Kullanıcı listesi ve toplam sayı
    */
-  async search(query: string, page = 1, limit = 20): Promise<{ users: UserDocument[], total: number }> {
+  async search(
+    query: string,
+    page = 1,
+    limit = 20
+  ): Promise<{ users: UserDocument[]; total: number }> {
     try {
       const { skip, limit: limitValue } = getPaginationParams(page, limit);
 
-      // Arama sorgusu oluştur
+      // Arama metnini temizle ve güvenli hale getir
+      const sanitizedText = query.trim();
+      const escapedText = sanitizedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      // Güvenli regex ile arama sorgusunu oluştur
       const searchQuery = {
         $or: [
-          { username: { $regex: query, $options: 'i' } },
-          { name: { $regex: query, $options: 'i' } },
-          { surname: { $regex: query, $options: 'i' } },
-          { email: { $regex: query, $options: 'i' } }
-        ]
+          { username: { $regex: new RegExp(escapedText, 'i') } },
+          { name: { $regex: new RegExp(escapedText, 'i') } },
+          { surname: { $regex: new RegExp(escapedText, 'i') } },
+          { email: { $regex: new RegExp(escapedText, 'i') } },
+        ],
       };
 
       // Toplam sayıyı al
@@ -112,14 +122,14 @@ export class UserRepository {
 
       return {
         users: users as unknown as UserDocument[],
-        total
+        total,
       };
     } catch (error) {
       logger.error('Kullanıcı arama hatası', {
         error: (error as Error).message,
         query,
         page,
-        limit
+        limit,
       });
       throw error;
     }
@@ -138,8 +148,8 @@ export class UserRepository {
         {
           $set: {
             'onlineStatus.isOnline': isOnline,
-            'onlineStatus.lastActiveAt': new Date()
-          }
+            'onlineStatus.lastActiveAt': new Date(),
+          },
         },
         { new: true }
       ).select('-passwordHash -twoFactorSecret -backupCodes');
@@ -148,7 +158,7 @@ export class UserRepository {
       logger.error('Kullanıcı durumu güncelleme hatası', {
         error: (error as Error).message,
         userId,
-        isOnline
+        isOnline,
       });
       throw error;
     }

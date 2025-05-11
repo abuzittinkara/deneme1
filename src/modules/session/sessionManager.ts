@@ -22,7 +22,7 @@ export async function createSession(
   } catch (error) {
     logger.error('Oturum oluşturma hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -41,7 +41,7 @@ export async function validateSession(token: string): Promise<string | null> {
   } catch (error) {
     logger.error('Oturum doğrulama hatası', {
       error: (error as Error).message,
-      token
+      token,
     });
     return null;
   }
@@ -59,7 +59,7 @@ export async function invalidateSession(token: string): Promise<boolean> {
   } catch (error) {
     logger.error('Oturum sonlandırma hatası', {
       error: (error as Error).message,
-      token
+      token,
     });
     return false;
   }
@@ -81,7 +81,7 @@ export async function invalidateAllSessions(
   } catch (error) {
     logger.error('Tüm oturumları sonlandırma hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     return 0;
   }
@@ -101,12 +101,12 @@ export async function getSessionById(sessionId: string): Promise<any | null> {
       userAgent: 'dummy-user-agent',
       ip: '127.0.0.1',
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     };
   } catch (error) {
     logger.error('Oturum bilgileri getirme hatası', {
       error: (error as Error).message,
-      sessionId
+      sessionId,
     });
     return null;
   }
@@ -127,13 +127,13 @@ export async function getUserSessions(userId: string): Promise<any[]> {
         userAgent: 'dummy-user-agent',
         ip: '127.0.0.1',
         createdAt: new Date(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-      }
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
     ];
   } catch (error) {
     logger.error('Kullanıcı oturumları getirme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     return [];
   }
@@ -151,7 +151,7 @@ export async function endSessionById(sessionId: string): Promise<boolean> {
   } catch (error) {
     logger.error('Oturum sonlandırma hatası', {
       error: (error as Error).message,
-      sessionId
+      sessionId,
     });
     return false;
   }
@@ -169,7 +169,7 @@ export async function endAllUserSessions(userId: string): Promise<boolean> {
   } catch (error) {
     logger.error('Kullanıcının tüm oturumlarını sonlandırma hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     return false;
   }
@@ -181,7 +181,10 @@ export async function endAllUserSessions(userId: string): Promise<boolean> {
  * @param currentSessionId - Mevcut oturum ID'si
  * @returns İşlem başarılı mı
  */
-export async function endAllSessionsExcept(userId: string, currentSessionId: string): Promise<boolean> {
+export async function endAllSessionsExcept(
+  userId: string,
+  currentSessionId: string
+): Promise<boolean> {
   try {
     logger.info('Kullanıcının diğer oturumları sonlandırıldı', { userId, currentSessionId });
     return true;
@@ -189,7 +192,7 @@ export async function endAllSessionsExcept(userId: string, currentSessionId: str
     logger.error('Kullanıcının diğer oturumlarını sonlandırma hatası', {
       error: (error as Error).message,
       userId,
-      currentSessionId
+      currentSessionId,
     });
     return false;
   }
@@ -204,5 +207,5 @@ export default {
   getUserSessions,
   endSessionById,
   endAllUserSessions,
-  endAllSessionsExcept
+  endAllSessionsExcept,
 };

@@ -7,19 +7,12 @@
   },
   "include": ["scripts/**/*.ts"],
   "exclude": [
-    "node_modules", 
-    "dist", 
+    "node_modules",
+    "dist",
     "src",
-    "modules",
-    "middleware",
-    "routes",
-    "utils",
-    "config",
-    "models",
-    "socket",
-    "**/*.js", 
-    "**/*.jsx", 
-    "**/*.spec.ts", 
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.spec.ts",
     "**/*.test.ts"
   ]
 }

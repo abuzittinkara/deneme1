@@ -18,7 +18,7 @@ moduleAlias.addAliases({
   '@middleware': path.join(rootDir, 'src/middleware'),
   '@routes': path.join(rootDir, 'src/routes'),
   '@socket': path.join(rootDir, 'src/socket'),
-  '@types': path.join(rootDir, 'src/types')
+  '@types': path.join(rootDir, 'src/types'),
 });
 
 export default moduleAlias;

@@ -1,0 +1,8 @@
+[
+  {
+    "file": ".env.example",
+    "type": "sensitive_data",
+    "severity": "high",
+    "message": "MongoDB bağlantı URL'si bilgisi açık metin olarak bulundu."
+  }
+]

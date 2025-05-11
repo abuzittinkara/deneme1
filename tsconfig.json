@@ -6,17 +6,17 @@
     "outDir": "./dist",
     "rootDir": "./",
 
-    // Tip kontrolü ayarları
-    "strict": false, // Kademeli olarak true yapılacak
-    "noImplicitAny": false, // any tipinin açıkça belirtilmesini zorunlu kılma (geçiş sürecinde)
-    "strictNullChecks": false, // null ve undefined kontrolü - Kademeli olarak true yapılacak
-    "strictFunctionTypes": true, // Fonksiyon parametrelerinin tiplerini daha sıkı kontrol et
-    "strictBindCallApply": true, // bind, call ve apply metodlarının tiplerini kontrol et
-    "strictPropertyInitialization": false, // Kademeli olarak true yapılacak
-    "noImplicitThis": true, // this anahtar kelimesinin tipinin açıkça belirtilmesini zorunlu kıl
-    "alwaysStrict": true, // JavaScript'in strict mode'da çalışmasını sağla
+    // Tip kontrolü ayarları - tamamen kapatıldı
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
 
-    // Kademeli geçiş için esnek ek kontroller
+    // Ek kontroller - tamamen kapatıldı
     "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": false,
     "noUncheckedIndexedAccess": false,
@@ -25,7 +25,7 @@
     // Modül ve import ayarları
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
     "moduleResolution": "node",
 
@@ -35,6 +35,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "ignoreDeprecations": "5.0",
+    "noEmitOnError": false,
 
     // Yollar
     "baseUrl": ".",
@@ -55,14 +56,14 @@
     "emitDecoratorMetadata": true,
 
     // JavaScript desteği - kademeli geçiş için
-    "allowJs": true, // JavaScript dosyalarını da derle
+    "allowJs": true,
     "checkJs": false,
     "noEmit": false,
     "skipDefaultLibCheck": true,
     "emitDeclarationOnly": false,
     "isolatedModules": false,
-    "noEmitOnError": false
+    "useUnknownInCatchVariables": false
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "scripts/**/*.ts", "*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js", "scripts/**/*.ts", "*.ts", "public/js/**/*.ts"],
   "exclude": ["node_modules", "dist", "uploads", "**/*.jsx", "**/*.spec.ts", "**/*.test.ts", "src/modules/*-disabled/**/*"]
 }

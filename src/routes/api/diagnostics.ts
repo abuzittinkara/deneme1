@@ -3,12 +3,13 @@
  * Sistem tanılama API'leri
  */
 import express from 'express';
-import { createRouteHandler } from '../../utils/routeHandler';
-import { requireAuth, requireAdmin } from '../../middleware/authMiddleware';
+import { createRouteHandler } from '../../utils/express-helpers';
+import { requireAuth } from '../../middleware/requireAuth';
+import { requireAdmin } from '../../middleware/requireAdmin';
 import { getErrorMetrics } from '../../middleware/errorHandler';
 import { logger } from '../../utils/logger';
 import { formatMemoryUsage } from '../../utils/performanceMonitoring';
-import database from '../../config/database';
+import databaseService from '../../services/databaseService';
 import { getAppInitState } from '../../app';
 
 const router = express.Router();
@@ -61,29 +62,34 @@ const router = express.Router();
  *       403:
  *         description: Yetkisiz erişim
  */
-router.get('/errors', requireAuth, requireAdmin(), createRouteHandler(async (req, res) => {
-  try {
-    const metrics = getErrorMetrics();
+router.get(
+  '/errors',
+  requireAuth,
+  requireAdmin(),
+  createRouteHandler(async (req, res) => {
+    try {
+      const metrics = getErrorMetrics();
 
-    return res.status(200).json({
-      success: true,
-      data: metrics
-    });
-  } catch (error) {
-    logger.error('Hata metrikleri getirme hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+      return res.status(200).json({
+        success: true,
+        data: metrics,
+      });
+    } catch (error) {
+      logger.error('Hata metrikleri getirme hatası', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Hata metrikleri getirilirken bir hata oluştu',
-        type: 'ServerError'
-      }
-    });
-  }
-}));
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Hata metrikleri getirilirken bir hata oluştu',
+          type: 'ServerError',
+        },
+      });
+    }
+  })
+);
 
 /**
  * @swagger
@@ -127,35 +133,40 @@ router.get('/errors', requireAuth, requireAdmin(), createRouteHandler(async (req
  *       403:
  *         description: Yetkisiz erişim
  */
-router.get('/memory', requireAuth, requireAdmin(), createRouteHandler(async (req, res) => {
-  try {
-    const memoryUsage = process.memoryUsage();
+router.get(
+  '/memory',
+  requireAuth,
+  requireAdmin(),
+  createRouteHandler(async (req, res) => {
+    try {
+      const memoryUsage = process.memoryUsage();
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        heapUsed: formatMemoryUsage(memoryUsage.heapUsed),
-        heapTotal: formatMemoryUsage(memoryUsage.heapTotal),
-        rss: formatMemoryUsage(memoryUsage.rss),
-        external: formatMemoryUsage(memoryUsage.external),
-        arrayBuffers: formatMemoryUsage(memoryUsage.arrayBuffers || 0)
-      }
-    });
-  } catch (error) {
-    logger.error('Bellek kullanımı getirme hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+      return res.status(200).json({
+        success: true,
+        data: {
+          heapUsed: formatMemoryUsage(memoryUsage['heapUsed']),
+          heapTotal: formatMemoryUsage(memoryUsage['heapTotal']),
+          rss: formatMemoryUsage(memoryUsage['rss']),
+          external: formatMemoryUsage(memoryUsage['external']),
+          arrayBuffers: formatMemoryUsage(memoryUsage['arrayBuffers'] || 0),
+        },
+      });
+    } catch (error) {
+      logger.error('Bellek kullanımı getirme hatası', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Bellek kullanımı getirilirken bir hata oluştu',
-        type: 'ServerError'
-      }
-    });
-  }
-}));
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Bellek kullanımı getirilirken bir hata oluştu',
+          type: 'ServerError',
+        },
+      });
+    }
+  })
+);
 
 /**
  * @swagger
@@ -205,38 +216,35 @@ router.get('/memory', requireAuth, requireAdmin(), createRouteHandler(async (req
  *       403:
  *         description: Yetkisiz erişim
  */
-router.get('/database', requireAuth, requireAdmin(), createRouteHandler(async (req, res) => {
-  try {
-    // Veritabanı sağlık durumunu kontrol et
-    const healthData = await database.checkDatabaseHealth();
+router.get(
+  '/database',
+  requireAuth,
+  requireAdmin(),
+  createRouteHandler(async (req, res) => {
+    try {
+      // Veritabanı sağlık durumunu kontrol et
+      const healthData = await databaseService.checkHealth();
 
-    return res.status(200).json({
-      success: true,
-      data: {
-        ...healthData,
-        connectionState: {
-          isConnecting: database.connectionState.isConnecting,
-          connectAttempts: database.connectionState.connectAttempts,
-          lastConnectAttempt: database.connectionState.lastConnectAttempt,
-          maxConnectAttempts: database.connectionState.maxConnectAttempts
-        }
-      }
-    });
-  } catch (error) {
-    logger.error('Veritabanı sağlık durumu getirme hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+      return res.status(200).json({
+        success: true,
+        data: healthData,
+      });
+    } catch (error) {
+      logger.error('Veritabanı sağlık durumu getirme hatası', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Veritabanı sağlık durumu getirilirken bir hata oluştu',
-        type: 'ServerError'
-      }
-    });
-  }
-}));
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Veritabanı sağlık durumu getirilirken bir hata oluştu',
+          type: 'ServerError',
+        },
+      });
+    }
+  })
+);
 
 /**
  * @swagger
@@ -294,29 +302,34 @@ router.get('/database', requireAuth, requireAdmin(), createRouteHandler(async (r
  *       403:
  *         description: Yetkisiz erişim
  */
-router.get('/app-state', requireAuth, requireAdmin(), createRouteHandler(async (req, res) => {
-  try {
-    // Uygulama durumunu al
-    const appState = getAppInitState();
+router.get(
+  '/app-state',
+  requireAuth,
+  requireAdmin(),
+  createRouteHandler(async (req, res) => {
+    try {
+      // Uygulama durumunu al
+      const appState = getAppInitState();
 
-    return res.status(200).json({
-      success: true,
-      data: appState
-    });
-  } catch (error) {
-    logger.error('Uygulama durumu getirme hatası', {
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+      return res.status(200).json({
+        success: true,
+        data: appState,
+      });
+    } catch (error) {
+      logger.error('Uygulama durumu getirme hatası', {
+        error: error instanceof Error ? error.message : 'Bilinmeyen hata',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
 
-    return res.status(500).json({
-      success: false,
-      error: {
-        message: 'Uygulama durumu getirilirken bir hata oluştu',
-        type: 'ServerError'
-      }
-    });
-  }
-}));
+      return res.status(500).json({
+        success: false,
+        error: {
+          message: 'Uygulama durumu getirilirken bir hata oluştu',
+          type: 'ServerError',
+        },
+      });
+    }
+  })
+);
 
 export default router;

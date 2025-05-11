@@ -6,7 +6,13 @@ import mongoose, { Document, Schema } from 'mongoose';
 import { TypedDocument, FullModelType } from '../types/mongoose-types';
 
 // Rapor nedeni tipi
-export type ReportReason = 'harassment' | 'spam' | 'inappropriate_content' | 'threats' | 'impersonation' | 'other';
+export type ReportReason =
+  | 'harassment'
+  | 'spam'
+  | 'inappropriate_content'
+  | 'threats'
+  | 'impersonation'
+  | 'other';
 
 // Rapor durumu tipi
 export type ReportStatus = 'pending' | 'investigating' | 'resolved' | 'dismissed';
@@ -28,7 +34,7 @@ export interface IReport {
 }
 
 // Rapor dokümanı arayüzü
-export interface ReportDocument extends TypedDocument<IReport> {}
+export type ReportDocument = TypedDocument<IReport>;
 
 // Rapor modeli arayüzü
 export interface ReportModel extends FullModelType<IReport> {
@@ -44,21 +50,14 @@ const ReportSchema = new Schema<ReportDocument, ReportModel>(
     reportedUser: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     reason: {
       type: String,
-      enum: [
-        'harassment',
-        'spam',
-        'inappropriate_content',
-        'threats',
-        'impersonation',
-        'other'
-      ],
-      required: true
+      enum: ['harassment', 'spam', 'inappropriate_content', 'threats', 'impersonation', 'other'],
+      required: true,
     },
     description: { type: String, required: true },
     status: {
       type: String,
       enum: ['pending', 'investigating', 'resolved', 'dismissed'],
-      default: 'pending'
+      default: 'pending',
     },
     relatedMessages: [{ type: Schema.Types.ObjectId, ref: 'Message' }],
     relatedDMMessages: [{ type: Schema.Types.ObjectId, ref: 'DMMessage' }],
@@ -66,10 +65,10 @@ const ReportSchema = new Schema<ReportDocument, ReportModel>(
     updatedAt: { type: Date },
     resolvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     resolution: { type: String },
-    isArchived: { type: Boolean, default: false }
+    isArchived: { type: Boolean, default: false },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 
@@ -81,14 +80,16 @@ ReportSchema.index({ createdAt: -1 });
 ReportSchema.index({ isArchived: 1 });
 
 // Statik metodlar
-ReportSchema.statics.findPendingReports = function(): Promise<ReportDocument[]> {
+ReportSchema.statics['findPendingReports'] = function (): Promise<ReportDocument[]> {
   return this.find({ status: 'pending', isArchived: false })
     .sort({ createdAt: 1 })
     .populate('reporter', 'username')
     .populate('reportedUser', 'username') as unknown as Promise<ReportDocument[]>;
 };
 
-ReportSchema.statics.findByReporter = function(userId: mongoose.Types.ObjectId): Promise<ReportDocument[]> {
+ReportSchema.statics['findByReporter'] = function (
+  userId: mongoose.Types.ObjectId
+): Promise<ReportDocument[]> {
   return this.find({ reporter: userId })
     .sort({ createdAt: -1 })
     .populate('reportedUser', 'username') as unknown as Promise<ReportDocument[]>;
@@ -113,7 +114,8 @@ if (process.env.NODE_ENV === 'development') {
   } as unknown as ReportModel;
 } else {
   // Gerçek model
-  Report = (mongoose.models.Report as ReportModel) ||
+  Report =
+    (mongoose.models['Report'] as ReportModel) ||
     mongoose.model<ReportDocument, ReportModel>('Report', ReportSchema);
 }
 

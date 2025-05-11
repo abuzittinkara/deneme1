@@ -14,7 +14,7 @@ const systemMetrics = {
   requestCount: 0,
   errorCount: 0,
   slowRequestCount: 0,
-  lastMetricsLog: Date.now()
+  lastMetricsLog: Date.now(),
 };
 
 /**
@@ -45,10 +45,10 @@ export function logSystemMetrics(): void {
         freeMem: `${Math.round(freeMem / 1024 / 1024)} MB`,
         totalMem: `${Math.round(totalMem / 1024 / 1024)} MB`,
         freeMemPercentage: `${Math.round((freeMem / totalMem) * 100)}%`,
-        loadAvg: loadAvg.map(load => load.toFixed(2)),
-        cpuCount
-      }
-    }
+        loadAvg: loadAvg.map((load) => load.toFixed(2)),
+        cpuCount,
+      },
+    },
   });
 
   // Metrikleri sıfırla
@@ -72,14 +72,15 @@ export function requestCounterMiddleware(req: Request, res: Response, next: Next
     }
 
     // Yavaş istekleri izle
-    const duration = parseInt(res.getHeader('X-Response-Time') as string || '0');
+    const duration = parseInt((res.getHeader('X-Response-Time') as string) || '0');
     if (duration > 1000) {
       systemMetrics.slowRequestCount++;
     }
 
     // Belirli aralıklarla metrikleri logla
     const now = Date.now();
-    if (now - systemMetrics.lastMetricsLog > 15 * 60 * 1000) { // 15 dakika
+    if (now - systemMetrics.lastMetricsLog > 15 * 60 * 1000) {
+      // 15 dakika
       logSystemMetrics();
     }
   });
@@ -116,13 +117,14 @@ export function memoryUsageMiddleware(req: Request, res: Response, next: NextFun
   const heapUsed = memoryUsage.heapUsed / 1024 / 1024; // MB cinsinden
 
   // Bellek kullanımı yüksekse uyar
-  if (heapUsed > 1024) { // 1 GB'dan fazla
+  if (heapUsed > 1024) {
+    // 1 GB'dan fazla
     logger.warn('Yüksek bellek kullanımı', {
       metadata: {
         heapUsed: `${heapUsed.toFixed(2)} MB`,
         url: req.originalUrl,
-        method: req.method
-      }
+        method: req.method,
+      },
     });
 
     // Garbage collection'ı zorla
@@ -138,7 +140,11 @@ export function memoryUsageMiddleware(req: Request, res: Response, next: NextFun
 /**
  * Sağlık kontrolü middleware'i
  */
-export function healthCheckMiddleware(req: Request, res: Response, next: NextFunction): Response | void {
+export function healthCheckMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Response | void {
   // Sağlık kontrolü isteği ise hemen yanıt ver
   if (req.path === '/api/health' || req.path === '/api/health/detailed') {
     const uptime = Date.now() - systemMetrics.startTime;
@@ -148,7 +154,7 @@ export function healthCheckMiddleware(req: Request, res: Response, next: NextFun
     if (req.path === '/api/health') {
       return res.status(200).json({
         status: 'ok',
-        uptime: `${Math.floor(uptime / 1000 / 60)} dakika`
+        uptime: `${Math.floor(uptime / 1000 / 60)} dakika`,
       });
     }
 
@@ -157,12 +163,12 @@ export function healthCheckMiddleware(req: Request, res: Response, next: NextFun
       return res.status(200).json({
         status: 'ok',
         uptime: `${Math.floor(uptime / 1000 / 60)} dakika`,
-        version: process.env.npm_package_version || 'unknown',
+        version: process.env['npm_package_version'] || 'unknown',
         memory: {
           rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
           heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
           heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`,
-          external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`
+          external: `${Math.round(memoryUsage.external / 1024 / 1024)} MB`,
         },
         system: {
           platform: process.platform,
@@ -171,8 +177,8 @@ export function healthCheckMiddleware(req: Request, res: Response, next: NextFun
           cpus: os.cpus().length,
           loadAvg: os.loadavg(),
           freeMem: `${Math.round(os.freemem() / 1024 / 1024)} MB`,
-          totalMem: `${Math.round(os.totalmem() / 1024 / 1024)} MB`
-        }
+          totalMem: `${Math.round(os.totalmem() / 1024 / 1024)} MB`,
+        },
       });
     }
   }
@@ -218,5 +224,5 @@ export default {
   responseTimeMiddleware,
   memoryUsageMiddleware,
   healthCheckMiddleware,
-  logSystemMetrics
+  logSystemMetrics,
 };

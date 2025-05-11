@@ -21,8 +21,8 @@ const transporter: Transporter = nodemailer.createTransport({
   secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER || 'user@example.com',
-    pass: process.env.SMTP_PASS || 'password'
-  }
+    pass: process.env.SMTP_PASS || 'password',
+  },
 });
 
 /**
@@ -38,7 +38,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
       from: `"Fisqos" <${process.env.SMTP_USER || 'info@fisqos.com.tr'}>`,
       to,
       subject,
-      html
+      html,
     };
 
     const info: SentMessageInfo = await transporter.sendMail(mailOptions);
@@ -50,7 +50,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     logger.error('E-posta gönderme hatası', {
       error: (error as Error).message,
       to,
-      subject
+      subject,
     });
     throw error;
   }
@@ -93,7 +93,7 @@ export async function sendEmailToUser(
     logger.error('Kullanıcıya e-posta gönderme hatası', {
       error: (error as Error).message,
       userId,
-      subject
+      subject,
     });
     throw error;
   }
@@ -117,9 +117,8 @@ export async function sendNewMessageEmail(
     ? `${channelName} kanalında yeni mesaj`
     : `${senderName} size mesaj gönderdi`;
 
-  const preview = messageContent.length > 150
-    ? messageContent.substring(0, 147) + '...'
-    : messageContent;
+  const preview =
+    messageContent.length > 150 ? messageContent.substring(0, 147) + '...' : messageContent;
 
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px;">
@@ -275,7 +274,7 @@ export async function sendPasswordResetEmail(
   } catch (error) {
     logger.error('Şifre sıfırlama e-postası gönderme hatası', {
       error: (error as Error).message,
-      userId
+      userId,
     });
     throw error;
   }
@@ -287,5 +286,5 @@ export default {
   sendNewMessageEmail,
   sendFriendRequestEmail,
   sendGroupInviteEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
 };

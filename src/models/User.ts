@@ -94,10 +94,11 @@
  *               type: integer
  *               example: 400
  */
-import mongoose, { Document, Schema, Types } from 'mongoose';
+import mongoose, { Document, Schema, Types, Model, Query } from 'mongoose';
 import { UserStatus, UserRole, NotificationType } from '../types/enums';
 import { ObjectId } from '../types/mongoose';
-import { TypedDocument, FullModelType } from '../types/mongoose-types';
+import { TypedDocument } from '../types/mongoose-types';
+import { FullModelType } from '../types/mongoose-model';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -198,296 +199,312 @@ export interface UserInstanceMethods {
 }
 
 // Kullanıcı dokümanı için interface
-export interface UserDocument extends TypedDocument<IUser, UserInstanceMethods> {}
+export type UserDocument = TypedDocument<IUser, UserInstanceMethods>;
 
 // Kullanıcı şeması
-const userSchema = new Schema<UserDocument>({
-  // Temel bilgiler
-  username: {
-    type: String,
-    required: [true, 'Kullanıcı adı zorunludur'],
-    unique: true,
-    trim: true,
-    lowercase: true,
-    minlength: [3, 'Kullanıcı adı en az 3 karakter olmalıdır'],
-    maxlength: [30, 'Kullanıcı adı en fazla 30 karakter olmalıdır'],
-    match: [/^[a-zA-Z0-9_\.]+$/, 'Kullanıcı adı sadece harf, rakam, nokta ve alt çizgi içerebilir']
-  },
-  passwordHash: {
-    type: String,
-    required: [true, 'Şifre zorunludur']
-  },
-  name: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'İsim en fazla 50 karakter olmalıdır']
-  },
-  surname: {
-    type: String,
-    trim: true,
-    maxlength: [50, 'Soyisim en fazla 50 karakter olmalıdır']
-  },
-  birthdate: {
-    type: Date,
-    validate: {
-      validator: function(value: Date) {
-        // 13 yaşından büyük olmalı
-        const minAge = 13;
-        const minDate = new Date();
-        minDate.setFullYear(minDate.getFullYear() - minAge);
-        return !value || value <= minDate;
-      },
-      message: 'Kullanıcı en az 13 yaşında olmalıdır'
-    }
-  },
-  email: {
-    type: String,
-    trim: true,
-    lowercase: true,
-    unique: true,
-    sparse: true, // null değerlere izin ver
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Geçerli bir e-posta adresi giriniz']
-  },
-  phone: {
-    type: String,
-    trim: true,
-    match: [/^\+?[0-9]{10,15}$/, 'Geçerli bir telefon numarası giriniz']
-  },
-
-  // Email doğrulama alanları
-  emailVerified: {
-    type: Boolean,
-    default: false
-  },
-  emailVerificationToken: {
-    type: String,
-    select: false // Varsayılan olarak sorguya dahil etme
-  },
-  emailVerificationExpires: {
-    type: Date,
-    select: false // Varsayılan olarak sorguya dahil etme
-  },
-
-  // Şifre sıfırlama alanları
-  passwordResetToken: {
-    type: String,
-    select: false // Varsayılan olarak sorguya dahil etme
-  },
-  passwordResetExpires: {
-    type: Date,
-    select: false // Varsayılan olarak sorguya dahil etme
-  },
-
-  // Giriş deneme sayısı ve kilitleme
-  loginAttempts: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  lockUntil: {
-    type: Date,
-    select: false // Varsayılan olarak sorguya dahil etme
-  },
-
-  // Gelişmiş profil alanları
-  bio: {
-    type: String,
-    default: '',
-    maxlength: [500, 'Biyografi en fazla 500 karakter olmalıdır']
-  },
-  status: {
-    type: String,
-    enum: {
-      values: Object.values(UserStatus),
-      message: 'Geçersiz kullanıcı durumu: {VALUE}'
+const userSchema = new Schema<UserDocument>(
+  {
+    // Temel bilgiler
+    username: {
+      type: String,
+      required: [true, 'Kullanıcı adı zorunludur'],
+      unique: true,
+      trim: true,
+      lowercase: true,
+      minlength: [3, 'Kullanıcı adı en az 3 karakter olmalıdır'],
+      maxlength: [30, 'Kullanıcı adı en fazla 30 karakter olmalıdır'],
+      match: [
+        /^[a-zA-Z0-9_\.]+$/,
+        'Kullanıcı adı sadece harf, rakam, nokta ve alt çizgi içerebilir',
+      ],
     },
-    default: UserStatus.ACTIVE
-  },
-  customStatus: {
-    type: String,
-    default: '',
-    maxlength: [100, 'Özel durum en fazla 100 karakter olmalıdır']
-  },
-  profilePicture: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'FileAttachment'
-  },
-  lastSeen: {
-    type: Date
-  },
-  lastLogin: {
-    type: Date
-  },
-  onlineStatus: {
-    isOnline: { type: Boolean, default: false },
-    lastActiveAt: { type: Date, default: Date.now },
-    device: { type: String },
-    platform: { type: String },
-    ipAddress: { type: String },
-    location: { type: String }
-  },
+    passwordHash: {
+      type: String,
+      required: [true, 'Şifre zorunludur'],
+    },
+    name: {
+      type: String,
+      trim: true,
+      maxlength: [50, 'İsim en fazla 50 karakter olmalıdır'],
+    },
+    surname: {
+      type: String,
+      trim: true,
+      maxlength: [50, 'Soyisim en fazla 50 karakter olmalıdır'],
+    },
+    birthdate: {
+      type: Date,
+      validate: {
+        validator: function (value: Date) {
+          // 13 yaşından büyük olmalı
+          const minAge = 13;
+          const minDate = new Date();
+          minDate.setFullYear(minDate.getFullYear() - minAge);
+          return !value || value <= minDate;
+        },
+        message: 'Kullanıcı en az 13 yaşında olmalıdır',
+      },
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      unique: true,
+      sparse: true, // null değerlere izin ver
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Geçerli bir e-posta adresi giriniz'],
+    },
+    phone: {
+      type: String,
+      trim: true,
+      match: [/^\+?[0-9]{10,15}$/, 'Geçerli bir telefon numarası giriniz'],
+    },
 
-  // İki faktörlü kimlik doğrulama alanları
-  twoFactorEnabled: {
-    type: Boolean,
-    default: false
-  },
-  twoFactorSecret: {
-    type: String,
-    select: false // Varsayılan olarak sorguya dahil etme
-  },
-  backupCodes: [{
-    type: String,
-    select: false // Varsayılan olarak sorguya dahil etme
-  }],
+    // Email doğrulama alanları
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false, // Varsayılan olarak sorguya dahil etme
+    },
+    emailVerificationExpires: {
+      type: Date,
+      select: false, // Varsayılan olarak sorguya dahil etme
+    },
 
-  // Push bildirim aboneliği
-  pushSubscription: {
-    type: Object
-  },
+    // Şifre sıfırlama alanları
+    passwordResetToken: {
+      type: String,
+      select: false, // Varsayılan olarak sorguya dahil etme
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false, // Varsayılan olarak sorguya dahil etme
+    },
 
-  // Kullanıcı tercihleri
-  preferences: {
-    theme: {
+    // Giriş deneme sayısı ve kilitleme
+    loginAttempts: {
+      type: Number,
+      default: 0,
+      min: 0,
+    } as any,
+    lockUntil: {
+      type: Date,
+      select: false, // Varsayılan olarak sorguya dahil etme
+    },
+
+    // Gelişmiş profil alanları
+    bio: {
+      type: String,
+      default: '',
+      maxlength: [500, 'Biyografi en fazla 500 karakter olmalıdır'],
+    },
+    status: {
       type: String,
       enum: {
-        values: ['dark', 'light', 'system'],
-        message: 'Geçersiz tema: {VALUE}'
+        values: Object.values(UserStatus),
+        message: 'Geçersiz kullanıcı durumu: {VALUE}',
       },
-      default: 'dark'
+      default: UserStatus.ACTIVE,
     },
-    notifications: {
-      type: Boolean,
-      default: true
-    },
-    emailNotifications: {
-      type: Boolean,
-      default: true
-    },
-    soundEffects: {
-      type: Boolean,
-      default: true
-    },
-    language: {
+    customStatus: {
       type: String,
-      enum: {
-        values: ['tr', 'en', 'de', 'fr', 'es'],
-        message: 'Desteklenmeyen dil: {VALUE}'
-      },
-      default: 'tr'
+      default: '',
+      maxlength: [100, 'Özel durum en fazla 100 karakter olmalıdır'],
     },
-    notificationTypes: {
-      [NotificationType.DIRECT_MESSAGES]: { type: Boolean, default: true },
-      [NotificationType.MENTIONS]: { type: Boolean, default: true },
-      [NotificationType.FRIEND_REQUESTS]: { type: Boolean, default: true },
-      [NotificationType.GROUP_INVITES]: { type: Boolean, default: true },
-      [NotificationType.CHANNEL_MESSAGES]: { type: Boolean, default: false }
+    profilePicture: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FileAttachment',
     },
-    privacy: {
-      showOnlineStatus: { type: Boolean, default: true },
-      showLastSeen: { type: Boolean, default: true },
-      allowFriendRequests: { type: Boolean, default: true },
-      allowDirectMessages: {
+    lastSeen: {
+      type: Date,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    onlineStatus: {
+      isOnline: { type: Boolean, default: false },
+      lastActiveAt: { type: Date, default: Date.now },
+      device: { type: String },
+      platform: { type: String },
+      ipAddress: { type: String },
+      location: { type: String },
+    },
+
+    // İki faktörlü kimlik doğrulama alanları
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+    twoFactorSecret: {
+      type: String,
+      select: false, // Varsayılan olarak sorguya dahil etme
+    },
+    backupCodes: [
+      {
         type: String,
-        enum: ['everyone', 'friends', 'none'],
-        default: 'everyone'
-      }
-    }
-  },
+        select: false, // Varsayılan olarak sorguya dahil etme
+      },
+    ],
 
-  // İlişkiler
-  groups: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Group'
-  }],
-  friends: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  friendRequests: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  blocked: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  favorites: [
-    {
-      type: {
+    // Push bildirim aboneliği
+    pushSubscription: {
+      type: Object,
+    },
+
+    // Kullanıcı tercihleri
+    preferences: {
+      theme: {
         type: String,
         enum: {
-          values: ['channel', 'user', 'group'],
-          message: 'Geçersiz favori tipi: {VALUE}'
+          values: ['dark', 'light', 'system'],
+          message: 'Geçersiz tema: {VALUE}',
         },
-        required: true
+        default: 'dark',
       },
-      itemId: {
+      notifications: {
+        type: Boolean,
+        default: true,
+      },
+      emailNotifications: {
+        type: Boolean,
+        default: true,
+      },
+      soundEffects: {
+        type: Boolean,
+        default: true,
+      },
+      language: {
         type: String,
-        required: true,
-        validate: {
-          validator: function(v: string) {
-            return mongoose.Types.ObjectId.isValid(v);
-          },
-          message: 'Geçersiz itemId formatı'
-        }
+        enum: {
+          values: ['tr', 'en', 'de', 'fr', 'es'],
+          message: 'Desteklenmeyen dil: {VALUE}',
+        },
+        default: 'tr',
       },
-      name: {
-        type: String,
-        required: true,
-        trim: true,
-        maxlength: [100, 'Favori adı en fazla 100 karakter olmalıdır']
+      notificationTypes: {
+        [NotificationType.DIRECT_MESSAGES]: { type: Boolean, default: true },
+        [NotificationType.MENTIONS]: { type: Boolean, default: true },
+        [NotificationType.FRIEND_REQUESTS]: { type: Boolean, default: true },
+        [NotificationType.GROUP_INVITES]: { type: Boolean, default: true },
+        [NotificationType.CHANNEL_MESSAGES]: { type: Boolean, default: false },
       },
-      groupId: {
-        type: String,
-        validate: {
-          validator: function(v: string) {
-            return !v || mongoose.Types.ObjectId.isValid(v);
-          },
-          message: 'Geçersiz groupId formatı'
-        }
+      privacy: {
+        showOnlineStatus: { type: Boolean, default: true },
+        showLastSeen: { type: Boolean, default: true },
+        allowFriendRequests: { type: Boolean, default: true },
+        allowDirectMessages: {
+          type: String,
+          enum: ['everyone', 'friends', 'none'],
+          default: 'everyone',
+        },
       },
-      addedAt: {
-        type: Date,
-        default: Date.now
-      }
-    }
-  ],
+    },
 
-  // Rol ve durum
-  role: {
-    type: String,
-    enum: {
-      values: Object.values(UserRole),
-      message: 'Geçersiz kullanıcı rolü: {VALUE}'
+    // İlişkiler
+    groups: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Group',
+      },
+    ],
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    friendRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    blocked: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    favorites: [
+      {
+        type: {
+          type: String,
+          enum: {
+            values: ['channel', 'user', 'group'],
+            message: 'Geçersiz favori tipi: {VALUE}',
+          },
+          required: true,
+        },
+        itemId: {
+          type: String,
+          required: true,
+          validate: {
+            validator: function (v: string) {
+              return mongoose.Types.ObjectId.isValid(v);
+            },
+            message: 'Geçersiz itemId formatı',
+          },
+        },
+        name: {
+          type: String,
+          required: true,
+          trim: true,
+          maxlength: [100, 'Favori adı en fazla 100 karakter olmalıdır'],
+        },
+        groupId: {
+          type: String,
+          validate: {
+            validator: function (v: string) {
+              return !v || mongoose.Types.ObjectId.isValid(v);
+            },
+            message: 'Geçersiz groupId formatı',
+          },
+        },
+        addedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+
+    // Rol ve durum
+    role: {
+      type: String,
+      enum: {
+        values: Object.values(UserRole),
+        message: 'Geçersiz kullanıcı rolü: {VALUE}',
+      },
+      default: UserRole.USER,
     },
-    default: UserRole.USER
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
-}, {
-  timestamps: true, // createdAt ve updatedAt alanlarını otomatik ekle
-  toJSON: {
-    transform: function(doc, ret) {
-      // Hassas alanları JSON çıktısından kaldır
-      delete ret.passwordHash;
-      delete ret.passwordResetToken;
-      delete ret.passwordResetExpires;
-      delete ret.emailVerificationToken;
-      delete ret.emailVerificationExpires;
-      delete ret.twoFactorSecret;
-      delete ret.backupCodes;
-      delete ret.lockUntil;
-      return ret;
+    isActive: {
+      type: Boolean,
+      default: true,
     },
-    virtuals: true // Sanal alanları JSON çıktısına dahil et
   },
-  toObject: {
-    virtuals: true // Sanal alanları Object çıktısına dahil et
+  {
+    timestamps: true, // createdAt ve updatedAt alanlarını otomatik ekle
+    toJSON: {
+      transform: function (doc, ret) {
+        // Hassas alanları JSON çıktısından kaldır
+        delete ret['passwordHash'];
+        delete ret['passwordResetToken'];
+        delete ret['passwordResetExpires'];
+        delete ret['emailVerificationToken'];
+        delete ret['emailVerificationExpires'];
+        delete ret['twoFactorSecret'];
+        delete ret['backupCodes'];
+        delete ret['lockUntil'];
+        return ret;
+      },
+      virtuals: true, // Sanal alanları JSON çıktısına dahil et
+    },
+    toObject: {
+      virtuals: true, // Sanal alanları Object çıktısına dahil et
+    },
   }
-});
+);
 
 // İndeksler
 // Temel indeksler
@@ -506,10 +523,10 @@ userSchema.index({ 'onlineStatus.isOnline': 1 });
 userSchema.index({ 'onlineStatus.lastActiveAt': -1 });
 
 // İlişki indeksleri
-userSchema.index({ 'groups': 1 });
-userSchema.index({ 'friends': 1 });
-userSchema.index({ 'friendRequests': 1 });
-userSchema.index({ 'blocked': 1 });
+userSchema.index({ groups: 1 });
+userSchema.index({ friends: 1 });
+userSchema.index({ friendRequests: 1 });
+userSchema.index({ blocked: 1 });
 userSchema.index({ 'favorites.itemId': 1 });
 userSchema.index({ 'favorites.type': 1 });
 
@@ -521,9 +538,9 @@ userSchema.index(
       username: 10,
       name: 5,
       surname: 5,
-      bio: 1
+      bio: 1,
     },
-    name: 'userTextIndex'
+    name: 'userTextIndex',
   }
 );
 
@@ -533,51 +550,66 @@ userSchema.index(
  * @param candidatePassword - Karşılaştırılacak şifre
  * @returns Şifre eşleşiyorsa true, aksi halde false
  */
-userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+userSchema.methods['comparePassword'] = async function (
+  candidatePassword: string
+): Promise<boolean> {
   try {
-    if (!this.passwordHash) {
+    const passwordHash = this['passwordHash'];
+    if (!passwordHash) {
       return false;
     }
-    return await bcrypt.compare(candidatePassword, this.passwordHash);
+    return await bcrypt.compare(candidatePassword, passwordHash);
   } catch (error) {
     logger.error('Şifre karşılaştırma hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      userId: this._id
+      userId: this['_id'],
     });
     throw new Error('Şifre karşılaştırma hatası');
   }
 };
 
+// Logger modülünü içe aktar
+import logger from '../utils/logger';
+
 /**
  * JWT token oluşturma metodu
  * @returns JWT token
  */
-userSchema.methods.generateAuthToken = function(): string {
+userSchema.methods['generateAuthToken'] = function (): string {
   try {
+    const _id = this['_id'];
+    const username = this['username'];
+    const role = this['role'];
+    const status = this['status'];
+
+    if (!_id) {
+      throw new Error('Kullanıcı ID bulunamadı');
+    }
+
     const payload = {
-      id: this._id.toString(),
-      username: this.username,
-      role: this.role,
-      status: this.status,
-      sub: this._id.toString()
+      id: _id.toString(),
+      username: username || '',
+      role: role || 'user',
+      status: status || 'active',
+      sub: _id.toString(),
     };
 
+    const jwtSecret = process.env['JWT_SECRET'] || 'default_secret';
+    const jwtExpiresIn = process.env['JWT_EXPIRES_IN'] || '1h';
+    const jwtOptions = {
+      expiresIn: jwtExpiresIn,
+      algorithm: 'HS256',
+      jti: require('crypto').randomBytes(16).toString('hex'),
+      issuer: 'fisqos-api',
+      audience: 'fisqos-client',
+    } as jwt.SignOptions;
+
     // JWT token oluştur
-    return jwt.sign(
-      payload,
-      process.env.JWT_SECRET || 'default_secret',
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-        algorithm: 'HS256',
-        jti: require('crypto').randomBytes(16).toString('hex'),
-        issuer: 'fisqos-api',
-        audience: 'fisqos-client'
-      } as jwt.SignOptions
-    );
+    return jwt.sign(payload, jwtSecret, jwtOptions);
   } catch (error) {
     logger.error('JWT token oluşturma hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      userId: this._id
+      userId: this['_id'],
     });
     throw new Error('JWT token oluşturma hatası');
   }
@@ -587,42 +619,78 @@ userSchema.methods.generateAuthToken = function(): string {
  * Refresh token oluşturma metodu
  * @returns Refresh token
  */
-userSchema.methods.generateRefreshToken = function(): string {
+userSchema.methods['generateRefreshToken'] = function (): string {
   try {
+    const _id = this['_id'];
+    const username = this['username'];
+    const role = this['role'];
+
+    if (!_id) {
+      throw new Error('Kullanıcı ID bulunamadı');
+    }
+
     const payload = {
-      id: this._id.toString(),
-      username: this.username,
-      role: this.role,
-      sub: this._id.toString(),
-      type: 'refresh'
+      id: _id.toString(),
+      username: username || '',
+      role: role || 'user',
+      sub: _id.toString(),
+      type: 'refresh',
     };
 
+    const refreshSecret = process.env['JWT_REFRESH_SECRET'] || 'default_refresh_secret';
+    const refreshExpiresIn = process.env['JWT_REFRESH_EXPIRES_IN'] || '7d';
+    const refreshOptions = {
+      expiresIn: refreshExpiresIn,
+      algorithm: 'HS256',
+      jti: require('crypto').randomBytes(32).toString('hex'),
+    } as jwt.SignOptions;
+
     // Refresh token oluştur
-    return jwt.sign(
-      payload,
-      process.env.JWT_REFRESH_SECRET || 'default_refresh_secret',
-      {
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
-        algorithm: 'HS256',
-        jti: require('crypto').randomBytes(32).toString('hex')
-      } as jwt.SignOptions
-    );
+    return jwt.sign(payload, refreshSecret, refreshOptions);
   } catch (error) {
     logger.error('Refresh token oluşturma hatası', {
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      userId: this._id
+      userId: this['_id'],
     });
     throw new Error('Refresh token oluşturma hatası');
   }
 };
 
+// Kullanıcı modeli statik metodları
+export interface UserStaticMethods {
+  findByUsername(username: string): Query<UserDocument | null, UserDocument>;
+  findByEmail(email: string): Query<UserDocument | null, UserDocument>;
+  findByUsernameOrEmail(usernameOrEmail: string): Query<UserDocument | null, UserDocument>;
+  findActiveUsers(limit?: number, skip?: number): Query<UserDocument[], UserDocument>;
+  findOnlineUsers(limit?: number): Query<UserDocument[], UserDocument>;
+}
+
 // Kullanıcı modeli arayüzü
-export interface UserModel extends FullModelType<IUser, {}, UserInstanceMethods> {
-  findByUsername(username: string): Promise<UserDocument | null>;
-  findByEmail(email: string): Promise<UserDocument | null>;
-  findByUsernameOrEmail(usernameOrEmail: string): Promise<UserDocument | null>;
-  findActiveUsers(limit?: number, skip?: number): Promise<UserDocument[]>;
-  findOnlineUsers(limit?: number): Promise<UserDocument[]>;
+export interface UserModel
+  extends FullModelType<UserDocument, {}, UserInstanceMethods, {}, UserStaticMethods> {
+  // Mongoose model metodları
+  find(filter?: any, projection?: any, options?: any): Query<UserDocument[], UserDocument>;
+  findOne(filter?: any, projection?: any, options?: any): Query<UserDocument | null, UserDocument>;
+  findById(
+    id: string | mongoose.Types.ObjectId,
+    projection?: any,
+    options?: any
+  ): Query<UserDocument | null, UserDocument>;
+  create(doc: Partial<IUser>): Promise<UserDocument>;
+  updateOne(filter: any, update: any, options?: any): Promise<mongoose.UpdateWriteOpResult>;
+  updateMany(filter: any, update: any, options?: any): Promise<mongoose.UpdateWriteOpResult>;
+  deleteOne(filter: any, options?: any): Promise<mongoose.DeleteResult>;
+  deleteMany(filter: any, options?: any): Promise<mongoose.DeleteResult>;
+  countDocuments(filter?: any): Promise<number>;
+  findByIdAndUpdate(
+    id: string | mongoose.Types.ObjectId,
+    update: any,
+    options?: any
+  ): Query<UserDocument | null, UserDocument>;
+  findByIdAndDelete(
+    id: string | mongoose.Types.ObjectId,
+    options?: any
+  ): Query<UserDocument | null, UserDocument>;
 }
 
 // Statik metodlar
@@ -631,11 +699,13 @@ export interface UserModel extends FullModelType<IUser, {}, UserInstanceMethods>
  * @param username - Kullanıcı adı
  * @returns Kullanıcı dokümanı veya null
  */
-userSchema.statics.findByUsername = function(username: string): Promise<UserDocument | null> {
-  if (!username) return Promise.resolve(null);
+userSchema.statics['findByUsername'] = function (
+  username: string
+): Query<UserDocument | null, UserDocument> {
+  if (!username) return Promise.resolve(null) as any;
 
-  return this.findOne({
-    username: new RegExp(`^${username.trim()}$`, 'i')
+  return (this as UserModel).findOne({
+    username: new RegExp(`^${username.trim()}$`, 'i'),
   });
 };
 
@@ -644,11 +714,13 @@ userSchema.statics.findByUsername = function(username: string): Promise<UserDocu
  * @param email - E-posta adresi
  * @returns Kullanıcı dokümanı veya null
  */
-userSchema.statics.findByEmail = function(email: string): Promise<UserDocument | null> {
-  if (!email) return Promise.resolve(null);
+userSchema.statics['findByEmail'] = function (
+  email: string
+): Query<UserDocument | null, UserDocument> {
+  if (!email) return Promise.resolve(null) as any;
 
-  return this.findOne({
-    email: new RegExp(`^${email.trim()}$`, 'i')
+  return (this as UserModel).findOne({
+    email: new RegExp(`^${email.trim()}$`, 'i'),
   });
 };
 
@@ -657,14 +729,16 @@ userSchema.statics.findByEmail = function(email: string): Promise<UserDocument |
  * @param usernameOrEmail - Kullanıcı adı veya e-posta adresi
  * @returns Kullanıcı dokümanı veya null
  */
-userSchema.statics.findByUsernameOrEmail = function(usernameOrEmail: string): Promise<UserDocument | null> {
-  if (!usernameOrEmail) return Promise.resolve(null);
+userSchema.statics['findByUsernameOrEmail'] = function (
+  usernameOrEmail: string
+): Query<UserDocument | null, UserDocument> {
+  if (!usernameOrEmail) return Promise.resolve(null) as any;
 
   const query = usernameOrEmail.includes('@')
     ? { email: new RegExp(`^${usernameOrEmail.trim()}$`, 'i') }
     : { username: new RegExp(`^${usernameOrEmail.trim()}$`, 'i') };
 
-  return this.findOne(query);
+  return (this as UserModel).findOne(query);
 };
 
 /**
@@ -673,11 +747,15 @@ userSchema.statics.findByUsernameOrEmail = function(usernameOrEmail: string): Pr
  * @param skip - Atlanacak kullanıcı sayısı
  * @returns Aktif kullanıcı dokümanları
  */
-userSchema.statics.findActiveUsers = function(limit = 20, skip = 0): Promise<UserDocument[]> {
-  return this.find({
-    isActive: true,
-    status: { $ne: UserStatus.BANNED }
-  })
+userSchema.statics['findActiveUsers'] = function (
+  limit = 20,
+  skip = 0
+): Query<UserDocument[], UserDocument> {
+  return (this as UserModel)
+    .find({
+      isActive: true,
+      status: { $ne: UserStatus.SUSPENDED },
+    })
     .sort({ lastSeen: -1 })
     .skip(skip)
     .limit(limit);
@@ -688,17 +766,15 @@ userSchema.statics.findActiveUsers = function(limit = 20, skip = 0): Promise<Use
  * @param limit - Maksimum kullanıcı sayısı
  * @returns Çevrimiçi kullanıcı dokümanları
  */
-userSchema.statics.findOnlineUsers = function(limit = 50): Promise<UserDocument[]> {
+userSchema.statics['findOnlineUsers'] = function (limit = 50): Query<UserDocument[], UserDocument> {
   const onlineThreshold = new Date();
   onlineThreshold.setMinutes(onlineThreshold.getMinutes() - 5); // Son 5 dakika içinde aktif olanlar
 
-  return this.find({
-    isActive: true,
-    $or: [
-      { 'onlineStatus.isOnline': true },
-      { lastSeen: { $gte: onlineThreshold } }
-    ]
-  })
+  return (this as UserModel)
+    .find({
+      isActive: true,
+      $or: [{ 'onlineStatus.isOnline': true }, { lastSeen: { $gte: onlineThreshold } }],
+    })
     .sort({ 'onlineStatus.lastActiveAt': -1 })
     .limit(limit);
 };
@@ -706,24 +782,19 @@ userSchema.statics.findOnlineUsers = function(limit = 50): Promise<UserDocument[
 // Kullanıcı modelini oluştur
 let UserModel_: UserModel;
 
-// Geliştirme modunda mock model oluştur
-if (process.env.NODE_ENV === 'development') {
-  // Mock model
-  UserModel_ = {
-    find: () => Promise.resolve([]),
-    findById: () => Promise.resolve(null),
-    findOne: () => Promise.resolve(null),
-    create: () => Promise.resolve({} as any),
-    updateOne: () => Promise.resolve({ modifiedCount: 0 }),
-    deleteOne: () => Promise.resolve({ deletedCount: 0 }),
-    countDocuments: () => Promise.resolve(0),
-    findByUsername: () => Promise.resolve(null),
-    findByEmail: () => Promise.resolve(null),
-  } as unknown as UserModel;
+// Gerçek model
+const existingModel = mongoose.models['User'] as Model<
+  UserDocument,
+  {},
+  UserInstanceMethods,
+  {},
+  UserDocument
+>;
+
+if (existingModel) {
+  UserModel_ = existingModel as unknown as UserModel;
 } else {
-  // Gerçek model
-  UserModel_ = (mongoose.models.User as UserModel) ||
-    mongoose.model<UserDocument, UserModel, UserInstanceMethods>('User', userSchema);
+  UserModel_ = mongoose.model<UserDocument, UserModel>('User', userSchema);
 }
 
 // Hem default export hem de named export sağla

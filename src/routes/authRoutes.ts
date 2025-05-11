@@ -3,13 +3,13 @@
  * Kimlik doğrulama rotaları
  */
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { requireAuth } from '../middleware/requireAuth';
 import { AuthRequest } from '../types/express';
 
 const router = express.Router();
 
 // Giriş rotası
-router.post('/login', (req: express.Request, res: express.Response) => {
+router.post('/login', (req: express.Request, res: express.Response): void => {
   const { username, password } = req.body;
 
   // Geçersiz giriş bilgileri kontrolü
@@ -17,7 +17,7 @@ router.post('/login', (req: express.Request, res: express.Response) => {
     return res.status(401).json({
       success: false,
       message: 'Geçersiz kullanıcı adı veya şifre',
-      code: 'INVALID_CREDENTIALS'
+      code: 'INVALID_CREDENTIALS',
     });
   }
 
@@ -31,23 +31,30 @@ router.post('/login', (req: express.Request, res: express.Response) => {
         username: 'admin',
         email: 'admin@example.com',
         role: 'admin',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       },
       tokens: {
         accessToken: 'sample-access-token',
         refreshToken: 'sample-refresh-token',
-        expiresIn: 3600
-      }
-    }
+        expiresIn: 3600,
+      },
+    },
   });
 });
 
 // Kayıt rotası
-router.post('/register', (req: express.Request, res: express.Response) => {
+router.post('/register', (req: express.Request, res: express.Response): void => {
   const { username, email, password } = req.body;
 
   // Geçersiz kayıt bilgileri kontrolü
-  if (!username || username.length < 3 || !email || !email.includes('@') || !password || password.length < 6) {
+  if (
+    !username ||
+    username.length < 3 ||
+    !email ||
+    !email.includes('@') ||
+    !password ||
+    password.length < 6
+  ) {
     return res.status(400).json({
       success: false,
       message: 'Doğrulama hatası',
@@ -55,8 +62,8 @@ router.post('/register', (req: express.Request, res: express.Response) => {
       errors: [
         { field: 'username', message: 'Kullanıcı adı en az 3 karakter olmalıdır' },
         { field: 'email', message: 'Geçerli bir e-posta adresi giriniz' },
-        { field: 'password', message: 'Şifre en az 6 karakter olmalıdır' }
-      ]
+        { field: 'password', message: 'Şifre en az 6 karakter olmalıdır' },
+      ],
     });
   }
 
@@ -70,14 +77,14 @@ router.post('/register', (req: express.Request, res: express.Response) => {
         username,
         email,
         role: 'user',
-        createdAt: new Date().toISOString()
-      }
-    }
+        createdAt: new Date().toISOString(),
+      },
+    },
   });
 });
 
 // Kullanıcı bilgisi rotası
-router.get('/me', authMiddleware, (req: express.Request, res: express.Response) => {
+router.get('/me', requireAuth, (req: express.Request, res: express.Response): void => {
   // Kullanıcı bilgisini döndür
   res.status(200).json({
     success: true,
@@ -87,14 +94,14 @@ router.get('/me', authMiddleware, (req: express.Request, res: express.Response) 
         username: 'admin',
         email: 'admin@example.com',
         role: 'admin',
-        createdAt: '2023-01-01T00:00:00.000Z'
-      }
-    }
+        createdAt: '2023-01-01T00:00:00.000Z',
+      },
+    },
   });
 });
 
 // Token yenileme rotası
-router.post('/refresh', (req: express.Request, res: express.Response) => {
+router.post('/refresh', (req: express.Request, res: express.Response): void => {
   const { refreshToken } = req.body;
 
   // Geçersiz refresh token kontrolü
@@ -102,7 +109,7 @@ router.post('/refresh', (req: express.Request, res: express.Response) => {
     return res.status(401).json({
       success: false,
       message: 'Geçersiz refresh token',
-      code: 'UNAUTHORIZED'
+      code: 'UNAUTHORIZED',
     });
   }
 
@@ -113,16 +120,16 @@ router.post('/refresh', (req: express.Request, res: express.Response) => {
     data: {
       accessToken: 'new-access-token',
       refreshToken: 'new-refresh-token',
-      expiresIn: 3600
-    }
+      expiresIn: 3600,
+    },
   });
 });
 
 // Çıkış rotası
-router.post('/logout', authMiddleware, (req: express.Request, res: express.Response) => {
+router.post('/logout', requireAuth, (req: express.Request, res: express.Response): void => {
   res.status(200).json({
     success: true,
-    message: 'Çıkış başarılı'
+    message: 'Çıkış başarılı',
   });
 });
 

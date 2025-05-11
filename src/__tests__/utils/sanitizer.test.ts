@@ -9,7 +9,7 @@ import {
   sanitizeUrl,
   sanitizeFilename,
   sanitizeAll,
-  sanitizeText
+  sanitizeText,
 } from '../../utils/sanitizer';
 
 describe('Sanitizer Utils', () => {
@@ -74,10 +74,10 @@ describe('Sanitizer Utils', () => {
     });
 
     it('should escape backslashes', () => {
-      const sql = "path\\to\\file";
+      const sql = 'path\\to\\file';
       const sanitized = sanitizeSql(sql);
 
-      expect(sanitized).toBe("path\\\\to\\\\file");
+      expect(sanitized).toBe('path\\\\to\\\\file');
     });
   });
 
@@ -176,7 +176,7 @@ describe('Sanitizer Utils', () => {
       expect(sanitized).not.toContain('<script>');
 
       // Should have escaped single quotes
-      expect(sanitized).toContain("&#39;&#39;");
+      expect(sanitized).toContain('&#39;&#39;');
     });
 
     it('should handle null or undefined', () => {

@@ -3,6 +3,7 @@
  * Geliştirme modunda kullanılacak sahte veri oluşturma modülü
  */
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { logger } from './logger';
 import { GroupData, ChannelData, UserSession } from '../types/app';
 
@@ -12,9 +13,9 @@ import { GroupData, ChannelData, UserSession } from '../types/app';
  */
 export function createMockUsers(): Record<string, UserSession> {
   logger.info('Sahte kullanıcı verileri oluşturuluyor');
-  
+
   const users: Record<string, UserSession> = {};
-  
+
   // Sahte kullanıcılar
   const mockUsers = [
     { id: 'user-1', username: 'admin', name: 'Admin', surname: 'User', email: 'admin@example.com' },
@@ -23,9 +24,9 @@ export function createMockUsers(): Record<string, UserSession> {
     { id: 'user-4', username: 'user', name: 'Normal', surname: 'User', email: 'user@example.com' },
     { id: 'user-5', username: 'guest', name: 'Guest', surname: 'User', email: 'guest@example.com' },
   ];
-  
+
   // Kullanıcıları ekle
-  mockUsers.forEach(user => {
+  mockUsers.forEach((user) => {
     users[user.id] = {
       id: user.id,
       username: user.username,
@@ -46,12 +47,12 @@ export function createMockUsers(): Record<string, UserSession> {
         language: 'tr',
         notifications: true,
         sounds: true,
-      }
+      },
     };
   });
-  
+
   logger.info(`${Object.keys(users).length} sahte kullanıcı oluşturuldu`);
-  
+
   return users;
 }
 
@@ -61,18 +62,18 @@ export function createMockUsers(): Record<string, UserSession> {
  */
 export function createMockGroups(): Record<string, GroupData> {
   logger.info('Sahte grup verileri oluşturuluyor');
-  
+
   const groups: Record<string, GroupData> = {};
-  
+
   // Sahte gruplar
   const mockGroups = [
     { id: 'group-1', name: 'Genel Grup', description: 'Herkesin katılabileceği genel grup' },
     { id: 'group-2', name: 'Geliştirici Grubu', description: 'Geliştiriciler için özel grup' },
     { id: 'group-3', name: 'Test Grubu', description: 'Test amaçlı grup' },
   ];
-  
+
   // Grupları ekle
-  mockGroups.forEach(group => {
+  mockGroups.forEach((group) => {
     groups[group.id] = {
       id: group.id,
       name: group.name,
@@ -87,15 +88,17 @@ export function createMockGroups(): Record<string, GroupData> {
         isPublic: true,
         joinRequiresApproval: false,
         allowInvites: true,
-      }
+      },
     };
-    
+
     // Her grup için sahte kanallar oluştur
-    groups[group.id].channels = createMockChannels(group.id);
+    if (groups[group.id]) {
+      groups[group.id].channels = createMockChannels(group.id);
+    }
   });
-  
+
   logger.info(`${Object.keys(groups).length} sahte grup oluşturuldu`);
-  
+
   return groups;
 }
 
@@ -106,17 +109,27 @@ export function createMockGroups(): Record<string, GroupData> {
  */
 function createMockChannels(groupId: string): Record<string, ChannelData> {
   const channels: Record<string, ChannelData> = {};
-  
+
   // Sahte kanallar
   const mockChannels = [
     { id: `${groupId}-channel-1`, name: 'genel', type: 'text', description: 'Genel sohbet kanalı' },
-    { id: `${groupId}-channel-2`, name: 'sesli-sohbet', type: 'voice', description: 'Sesli sohbet kanalı' },
-    { id: `${groupId}-channel-3`, name: 'duyurular', type: 'text', description: 'Duyurular kanalı' },
+    {
+      id: `${groupId}-channel-2`,
+      name: 'sesli-sohbet',
+      type: 'voice',
+      description: 'Sesli sohbet kanalı',
+    },
+    {
+      id: `${groupId}-channel-3`,
+      name: 'duyurular',
+      type: 'text',
+      description: 'Duyurular kanalı',
+    },
     { id: `${groupId}-channel-4`, name: 'yardım', type: 'text', description: 'Yardım kanalı' },
   ];
-  
+
   // Kanalları ekle
-  mockChannels.forEach(channel => {
+  mockChannels.forEach((channel) => {
     channels[channel.id] = {
       id: channel.id,
       name: channel.name,
@@ -133,10 +146,10 @@ function createMockChannels(groupId: string): Record<string, ChannelData> {
         allowReactions: true,
         allowThreads: true,
         allowAttachments: true,
-      }
+      },
     };
   });
-  
+
   return channels;
 }
 
@@ -148,18 +161,23 @@ function createMockChannels(groupId: string): Record<string, ChannelData> {
  */
 export function createMockMessages(channelId: string, count: number = 10): any[] {
   const messages = [];
-  
+
   for (let i = 0; i < count; i++) {
-    const userId = `user-${Math.floor(Math.random() * 5) + 1}`;
-    const timestamp = new Date(Date.now() - (i * 60000)).toISOString(); // Her mesaj 1 dakika önce
-    
+    // Güvenli rastgele sayı üretimi için crypto.randomBytes() kullanılıyor
+    const randomByte = crypto.randomBytes(1)[0];
+    const randomIndex = randomByte !== undefined ? (randomByte % 5) + 1 : 1;
+    const userId = `user-${randomIndex}`;
+    const timestamp = new Date(Date.now() - i * 60000).toISOString(); // Her mesaj 1 dakika önce
+
     messages.push({
       id: uuidv4(),
       channelId,
       content: `Bu bir test mesajıdır #${i + 1}`,
       sender: {
         id: userId,
-        username: ['admin', 'test', 'demo', 'user', 'guest'][parseInt(userId.split('-')[1]) - 1],
+        username: ['admin', 'test', 'demo', 'user', 'guest'][
+          parseInt(userId.split('-')[1] || '1') - 1
+        ],
       },
       timestamp,
       edited: false,
@@ -169,7 +187,7 @@ export function createMockMessages(channelId: string, count: number = 10): any[]
       replyTo: null,
     });
   }
-  
+
   return messages;
 }
 
@@ -177,23 +195,28 @@ export function createMockMessages(channelId: string, count: number = 10): any[]
  * Tüm sahte verileri oluşturur
  * @returns Sahte veriler
  */
-export function createAllMockData(): { users: Record<string, UserSession>, groups: Record<string, GroupData> } {
+export function createAllMockData(): {
+  users: Record<string, UserSession>;
+  groups: Record<string, GroupData>;
+  } {
   const users = createMockUsers();
   const groups = createMockGroups();
-  
+
   // Her kanal için sahte mesajlar oluştur
-  Object.keys(groups).forEach(groupId => {
+  Object.keys(groups).forEach((groupId) => {
     const group = groups[groupId];
-    
-    Object.keys(group.channels).forEach(channelId => {
-      const channel = group.channels[channelId];
-      
-      if (channel.type === 'text') {
-        channel.messages = createMockMessages(channelId);
-      }
-    });
+
+    if (group && group.channels) {
+      Object.keys(group.channels).forEach((channelId) => {
+        const channel = group.channels ? group.channels[channelId] : undefined;
+
+        if (channel && channel.type === 'text') {
+          channel.messages = createMockMessages(channelId);
+        }
+      });
+    }
   });
-  
+
   return { users, groups };
 }
 

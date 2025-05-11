@@ -12,7 +12,7 @@ import {
   startMeasure,
   endMeasure,
   PerformanceMetricType,
-  startPerformanceTracking
+  startPerformanceTracking,
 } from '../utils/performanceTracker';
 
 /**
@@ -36,7 +36,7 @@ export function requestDuration(req: Request, res: Response, next: NextFunction)
     userAgent: req.headers['user-agent'],
     contentType: req.headers['content-type'],
     userId: (req as any).user?._id,
-    query: Object.keys(req.query).length > 0 ? req.query : undefined
+    query: Object.keys(req.query).length > 0 ? req.query : undefined,
   });
 
   // İstek tamamlandığında süreyi hesapla ve logla
@@ -48,7 +48,7 @@ export function requestDuration(req: Request, res: Response, next: NextFunction)
     const duration = endMeasure(id, {
       statusCode: status,
       contentLength: res.getHeader('content-length'),
-      isError
+      isError,
     });
 
     // İstek süresini response header'a ekle
@@ -58,7 +58,10 @@ export function requestDuration(req: Request, res: Response, next: NextFunction)
 
         // Geliştirme modunda ek bilgiler ekle
         if (env.isDevelopment) {
-          res.setHeader('X-Memory-Usage', `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+          res.setHeader(
+            'X-Memory-Usage',
+            `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`
+          );
           res.setHeader('X-Request-ID', req.headers['x-request-id'] || 'unknown');
         }
       } catch (error) {
@@ -76,7 +79,7 @@ export function requestDuration(req: Request, res: Response, next: NextFunction)
  */
 export function memoryUsageMonitor(req: Request, res: Response, next: NextFunction): void {
   // Sadece belirli aralıklarla bellek kullanımını logla (her 100 istekte bir)
-  const requestCount = (global as any).requestCount = ((global as any).requestCount || 0) + 1;
+  const requestCount = ((global as any).requestCount = ((global as any).requestCount || 0) + 1);
 
   if (requestCount % 100 === 0) {
     logMemoryUsage('Bellek Kullanımı (100 istek sonrası)');
@@ -105,7 +108,7 @@ export function cpuUsageMonitor(req: Request, res: Response, next: NextFunction)
         method: req.method,
         cpuUser: `${(endCpuUsage.user / 1000).toFixed(2)}ms`,
         cpuSystem: `${(endCpuUsage.system / 1000).toFixed(2)}ms`,
-        totalCpu: `${totalCpuMs.toFixed(2)}ms`
+        totalCpu: `${totalCpuMs.toFixed(2)}ms`,
       });
     }
   });
@@ -123,14 +126,14 @@ export function largeResponseMonitor(req: Request, res: Response, next: NextFunc
 
   // res.write metodunu override et
   const originalWrite = res.write;
-  res.write = function(chunk: any, ...args: any[]): boolean {
+  res.write = function (chunk: any, ...args: any[]): boolean {
     responseSize += chunk.length;
     // TypeScript ile uyumlu hale getir
     return originalWrite.apply(res, [chunk, args[0], args[1]]);
   };
 
   // res.end metodunu override et
-  res.end = function(chunk: any, ...args: any[]): Response {
+  res.end = function (chunk: any, ...args: any[]): Response {
     if (chunk) {
       responseSize += chunk.length;
     }
@@ -140,7 +143,7 @@ export function largeResponseMonitor(req: Request, res: Response, next: NextFunc
       logger.warn('Büyük yanıt tespit edildi', {
         path: req.originalUrl || req.url,
         method: req.method,
-        size: `${(responseSize / (1024 * 1024)).toFixed(2)}MB`
+        size: `${(responseSize / (1024 * 1024)).toFixed(2)}MB`,
       });
     }
 
@@ -166,7 +169,7 @@ export function measureRoute(name: string, metadata: Record<string, any> = {}) {
       path: req.originalUrl || req.url,
       ip: getClientIp(req),
       userAgent: req.headers['user-agent'],
-      userId: (req as any).user?._id
+      userId: (req as any).user?._id,
     });
 
     // İstek tamamlandığında süreyi hesapla ve logla
@@ -174,7 +177,7 @@ export function measureRoute(name: string, metadata: Record<string, any> = {}) {
       // Performans ölçümünü bitir
       endMeasure(id, {
         statusCode: res.statusCode,
-        contentLength: res.getHeader('content-length')
+        contentLength: res.getHeader('content-length'),
       });
     });
 
@@ -216,5 +219,5 @@ export default {
   largeResponseMonitor,
   performanceMonitoring,
   measureRoute,
-  setupPerformanceMiddleware
+  setupPerformanceMiddleware,
 };

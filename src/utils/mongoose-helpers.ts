@@ -23,7 +23,7 @@ export class TypedQuery<T extends Document, R = T | T[] | null> {
    */
   async exec(): Promise<R> {
     try {
-      return await this.query.exec() as R;
+      return (await this.query.exec()) as R;
     } catch (error) {
       logger.error('Mongoose sorgu hatası', { error: (error as Error).message });
       throw error;
@@ -120,7 +120,7 @@ export class TypedQuery<T extends Document, R = T | T[] | null> {
   ): Promise<R | TResult> {
     return this.exec().catch(onrejected);
   }
-};
+}
 
 /**
  * Mongoose model metodlarını tip güvenli hale getiren yardımcı fonksiyon
@@ -147,7 +147,10 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
         const query = (model as any).findOne(filter, projection, options);
         return new TypedQuery<T, T | null>(query);
       } catch (error) {
-        logger.error(`${model.modelName}.findOne hatası`, { error: (error as Error).message, filter });
+        logger.error(`${model.modelName}.findOne hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
         throw error;
       }
     },
@@ -237,7 +240,10 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).findOneAndUpdate(filter, update, { new: true, ...options });
       } catch (error) {
-        logger.error(`${model.modelName}.findOneAndUpdate hatası`, { error: (error as Error).message, filter });
+        logger.error(`${model.modelName}.findOneAndUpdate hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
         throw error;
       }
     },
@@ -257,7 +263,10 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).findByIdAndUpdate(id, update, { new: true, ...options });
       } catch (error) {
-        logger.error(`${model.modelName}.findByIdAndUpdate hatası`, { error: (error as Error).message, id });
+        logger.error(`${model.modelName}.findByIdAndUpdate hatası`, {
+          error: (error as Error).message,
+          id,
+        });
         throw error;
       }
     },
@@ -275,7 +284,10 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).findOneAndDelete(filter, options);
       } catch (error) {
-        logger.error(`${model.modelName}.findOneAndDelete hatası`, { error: (error as Error).message, filter });
+        logger.error(`${model.modelName}.findOneAndDelete hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
         throw error;
       }
     },
@@ -293,7 +305,10 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).findByIdAndDelete(id, options);
       } catch (error) {
-        logger.error(`${model.modelName}.findByIdAndDelete hatası`, { error: (error as Error).message, id });
+        logger.error(`${model.modelName}.findByIdAndDelete hatası`, {
+          error: (error as Error).message,
+          id,
+        });
         throw error;
       }
     },
@@ -307,12 +322,36 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).countDocuments(filter);
       } catch (error) {
-        logger.error(`${model.modelName}.countDocuments hatası`, { error: (error as Error).message, filter });
+        logger.error(`${model.modelName}.countDocuments hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
         throw error;
       }
     },
 
-
+    /**
+     * Belirtilen filtreye göre tek bir dokümanı günceller
+     * @param filter - Filtre
+     * @param update - Güncelleme verileri
+     * @param options - Seçenekler
+     * @returns Güncelleme sonucu
+     */
+    async updateOne(
+      filter: mongoose.FilterQuery<T>,
+      update: mongoose.UpdateQuery<T>,
+      options?: mongoose.QueryOptions
+    ): Promise<mongoose.UpdateWriteOpResult> {
+      try {
+        return await (model as any).updateOne(filter, update, options);
+      } catch (error) {
+        logger.error(`${model.modelName}.updateOne hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
+        throw error;
+      }
+    },
 
     /**
      * Belirtilen filtreye göre dokümanları günceller
@@ -329,7 +368,31 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).updateMany(filter, update, options);
       } catch (error) {
-        logger.error(`${model.modelName}.updateMany hatası`, { error: (error as Error).message, filter });
+        logger.error(`${model.modelName}.updateMany hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
+        throw error;
+      }
+    },
+
+    /**
+     * Belirtilen filtreye göre tek bir dokümanı siler
+     * @param filter - Filtre
+     * @param options - Seçenekler
+     * @returns Silme sonucu
+     */
+    async deleteOne(
+      filter: mongoose.FilterQuery<T>,
+      options?: mongoose.QueryOptions
+    ): Promise<mongoose.DeleteResult> {
+      try {
+        return await (model as any).deleteOne(filter, options);
+      } catch (error) {
+        logger.error(`${model.modelName}.deleteOne hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
         throw error;
       }
     },
@@ -347,12 +410,13 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
       try {
         return await (model as any).deleteMany(filter, options);
       } catch (error) {
-        logger.error(`${model.modelName}.deleteMany hatası`, { error: (error as Error).message, filter });
+        logger.error(`${model.modelName}.deleteMany hatası`, {
+          error: (error as Error).message,
+          filter,
+        });
         throw error;
       }
     },
-
-
 
     /**
      * Orijinal model nesnesini döndürür
@@ -360,7 +424,7 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
      */
     getModel(): typeof model {
       return model;
-    }
+    },
   };
 }
 
@@ -369,7 +433,9 @@ export function createModelHelper<T extends Document, M = any>(model: M & { mode
  * @param id - String veya ObjectId
  * @returns ObjectId
  */
-export function toObjectId(id: string | mongoose.Types.ObjectId | { _id?: any; id?: string } | unknown): mongoose.Types.ObjectId {
+export function toObjectId(
+  id: string | mongoose.Types.ObjectId | { _id?: any; id?: string } | unknown
+): mongoose.Types.ObjectId {
   if (typeof id === 'string') {
     return new mongoose.Types.ObjectId(id);
   }
@@ -440,7 +506,7 @@ export function objectIdEquals(
 const mongooseHelpers = {
   createModelHelper,
   toObjectId,
-  objectIdEquals
+  objectIdEquals,
 };
 
 export default mongooseHelpers;

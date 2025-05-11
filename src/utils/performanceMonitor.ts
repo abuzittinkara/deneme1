@@ -54,7 +54,7 @@ export async function measure<T>(
     recordMeasurement(name, duration, {
       ...metadata,
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      status: 'error'
+      status: 'error',
     });
 
     throw error;
@@ -69,11 +69,7 @@ export async function measure<T>(
  * @param metadata - Ek meta veriler
  * @returns İşlem sonucu
  */
-export function measureSync<T>(
-  name: string,
-  fn: () => T,
-  metadata?: Record<string, any>
-): T {
+export function measureSync<T>(name: string, fn: () => T, metadata?: Record<string, any>): T {
   const start = performance.now();
 
   try {
@@ -95,7 +91,7 @@ export function measureSync<T>(
     recordMeasurement(name, duration, {
       ...metadata,
       error: error instanceof Error ? error.message : 'Bilinmeyen hata',
-      status: 'error'
+      status: 'error',
     });
 
     throw error;
@@ -109,17 +105,13 @@ export function measureSync<T>(
  * @param duration - Süre (ms)
  * @param metadata - Ek meta veriler
  */
-function recordMeasurement(
-  name: string,
-  duration: number,
-  metadata?: Record<string, any>
-): void {
+function recordMeasurement(name: string, duration: number, metadata?: Record<string, any>): void {
   // Ölçümü oluştur
   const measurement: PerformanceMeasurement = {
     name,
     duration,
     metadata,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 
   // Ölçümü diziye ekle
@@ -135,13 +127,13 @@ function recordMeasurement(
     logger.warn('Yavaş işlem tespit edildi', {
       name,
       duration: `${duration.toFixed(2)}ms`,
-      ...metadata
+      ...metadata,
     });
   } else {
     logger.debug('İşlem performansı', {
       name,
       duration: `${duration.toFixed(2)}ms`,
-      ...metadata
+      ...metadata,
     });
   }
 }
@@ -163,7 +155,7 @@ export function getRecentMeasurements(limit: number = MAX_MEASUREMENTS): Perform
  * @returns Ortalama süre (ms)
  */
 export function getAverageDuration(name: string): number {
-  const measurements = recentMeasurements.filter(m => m.name === name);
+  const measurements = recentMeasurements.filter((m) => m.name === name);
 
   if (measurements.length === 0) {
     return 0;
@@ -180,12 +172,12 @@ export function getAverageDuration(name: string): number {
  */
 export function generatePerformanceReport(): Record<string, any> {
   // İşlem adlarını topla
-  const operationNames = Array.from(new Set(recentMeasurements.map(m => m.name)));
+  const operationNames = Array.from(new Set(recentMeasurements.map((m) => m.name)));
 
   // Her işlem için istatistikleri hesapla
-  const operationStats = operationNames.map(name => {
-    const measurements = recentMeasurements.filter(m => m.name === name);
-    const durations = measurements.map(m => m.duration);
+  const operationStats = operationNames.map((name) => {
+    const measurements = recentMeasurements.filter((m) => m.name === name);
+    const durations = measurements.map((m) => m.duration);
 
     // İstatistikleri hesapla
     const count = measurements.length;
@@ -196,7 +188,7 @@ export function generatePerformanceReport(): Record<string, any> {
 
     // Son 24 saat içindeki ölçümleri filtrele
     const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
-    const recentMeasurementsLast24Hours = measurements.filter(m => m.timestamp >= last24Hours);
+    const recentMeasurementsLast24Hours = measurements.filter((m) => m.timestamp >= last24Hours);
 
     return {
       name,
@@ -204,7 +196,7 @@ export function generatePerformanceReport(): Record<string, any> {
       averageDuration,
       minDuration,
       maxDuration,
-      last24HoursCount: recentMeasurementsLast24Hours.length
+      last24HoursCount: recentMeasurementsLast24Hours.length,
     };
   });
 
@@ -218,12 +210,12 @@ export function generatePerformanceReport(): Record<string, any> {
       rss: memoryUsage.rss,
       heapTotal: memoryUsage.heapTotal,
       heapUsed: memoryUsage.heapUsed,
-      external: memoryUsage.external
+      external: memoryUsage.external,
     },
     measurements: {
       total: recentMeasurements.length,
-      maxStored: MAX_MEASUREMENTS
-    }
+      maxStored: MAX_MEASUREMENTS,
+    },
   };
 }
 
@@ -256,5 +248,5 @@ export default {
   getRecentMeasurements,
   getAverageDuration,
   generatePerformanceReport,
-  startPerformanceMonitoring
+  startPerformanceMonitoring,
 };
